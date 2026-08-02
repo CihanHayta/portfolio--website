@@ -1,0 +1,132 @@
+.contact {
+  background: var(--color-dark);
+  color: var(--color-on-dark);
+  border-radius: clamp(24px, 4vw, 40px) clamp(24px, 4vw, 40px) 0 0;
+  margin-top: clamp(-24px, -2vw, 0px);
+}
+
+.inner {
+  padding-top: clamp(56px, 9vw, 110px);
+  padding-bottom: clamp(28px, 4vw, 40px);
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: clamp(28px, 5vw, 44px);
+}
+
+.pretitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-on-dark-soft);
+}
+
+.heading {
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  font-size: clamp(48px, 9vw, 104px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.italic {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--color-on-dark-soft);
+}
+
+.mid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: clamp(48px, 8vw, 88px);
+  border-bottom: 1px solid rgba(244, 244, 240, 0.14);
+}
+
+.email {
+  font-size: clamp(18px, 2.6vw, 24px);
+  font-weight: 600;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(244, 244, 240, 0.4);
+  transition: border-color 0.3s var(--ease), opacity 0.3s var(--ease);
+}
+
+.email:hover {
+  border-color: var(--color-on-dark);
+}
+
+.socialRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 244, 240, 0.25);
+  transition: background 0.3s var(--ease), color 0.3s var(--ease), transform 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+
+.socialLink:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+  transform: translateY(-2px);
+}
+
+.bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: clamp(20px, 3vw, 28px);
+  font-size: 13px;
+  color: var(--color-on-dark-soft);
+}
+
+.bottomLogo {
+  font-weight: 700;
+  color: var(--color-on-dark);
+}
+
+.bottomNav {
+  display: flex;
+  gap: 24px;
+}
+
+.bottomLink {
+  transition: color 0.3s var(--ease);
+}
+
+.bottomLink:hover {
+  color: var(--color-on-dark);
+}
+
+.bottomPhone {
+  font-weight: 600;
+  color: var(--color-on-dark);
+}
+
+@media (max-width: 640px) {
+  .bottom {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .bottomNav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}

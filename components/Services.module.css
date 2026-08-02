@@ -1,0 +1,132 @@
+.services {
+  padding-block: clamp(56px, 9vw, 110px);
+}
+
+.header {
+  margin-bottom: clamp(32px, 6vw, 56px);
+}
+
+.headerGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  align-items: end;
+  margin-top: 14px;
+}
+
+.heading {
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  font-size: clamp(30px, 4.2vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  max-width: 14ch;
+}
+
+.subtext {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--color-ink-soft);
+  max-width: 42ch;
+}
+
+.list {
+  border-top: 1px solid var(--color-line);
+}
+
+.row {
+  border-bottom: 1px solid var(--color-line);
+}
+
+.rowHeader {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 20px;
+  padding-block: 26px;
+  text-align: left;
+  transition: opacity 0.3s var(--ease);
+}
+
+.rowHeader:hover {
+  opacity: 0.65;
+}
+
+.rowNumber {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+}
+
+.rowTitle {
+  font-size: clamp(18px, 2.4vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.rowAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--color-dark);
+  color: var(--color-on-dark);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.rowOpen .rowAction {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.rowBody {
+  overflow: hidden;
+}
+
+.rowBodyInner {
+  padding-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rowMedia {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.rowDescription {
+  max-width: 60ch;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--color-ink-soft);
+}
+
+@media (max-width: 820px) {
+  .headerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .rowHeader {
+    grid-template-columns: 36px 1fr auto;
+    padding-block: 20px;
+  }
+
+  .rowMedia {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+@media (max-width: 520px) {
+  .rowAction span {
+    display: none;
+  }
+}

@@ -1,0 +1,94 @@
+.process {
+  padding-block: clamp(56px, 9vw, 110px);
+  background: var(--color-bg-soft);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.heading {
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.15;
+}
+
+.circles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: clamp(48px, 7vw, 80px);
+  margin-bottom: clamp(32px, 5vw, 56px);
+}
+
+.circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(96px, 12vw, 132px);
+  height: clamp(96px, 12vw, 132px);
+  border-radius: 50%;
+  border: 1px solid var(--color-line);
+  background: var(--color-bg-soft);
+  margin-inline: clamp(-14px, -1.6vw, -10px);
+  transition: width 0.35s var(--ease), height 0.35s var(--ease), z-index 0s;
+  z-index: 1;
+}
+
+.circleActive {
+  width: clamp(140px, 16vw, 176px);
+  height: clamp(140px, 16vw, 176px);
+  z-index: 2;
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-ink);
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.25);
+  z-index: -1;
+}
+
+.circleLabel {
+  position: relative;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0 6px;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+}
+
+.description {
+  max-width: 52ch;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--color-ink-soft);
+}
+
+@media (max-width: 640px) {
+  .circles {
+    flex-wrap: wrap;
+    row-gap: 16px;
+  }
+
+  .circle {
+    margin-inline: -6px;
+  }
+}

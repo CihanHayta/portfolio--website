@@ -1,0 +1,24 @@
+.gallery {
+  padding-bottom: clamp(48px, 8vw, 96px);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(12px, 2vw, 20px);
+}
+
+.item {
+  position: relative;
+  aspect-ratio: 4 / 5;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .item {
+    aspect-ratio: 16 / 11;
+  }
+}
