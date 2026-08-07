@@ -56,9 +56,9 @@ export const navLinks = [
 ];
 
 export const galleryItems = [
-  { id: 1, label: "Dashboard", Icon: LayoutDashboard, Illustration: DashboardIllustration, tone: "neutral", image: "/images/sahin-emlak-dashboard.png" },
-  { id: 2, label: "Randevu Yönetimi", Icon: Smartphone, Illustration: MobileAppIllustration, tone: "accent", image: "/images/sahin-emlak-randevular.png" },
-  { id: 3, label: "Mesajlaşma", Icon: BarChart3, Illustration: AnalyticsIllustration, tone: "dark", image: "/images/sahin-emlak-mesajlar.png" },
+  { id: 1, label: "Şahin Emlak", Icon: LayoutDashboard, Illustration: DashboardIllustration, tone: "neutral", image: "/images/sahin-emlak-cover.png" },
+  { id: 2, label: "Mobil Uygulama", Icon: Smartphone, Illustration: MobileAppIllustration, tone: "accent", image: null },
+  { id: 3, label: "Ürün Analitiği", Icon: BarChart3, Illustration: AnalyticsIllustration, tone: "dark", image: null },
 ];
 
 export const services = [

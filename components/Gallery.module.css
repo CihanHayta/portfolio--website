@@ -10,11 +10,15 @@
 
 .item {
   position: relative;
-  aspect-ratio: 2880 / 1230;
+  aspect-ratio: 3 / 2;
 }
 
 @media (max-width: 720px) {
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .item {
+    aspect-ratio: 4 / 3;
   }
 }
