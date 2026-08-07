@@ -7,7 +7,7 @@ import {
   Megaphone,
   TrendingUp,
 } from "lucide-react";
-import { GithubIcon, LinkedinIcon, XIcon } from "@/components/icons";
+import { GithubIcon, LinkedinIcon, InstagramIcon } from "@/components/icons";
 import {
   DashboardIllustration,
   MobileAppIllustration,
@@ -33,8 +33,8 @@ export const profile = {
   lastNameDisplay: "-Hayta",
   fullName: "Cihan Hayta",
   role: "Full-Stack Geliştirici",
-  email: "hello@cihanhayta.dev",
-  phone: "+90 (555) 123-4567",
+  email: "cihanhayta8080@gmail.com",
+  phone: "+90 539 941 71 05 ",
   // Sadece rakam, başında ülke kodu, + veya boşluk yok — WhatsApp linki için kullanılır.
   whatsapp: "905551234567",
   location: "İstanbul, Türkiye",
@@ -42,10 +42,10 @@ export const profile = {
 };
 
 export const socials = [
-  { name: "GitHub", href: "https://github.com/", Icon: GithubIcon },
-  { name: "LinkedIn", href: "https://linkedin.com/", Icon: LinkedinIcon },
-  { name: "X", href: "https://x.com/", Icon: XIcon },
-  { name: "E-posta", href: "mailto:hello@cihanhayta.dev", Icon: Mail },
+  { name: "GitHub", href: "https://github.com/CihanHayta", Icon: GithubIcon },
+  { name: "LinkedIn", href: "https://www.linkedin.com/in/cihan-hayta-4586671a0/", Icon: LinkedinIcon },
+  { name: "Instagram", href: "https://www.instagram.com/persona_dijital_pazarlama/", Icon: InstagramIcon },
+  { name: "E-posta", href: "mailto:cihanhayta8080@gmail.com", Icon: Mail },
 ];
 
 export const navLinks = [

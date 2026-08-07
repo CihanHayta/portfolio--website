@@ -64,12 +64,7 @@ export default function Hero() {
             <a href={`mailto:${profile.email}`} className={styles.contactLink}>
               {profile.email}
             </a>
-            <a
-              href={`tel:${profile.phone.replace(/[^+\d]/g, "")}`}
-              className={styles.contactLink}
-            >
-              {profile.phone}
-            </a>
+          
 
             <div className={styles.socialRow}>
               {socials.map(({ name, href, Icon }) => (
