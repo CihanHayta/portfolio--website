@@ -61,7 +61,13 @@ export default function Work() {
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
             {current.map((project) => (
-              <a key={project.id} href={project.href || "#"} className={styles.card}>
+              <a
+                key={project.id}
+                href={project.href || "#"}
+                target={project.href && project.href !== "#" ? "_blank" : undefined}
+                rel={project.href && project.href !== "#" ? "noreferrer" : undefined}
+                className={styles.card}
+              >
                 <div className={styles.cardMedia}>
                   <MediaFrame
                     image={project.image}

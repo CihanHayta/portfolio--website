@@ -56,9 +56,9 @@ export const navLinks = [
 ];
 
 export const galleryItems = [
-  { id: 1, label: "SaaS Paneli", Icon: LayoutDashboard, Illustration: DashboardIllustration, tone: "neutral", image: null },
-  { id: 2, label: "Mobil Uygulama", Icon: Smartphone, Illustration: MobileAppIllustration, tone: "accent", image: null },
-  { id: 3, label: "Ürün Analitiği", Icon: BarChart3, Illustration: AnalyticsIllustration, tone: "dark", image: null },
+  { id: 1, label: "Dashboard", Icon: LayoutDashboard, Illustration: DashboardIllustration, tone: "neutral", image: "/images/sahin-emlak-dashboard.png" },
+  { id: 2, label: "Randevu Yönetimi", Icon: Smartphone, Illustration: MobileAppIllustration, tone: "accent", image: "/images/sahin-emlak-randevular.png" },
+  { id: 3, label: "Mesajlaşma", Icon: BarChart3, Illustration: AnalyticsIllustration, tone: "dark", image: "/images/sahin-emlak-mesajlar.png" },
 ];
 
 export const services = [
@@ -109,6 +109,16 @@ export const processSteps = [
 ];
 
 export const projects = [
+  {
+    id: 0,
+    name: "Şahin Emlak CRM",
+    year: "2026",
+    description:
+      "Emlak ofisleri için uçtan uca CRM — ilan yönetimi, randevu takvimi ve Instagram/WhatsApp mesajlarını tek panelden yöneten satış hattı.",
+    tags: ["Next.js", "CRM", "WhatsApp Entegrasyonu"],
+    href: "https://sahin-emlak-frontend.vercel.app",
+    image: "/images/sahin-emlak-cover.png",
+  },
   {
     id: 1,
     name: "TaskFlow",
