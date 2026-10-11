@@ -162,13 +162,24 @@ export async function savePost(id, revision, input) {
   const parsed = parsePostInput(input);
   if (parsed.error) return fail(parsed.error);
 
+  // Slug değişirse eski adresin önbelleği de tazelenmeli; yoksa yönlendirme
+  // yerine birkaç dakika boyunca eski sayfa sunulur.
+  const { data: previous } = await admin.supabase
+    .from("blog_posts")
+    .select("slug")
+    .eq("id", id)
+    .maybeSingle();
+
   const result = await updateWithRevision(admin.supabase, id, revision, parsed.row);
   if (!result.ok) return result;
 
   const tagError = await syncTags(admin.supabase, id, parsed.tags);
   if (tagError) return fail(dbError(tagError));
 
-  if (result.post.status === "published") revalidatePost(result.post.slug);
+  if (result.post.status === "published") {
+    revalidatePost(result.post.slug);
+    if (previous && previous.slug !== result.post.slug) revalidatePath(`/blog/${previous.slug}`);
+  }
   return result;
 }
 
