@@ -49,8 +49,8 @@ export const socials = [
 ];
 
 export const navLinks = [
-  { label: "Hizmetler", href: "#services" },
   { label: "Projeler", href: "#work" },
+  { label: "Hizmetler", href: "#services" },
   { label: "Süreç", href: "#process" },
   { label: "İletişim", href: "#contact" },
 ];

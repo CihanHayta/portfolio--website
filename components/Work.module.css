@@ -1,5 +1,7 @@
+/* Hero'nun hemen ardından gelir; üst boşluğu hero'nun alt boşluğu sağlar. */
 .work {
-  padding-block: clamp(56px, 9vw, 110px);
+  padding-bottom: clamp(56px, 9vw, 110px);
+  scroll-margin-top: clamp(32px, 5vw, 56px);
 }
 
 .header {

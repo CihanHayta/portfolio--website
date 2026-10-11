@@ -90,7 +90,7 @@ export default function Hero() {
             custom={0.4}
           >
             <p className={styles.bio}>{profile.bio}</p>
-            <a href="#services" className={`btn btnDark ${styles.discoverBtn}`}>
+            <a href="#work" className={`btn btnDark ${styles.discoverBtn}`}>
               Keşfet
               <ArrowDown size={16} />
             </a>
