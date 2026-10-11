@@ -49,11 +49,28 @@ export const socials = [
 ];
 
 export const navLinks = [
-  { label: "Projeler", href: "#work" },
-  { label: "Hizmetler", href: "#services" },
-  { label: "Süreç", href: "#process" },
-  { label: "İletişim", href: "#contact" },
+  { label: "Projeler", href: "/#work" },
+  { label: "Hizmetler", href: "/#services" },
+  { label: "Süreç", href: "/#process" },
+  { label: "Blog", href: "/blog" },
+  { label: "İletişim", href: "/#contact" },
 ];
+
+// Blog sayfasının üst bölümü. `heroImage` için /public altına bir görsel koyup
+// yolunu yaz (örn. "/images/blog-hero.jpg"); boşken sade bir panel gösterilir.
+// `avatar` yazar kartındaki fotoğraftır; boşken adının baş harfi gösterilir.
+export const blog = {
+  title: "Teknoloji, dijital pazarlama ve girişimcilik üzerine düşüncelerimi paylaşıyorum.",
+  description:
+    "Deneyimlerim, öğrendiklerim ve uyguladığım stratejilerle ilgili kapsamlı yazılar. Kendi yolculuğumdan edindiğim içgörüleri burada seninle paylaşıyorum.",
+  quote: "Daha iyi projeler, daha iyi insanlar ve daha iyi bir gelecek için.",
+  heroImage: null,
+  heroImageAlt: "",
+  avatar: null,
+  authorTagline: "Geliştirici · Dijital Pazarlama · Girişimci",
+  authorBio:
+    "Teknoloji, dijital pazarlama ve girişimcilik üzerine yazılar yazıyorum. Deneyimlerimi ve öğrendiklerimi burada paylaşıyorum.",
+};
 
 export const galleryItems = [
   { id: 1, label: "Şahin Emlak", Icon: LayoutDashboard, Illustration: DashboardIllustration, tone: "neutral", image: "/images/sahin-emlak-cover.png" },

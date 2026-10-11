@@ -35,6 +35,45 @@ Open [http://localhost:3000](http://localhost:3000).
 3. Add more entries to the `projects` array freely — the Work section
    paginates automatically once there are more than 4.
 
+## Blog ve yönetim paneli
+
+- `/blog` — yazı listesi (arama, kategori filtresi, sayfalama)
+- `/blog/[slug]` — yazı sayfası (içindekiler, ilgili yazılar, JSON-LD)
+- `/admin/blog` — giriş gerektiren yönetim paneli (editör, medya, kategoriler, etiketler)
+
+Veriler Supabase'de durur (Postgres + Storage + Auth). Yetkilendirmenin tamamı
+`supabase/migrations/` içindeki RLS politikalarıyla yapılır; uygulama yalnızca
+anon anahtarı kullanır, `service_role` anahtarına ihtiyaç yoktur.
+
+### Kurulum
+
+Canlı site `portfollio` adlı Supabase projesine bağlıdır; şema Supabase CLI
+ile yönetilir:
+
+```bash
+npx supabase login
+npx supabase link --project-ref <proje-ref>
+npx supabase db push        # supabase/migrations içindekileri uygular
+npx supabase config push    # supabase/config.toml (kayıt kapalı, site adresi)
+```
+
+Yönetici eklemek için: Dashboard → Authentication → Users → **Add user**
+(Auto Confirm açık), ardından SQL Editor'da:
+
+```sql
+insert into public.blog_admins (user_id, display_name)
+select id, 'Ad Soyad' from auth.users where email = 'eposta@ornek.com';
+```
+
+Yeni kullanıcı kaydı kapalıdır (`[auth] enable_signup = false`); yalnızca
+`blog_admins` tablosundaki hesaplar panele girebilir.
+
+Ortam değişkenleri `.env.example` dosyasında listelidir; yerelde `.env.local`
+içine, canlıda Vercel → Settings → Environment Variables'a yazılır.
+
+Blog başlığı, alıntı, üst görsel ve yazar kartı metinleri `data/content.js`
+içindeki `blog` nesnesinden düzenlenir.
+
 ## Project videos
 
 A project with `video` + `poster` fields in `data/content.js` shows a muted

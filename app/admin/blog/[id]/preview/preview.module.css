@@ -1,0 +1,29 @@
+.preview {
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-bg);
+  overflow: clip;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 10px 20px;
+  background: var(--blog-warning-soft);
+  color: var(--blog-warning);
+  font-size: 13.5px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  font-weight: 700;
+}
+
+.back:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

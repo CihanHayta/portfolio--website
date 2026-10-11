@@ -108,3 +108,100 @@
     display: inline-flex;
   }
 }
+
+/* Blog ve yönetim sayfalarındaki başlık: sola yaslı menü, hap biçimli etkin
+   bağlantı ve yeşil eylem düğmesi. Renkler [data-theme="blog"] tokenlarından gelir. */
+.blog {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom-color: var(--blog-line);
+}
+
+.blog .inner {
+  justify-content: flex-start;
+  padding-block: 12px;
+}
+
+.blog .logo {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  margin-right: 40px;
+}
+
+.blog .nav {
+  gap: 4px;
+  margin-right: auto;
+}
+
+.blog .navLink {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blog-ink-soft);
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.blog .navLink::after {
+  display: none;
+}
+
+.blog .navLink:hover,
+.blog .navLink[aria-current="page"] {
+  background: var(--blog-accent-soft);
+  color: var(--blog-ink);
+}
+
+.blog .navLink[aria-current="page"] {
+  font-weight: 700;
+}
+
+.searchLink {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--blog-ink);
+  transition: background 0.2s var(--ease);
+}
+
+.searchLink:hover {
+  background: var(--blog-accent-soft);
+}
+
+.blog .contactBtn {
+  padding: 11px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+}
+
+.blog .contactBtn:hover {
+  background: var(--blog-accent-hover);
+  color: var(--blog-on-accent);
+  transform: none;
+}
+
+.blog .mobileNavLink[aria-current="page"] {
+  color: var(--blog-accent);
+}
+
+.header :focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (max-width: 820px) {
+  .blog .inner {
+    justify-content: space-between;
+  }
+
+  .blog .logo {
+    margin-right: auto;
+  }
+
+  .searchLink {
+    display: none;
+  }
+}

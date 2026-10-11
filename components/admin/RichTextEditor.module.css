@@ -1,0 +1,367 @@
+.wrapper[data-fullscreen="true"] {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: var(--blog-bg);
+  overflow-y: auto;
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: var(--blog-radius-control);
+  color: var(--blog-ink-soft);
+  font-size: 14px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  min-height: 40px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: var(--blog-bg-muted);
+  color: var(--blog-ink-soft);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+  border-color: var(--blog-line-strong);
+  background: var(--blog-bg);
+  color: var(--blog-ink);
+  font-weight: 700;
+}
+
+.frame {
+  border: 1px solid var(--blog-line-strong);
+  border-radius: 0 var(--blog-radius-control) var(--blog-radius-control) var(--blog-radius-control);
+  background: var(--blog-bg);
+}
+
+.frame:focus-within {
+  border-color: var(--blog-accent);
+}
+
+.wrapper[data-fullscreen="true"] .frame {
+  flex: 1;
+}
+
+/* Araç çubuğu masaüstünde gerekirse ikinci satıra iner; dar ekranda tek
+   satırda kalıp yatay kayar. */
+.toolbar {
+  position: sticky;
+  top: 64px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--blog-line);
+  border-radius: 0 var(--blog-radius-control) 0 0;
+  background: var(--blog-bg);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.wrapper[data-fullscreen="true"] .toolbar {
+  top: 0;
+}
+
+.blockSelect {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--blog-ink);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.blockSelect:hover {
+  background: var(--blog-bg-muted);
+}
+
+.tool {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  color: var(--blog-ink);
+  cursor: pointer;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.tool:hover {
+  background: var(--blog-bg-muted);
+}
+
+.tool[aria-pressed="true"] {
+  background: var(--blog-accent-soft);
+  color: var(--blog-accent);
+}
+
+.tool:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 22px;
+  margin-inline: 4px;
+  background: var(--blog-line);
+}
+
+.spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+.context {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--blog-line);
+  background: var(--blog-bg-muted);
+}
+
+.contextField,
+.contextSelect {
+  display: grid;
+  gap: 4px;
+  color: var(--blog-ink-soft);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.contextField {
+  flex: 1 1 220px;
+}
+
+.contextField input,
+.contextSelect select {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: 6px;
+  background: var(--blog-bg);
+  color: var(--blog-ink);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+.contextField input:focus-visible,
+.contextSelect select:focus-visible {
+  outline: none;
+  border-color: var(--blog-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blog-accent) 16%, transparent);
+}
+
+.contextPrimary,
+.contextButton,
+.contextIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.contextPrimary {
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+}
+
+.contextButton {
+  border: 1px solid var(--blog-line-strong);
+  background: var(--blog-bg);
+}
+
+.contextButton:hover {
+  border-color: var(--blog-accent);
+}
+
+.contextButton[data-danger="true"] {
+  color: var(--blog-danger);
+}
+
+.contextIcon {
+  width: 36px;
+  padding: 0;
+  color: var(--blog-ink-soft);
+}
+
+.contextIcon:hover {
+  background: var(--blog-line);
+}
+
+.contextError {
+  flex-basis: 100%;
+  color: var(--blog-danger);
+  font-size: 12.5px;
+}
+
+.content {
+  cursor: text;
+}
+
+.editable {
+  min-height: 300px;
+  padding: 22px 20px 28px;
+  font-size: 16px;
+  outline: none;
+}
+
+.wrapper[data-fullscreen="true"] .editable {
+  max-width: 760px;
+  min-height: 60dvh;
+  margin-inline: auto;
+}
+
+/* Editörde başlıklar h1–h3 olarak durur; yayın sayfasındaki ölçülerle eşleşir. */
+.editable h1,
+.editable h2,
+.editable h3 {
+  color: var(--blog-ink);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.editable h1 {
+  font-size: 30px;
+}
+
+.editable h2 {
+  font-size: 24px;
+}
+
+.editable h3 {
+  font-size: 19px;
+}
+
+.editable :global(p.is-editor-empty:first-child)::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--blog-ink-faint);
+  pointer-events: none;
+}
+
+.editable :global(.ProseMirror-selectednode) {
+  outline: 2px solid var(--blog-accent);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+.editable figure {
+  cursor: pointer;
+}
+
+.editable figcaption:empty {
+  display: none;
+}
+
+.editable :global(.tableWrapper) {
+  overflow-x: auto;
+  border: 1px solid var(--blog-line);
+  border-radius: 12px;
+}
+
+.editable :global(.selectedCell) {
+  background: var(--blog-accent-soft);
+}
+
+.editable :global([data-youtube-video]) {
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #101513;
+}
+
+.editable :global([data-youtube-video]) iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  /* Videoya tıklamak oynatmak yerine bloğu seçsin. */
+  pointer-events: none;
+}
+
+.preview {
+  min-height: 300px;
+  padding: 22px 20px 28px;
+  border-radius: 0 var(--blog-radius-control) var(--blog-radius-control) var(--blog-radius-control);
+}
+
+.wordCount {
+  margin-top: 6px;
+  color: var(--blog-ink-soft);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .toolbar {
+    top: 56px;
+    flex-wrap: nowrap;
+  }
+
+  .tool,
+  .blockSelect {
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+  }
+
+  .blockSelect {
+    width: auto;
+    font-size: 16px;
+  }
+
+  .contextField input,
+  .contextSelect select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .contextPrimary,
+  .contextButton,
+  .contextIcon {
+    min-height: 44px;
+  }
+
+  .editable,
+  .preview {
+    padding: 16px 14px 22px;
+  }
+}

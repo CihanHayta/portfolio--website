@@ -2,12 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Menu, Search, Send, X } from "lucide-react";
 import { navLinks, profile } from "@/data/content";
 import ContactModal from "./ContactModal";
 import styles from "./Header.module.css";
 
-export default function Header() {
+export default function Header({ variant = "default" }) {
+  const pathname = usePathname();
+  const isBlog = variant === "blog";
+  // Blog yönetimi de "Blog" bağlantısının altında sayılır.
+  const isActive = (href) =>
+    !href.includes("#") && (pathname.startsWith(href) || pathname.startsWith(`/admin${href}`));
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
@@ -26,26 +33,46 @@ export default function Header() {
 
   return (
     <>
-      <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
+      <header
+        className={`${styles.header} ${scrolled ? styles.scrolled : ""} ${isBlog ? styles.blog : ""}`}
+      >
         <div className={`container ${styles.inner}`}>
-          <a href="#top" className={styles.logo}>
+          <Link href="/" className={styles.logo}>
             {profile.fullName}
-          </a>
+          </Link>
 
-          <nav className={styles.nav}>
+          <nav className={styles.nav} aria-label="Ana menü">
             {navLinks.map((link) => (
-              <a key={link.href} href={link.href} className={styles.navLink}>
+              <Link
+                key={link.href}
+                href={link.href}
+                className={styles.navLink}
+                aria-current={isActive(link.href) ? "page" : undefined}
+              >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
+
+          {isBlog && (
+            <Link href="/blog#blog-ara" className={styles.searchLink} aria-label="Blogda ara">
+              <Search size={18} aria-hidden="true" />
+            </Link>
+          )}
 
           <button
             type="button"
             onClick={openContact}
             className={`btn btnDark ${styles.contactBtn}`}
           >
-            İletişime Geç
+            {isBlog ? (
+              <>
+                <Send size={16} aria-hidden="true" />
+                İletişim
+              </>
+            ) : (
+              "İletişime Geç"
+            )}
           </button>
 
           <button
@@ -53,6 +80,7 @@ export default function Header() {
             className={styles.menuBtn}
             onClick={() => setOpen((v) => !v)}
             aria-label="Menüyü aç/kapat"
+            aria-expanded={open}
           >
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -69,21 +97,22 @@ export default function Header() {
             >
               <div className={styles.mobileMenuInner}>
                 {navLinks.map((link) => (
-                  <a
+                  <Link
                     key={link.href}
                     href={link.href}
                     className={styles.mobileNavLink}
+                    aria-current={isActive(link.href) ? "page" : undefined}
                     onClick={() => setOpen(false)}
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 ))}
                 <button
                   type="button"
                   onClick={openContact}
                   className={`btn btnDark ${styles.mobileContactBtn}`}
                 >
-                  Get in touch
+                  İletişime Geç
                 </button>
               </div>
             </motion.div>

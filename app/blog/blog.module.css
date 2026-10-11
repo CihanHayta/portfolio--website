@@ -1,0 +1,473 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 36px;
+  padding-block: 22px 72px;
+  align-items: start;
+}
+
+/* --- Üst bölüm ----------------------------------------------------------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 325px;
+  gap: 52px;
+  align-items: start;
+}
+
+.heroText {
+  padding-top: 16px;
+}
+
+.eyebrow {
+  color: var(--blog-ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.heading {
+  margin-top: 14px;
+  font-size: clamp(28px, 3.1vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.lead {
+  max-width: 480px;
+  margin-block: 18px 22px;
+  color: var(--blog-ink-soft);
+  font-size: 16.5px;
+  line-height: 1.4;
+}
+
+.heroMedia {
+  position: relative;
+  aspect-ratio: 325 / 312;
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-accent-soft);
+}
+
+.heroImage {
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.quote {
+  position: absolute;
+  left: -14px;
+  bottom: 38px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  width: min(204px, 80%);
+  padding: 18px 16px 16px;
+  border-radius: 12px;
+  background: var(--blog-bg);
+  box-shadow: var(--blog-shadow-pop);
+}
+
+.quoteIcon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--blog-accent-soft);
+  color: var(--blog-accent);
+}
+
+.quote blockquote {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.quote figcaption {
+  grid-column: 2;
+  margin-top: 6px;
+  color: var(--blog-ink-soft);
+  font-size: 11px;
+}
+
+/* --- Kategori çipleri ---------------------------------------------------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  background: var(--blog-bg-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.chip:hover {
+  background: var(--blog-accent-soft);
+}
+
+.chip[aria-current] {
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+  font-weight: 700;
+}
+
+/* --- Yazı ızgarası ------------------------------------------------------- */
+
+.resultLine {
+  margin-top: 20px;
+  color: var(--blog-ink-soft);
+  font-size: 14px;
+}
+
+.resultLine strong {
+  color: var(--blog-ink);
+}
+
+.clearLink {
+  color: var(--blog-accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 56px 24px;
+  border: 1px dashed var(--blog-line-strong);
+  border-radius: var(--blog-radius-card);
+  color: var(--blog-ink-soft);
+  text-align: center;
+}
+
+.empty h2 {
+  margin-top: 6px;
+  color: var(--blog-ink);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.empty p {
+  max-width: 380px;
+  font-size: 14.5px;
+}
+
+.emptyAction,
+.pageLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: var(--blog-radius-control);
+  color: var(--blog-ink);
+  font-size: 14px;
+  font-weight: 700;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+
+.emptyAction {
+  margin-top: 10px;
+}
+
+.emptyAction:hover,
+.pageLink:hover {
+  border-color: var(--blog-accent);
+  background: var(--blog-accent-soft);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.pageStatus {
+  color: var(--blog-ink-soft);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Kenar çubuğu -------------------------------------------------------- */
+
+.sidebar {
+  display: grid;
+  gap: 16px;
+}
+
+.panel {
+  padding: 20px 18px;
+  border: 1px solid var(--blog-line);
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-bg);
+}
+
+.panelTitle {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.categoryList {
+  display: grid;
+  gap: 2px;
+  margin: 12px -6px 0;
+}
+
+.categoryLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  transition: background 0.2s var(--ease);
+}
+
+.categoryLink:hover {
+  background: var(--blog-bg-muted);
+}
+
+.categoryLink[aria-current] {
+  background: var(--blog-accent-soft);
+  font-weight: 700;
+}
+
+.count {
+  margin-left: auto;
+  color: var(--blog-ink-soft);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.categoryLink[aria-current] .count {
+  color: var(--blog-ink);
+}
+
+.featuredList {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.featuredItem {
+  position: relative;
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.featuredThumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  background: var(--blog-accent-soft);
+  overflow: hidden;
+}
+
+.featuredThumb img {
+  object-fit: cover;
+}
+
+.featuredText {
+  display: grid;
+  gap: 4px;
+}
+
+.featuredLink {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.featuredLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.featuredItem:hover .featuredLink {
+  color: var(--blog-accent);
+}
+
+.featuredMeta {
+  color: var(--blog-ink-soft);
+  font-size: 12px;
+}
+
+.author {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  gap: 6px 16px;
+  align-items: center;
+}
+
+.avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+  font-size: 22px;
+  font-weight: 800;
+  overflow: hidden;
+}
+
+.avatar img {
+  object-fit: cover;
+}
+
+.authorName {
+  font-size: 14.5px;
+  font-weight: 800;
+}
+
+.authorTagline {
+  margin-top: 2px;
+  color: var(--blog-ink-soft);
+  font-size: 11.5px;
+}
+
+.authorBio,
+.authorLink {
+  grid-column: 2;
+}
+
+.authorBio {
+  color: var(--blog-ink-soft);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.authorLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  color: var(--blog-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.authorLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* --- Yükleme iskeleti ---------------------------------------------------- */
+
+.skeleton {
+  border-radius: var(--blog-radius-card);
+  background: linear-gradient(90deg, var(--blog-bg-muted) 25%, #eceeed 50%, var(--blog-bg-muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* --- Duyarlı düzen ------------------------------------------------------- */
+
+@media (max-width: 1120px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .heroText {
+    padding-top: 8px;
+  }
+
+  .heroMedia {
+    aspect-ratio: 16 / 9;
+    max-height: 320px;
+    width: 100%;
+  }
+
+  .heroMediaEmpty {
+    display: none;
+  }
+
+  .quote {
+    left: 14px;
+    bottom: 14px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .page {
+    padding-bottom: 48px;
+  }
+
+  .grid,
+  .sidebar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chips {
+    flex-wrap: nowrap;
+    margin-inline: -16px;
+    padding-inline: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chip {
+    flex-shrink: 0;
+    min-height: 40px;
+  }
+
+  .lead {
+    font-size: 15.5px;
+  }
+}
