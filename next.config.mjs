@@ -10,6 +10,11 @@ const isLocalSupabase = ["localhost", "127.0.0.1"].includes(supabaseUrl?.hostnam
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // sharp'ın yerel kitaplığı (libvips) ayrı bir @img paketinde durur ve
+  // otomatik izlemede atlanabiliyor; yükleme fonksiyonuna açıkça eklenir.
+  outputFileTracingIncludes: {
+    "/api/admin/media": ["./node_modules/@img/**/*"],
+  },
   images: {
     dangerouslyAllowLocalIP: isLocalSupabase,
     remotePatterns: supabaseUrl
