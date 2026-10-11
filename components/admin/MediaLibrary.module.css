@@ -1,0 +1,179 @@
+.dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  min-height: 84px;
+  padding: 16px;
+  border: 1.5px dashed var(--blog-accent-line);
+  border-radius: var(--blog-radius-card);
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.dropzone[data-dragging="true"] {
+  border-color: var(--blog-accent);
+  background: var(--blog-accent-soft);
+}
+
+.uploadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: var(--blog-radius-control);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.uploadButton:hover {
+  border-color: var(--blog-accent);
+  background: var(--blog-accent-soft);
+}
+
+.dropHint {
+  color: var(--blog-ink-soft);
+  font-size: 12.5px;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress progress {
+  width: 180px;
+  height: 6px;
+  accent-color: var(--blog-accent);
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.state {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 40px 16px;
+  color: var(--blog-ink-soft);
+  font-size: 14px;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.item {
+  display: grid;
+  border: 1px solid var(--blog-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: var(--blog-accent-soft);
+}
+
+.thumb img {
+  object-fit: cover;
+}
+
+.select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.select:hover {
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+}
+
+.manage {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.altLabel {
+  display: grid;
+  gap: 4px;
+  color: var(--blog-ink-soft);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.altInput {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: 6px;
+  color: var(--blog-ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.itemFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--blog-ink-soft);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.delete {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete:hover {
+  background: var(--blog-danger-soft);
+  color: var(--blog-danger);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .altInput {
+    min-height: 44px;
+    font-size: 16px;
+  }
+}

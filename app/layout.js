@@ -1,4 +1,5 @@
 import { Playfair_Display, Manrope } from "next/font/google";
+import { SITE_URL } from "@/lib/supabase/env";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -17,6 +18,7 @@ const manrope = Manrope({
 });
 
 export const metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Cihan Hayta — Full-Stack Geliştirici",
   description:
     "Uçtan uca SaaS ürünleri tasarlayıp geliştiren full-stack yazılım geliştirici. Seçili projelerimi, hizmetlerimi keşfedin ve benimle iletişime geçin.",

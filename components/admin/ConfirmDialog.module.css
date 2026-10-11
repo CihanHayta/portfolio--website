@@ -1,0 +1,68 @@
+.dialog {
+  width: min(440px, calc(100vw - 32px));
+  margin: auto;
+  padding: 24px;
+  border: 0;
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-bg);
+  color: var(--blog-ink);
+  box-shadow: var(--blog-shadow-pop);
+}
+
+.dialog::backdrop {
+  background: rgba(17, 20, 18, 0.45);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.body {
+  margin-top: 8px;
+  color: var(--blog-ink-soft);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.cancel,
+.confirm {
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: var(--blog-radius-control);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancel {
+  border: 1px solid var(--blog-line-strong);
+}
+
+.cancel:hover {
+  background: var(--blog-bg-muted);
+}
+
+.confirm {
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+}
+
+.confirm[data-danger="true"] {
+  background: var(--blog-danger);
+}
+
+.confirm:disabled,
+.cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

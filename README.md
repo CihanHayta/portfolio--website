@@ -35,6 +35,48 @@ Open [http://localhost:3000](http://localhost:3000).
 3. Add more entries to the `projects` array freely — the Work section
    paginates automatically once there are more than 4.
 
+## Blog ve yönetim paneli
+
+- `/blog` — yazı listesi (arama, kategori filtresi, sayfalama)
+- `/blog/[slug]` — yazı sayfası (içindekiler, ilgili yazılar, JSON-LD)
+- `/admin/blog` — giriş gerektiren yönetim paneli (editör, medya, kategoriler, etiketler)
+
+Veriler Supabase'de durur (Postgres + Storage + Auth). Yetkilendirmenin tamamı
+`supabase/migrations/` içindeki RLS politikalarıyla yapılır; uygulama yalnızca
+anon anahtarı kullanır, `service_role` anahtarına ihtiyaç yoktur.
+
+### Kurulum (bir kez)
+
+1. [supabase.com](https://supabase.com) üzerinde bir proje oluştur.
+2. SQL Editor'da `supabase/migrations/20261011000000_blog.sql` dosyasının
+   içeriğini çalıştır (tablolar, RLS politikaları, `blog-media` kovası ve
+   başlangıç kategorileri oluşur).
+3. Authentication → Users → **Add user** ile yönetici hesabını (e-posta +
+   parola) oluştur. Authentication → Sign In / Providers altında **Allow new
+   users to sign up** seçeneğini kapat.
+4. SQL Editor'da hesabı yönetici yap:
+
+   ```sql
+   insert into public.blog_admins (user_id, display_name)
+   select id, 'Cihan Hayta' from auth.users where email = 'SENIN@EPOSTAN.com';
+   ```
+
+5. `.env.example` dosyasını `.env.local` olarak kopyalayıp Supabase URL ve anon
+   anahtarını yaz. Aynı üç değişkeni Vercel → Settings → Environment
+   Variables'a da ekle.
+
+Blog başlığı, alıntı, üst görsel ve yazar kartı metinleri `data/content.js`
+içindeki `blog` nesnesinden düzenlenir.
+
+## Project videos
+
+A project with `video` + `poster` fields in `data/content.js` shows a muted
+product video preview on its card (`components/ProjectVideo.jsx`): poster
+first, plays only while visible, one card at a time, never autoplays under
+`prefers-reduced-motion` or data saver. The videos are generated from real
+app screenshots in `public/projects/` by the Remotion project in `video/` —
+see `video/README.md`.
+
 ## Customizing the look
 
 - Accent color: `--color-accent` in `app/globals.css` (currently a

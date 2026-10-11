@@ -1,4 +1,5 @@
 import { profile, socials, navLinks } from "@/data/content";
+import Link from "next/link";
 import Reveal from "./Reveal";
 import styles from "./Contact.module.css";
 
@@ -39,9 +40,9 @@ export default function Contact() {
 
           <nav className={styles.bottomNav}>
             {navLinks.map((link) => (
-              <a key={link.href} href={link.href} className={styles.bottomLink}>
+              <Link key={link.href} href={link.href} className={styles.bottomLink}>
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
