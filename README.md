@@ -45,25 +45,31 @@ Veriler Supabase'de durur (Postgres + Storage + Auth). Yetkilendirmenin tamamı
 `supabase/migrations/` içindeki RLS politikalarıyla yapılır; uygulama yalnızca
 anon anahtarı kullanır, `service_role` anahtarına ihtiyaç yoktur.
 
-### Kurulum (bir kez)
+### Kurulum
 
-1. [supabase.com](https://supabase.com) üzerinde bir proje oluştur.
-2. SQL Editor'da `supabase/migrations/20261011000000_blog.sql` dosyasının
-   içeriğini çalıştır (tablolar, RLS politikaları, `blog-media` kovası ve
-   başlangıç kategorileri oluşur).
-3. Authentication → Users → **Add user** ile yönetici hesabını (e-posta +
-   parola) oluştur. Authentication → Sign In / Providers altında **Allow new
-   users to sign up** seçeneğini kapat.
-4. SQL Editor'da hesabı yönetici yap:
+Canlı site `portfollio` adlı Supabase projesine bağlıdır; şema Supabase CLI
+ile yönetilir:
 
-   ```sql
-   insert into public.blog_admins (user_id, display_name)
-   select id, 'Cihan Hayta' from auth.users where email = 'SENIN@EPOSTAN.com';
-   ```
+```bash
+npx supabase login
+npx supabase link --project-ref <proje-ref>
+npx supabase db push        # supabase/migrations içindekileri uygular
+npx supabase config push    # supabase/config.toml (kayıt kapalı, site adresi)
+```
 
-5. `.env.example` dosyasını `.env.local` olarak kopyalayıp Supabase URL ve anon
-   anahtarını yaz. Aynı üç değişkeni Vercel → Settings → Environment
-   Variables'a da ekle.
+Yönetici eklemek için: Dashboard → Authentication → Users → **Add user**
+(Auto Confirm açık), ardından SQL Editor'da:
+
+```sql
+insert into public.blog_admins (user_id, display_name)
+select id, 'Ad Soyad' from auth.users where email = 'eposta@ornek.com';
+```
+
+Yeni kullanıcı kaydı kapalıdır (`[auth] enable_signup = false`); yalnızca
+`blog_admins` tablosundaki hesaplar panele girebilir.
+
+Ortam değişkenleri `.env.example` dosyasında listelidir; yerelde `.env.local`
+içine, canlıda Vercel → Settings → Environment Variables'a yazılır.
 
 Blog başlığı, alıntı, üst görsel ve yazar kartı metinleri `data/content.js`
 içindeki `blog` nesnesinden düzenlenir.
