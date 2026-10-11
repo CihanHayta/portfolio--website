@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { projects } from "@/data/content";
 import MediaFrame from "./MediaFrame";
+import ProjectVideo from "./ProjectVideo";
 import Reveal from "./Reveal";
 import styles from "./Work.module.css";
 
@@ -60,42 +61,62 @@ export default function Work() {
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            {current.map((project) => (
-              <a
-                key={project.id}
-                href={project.href || "#"}
-                target={project.href && project.href !== "#" ? "_blank" : undefined}
-                rel={project.href && project.href !== "#" ? "noreferrer" : undefined}
-                className={styles.card}
-              >
-                <div className={styles.cardMedia}>
-                  <MediaFrame
-                    image={project.image}
-                    alt={project.name}
-                    Illustration={project.Illustration}
-                    label={project.name}
-                    tone="neutral"
-                  />
-                  <span className={styles.cardMediaIcon}>
-                    <ArrowUpRight size={16} />
-                  </span>
-                </div>
-                <div className={styles.cardHead}>
-                  <h3 className={styles.cardName}>{project.name}</h3>
-                  <span className={styles.cardYear}>{project.year}</span>
-                </div>
-                <p className={styles.cardDescription}>{project.description}</p>
-                {project.tags?.length ? (
-                  <div className={styles.tags}>
-                    {project.tags.map((tag) => (
-                      <span key={tag} className={styles.tag}>
-                        {tag}
+            {current.map((project) => {
+              const isLive = Boolean(project.href && project.href !== "#");
+              return (
+                <article key={project.id} className={styles.card}>
+                  <div className={styles.cardMedia}>
+                    {project.video ? (
+                      <ProjectVideo
+                        src={project.video}
+                        poster={project.poster}
+                        alt={project.posterAlt ?? project.name}
+                        label={project.name}
+                      />
+                    ) : (
+                      <MediaFrame
+                        image={project.image}
+                        alt={project.name}
+                        Illustration={project.Illustration}
+                        label={project.name}
+                        tone="neutral"
+                      />
+                    )}
+                    {isLive ? (
+                      <span className={styles.cardMediaIcon} aria-hidden="true">
+                        <ArrowUpRight size={16} />
                       </span>
-                    ))}
+                    ) : null}
                   </div>
-                ) : null}
-              </a>
-            ))}
+                  <div className={styles.cardHead}>
+                    <h3 className={styles.cardName}>{project.name}</h3>
+                    <span className={styles.cardYear}>{project.year}</span>
+                  </div>
+                  <p className={styles.cardDescription}>{project.description}</p>
+                  {project.tags?.length ? (
+                    <ul className={styles.tags} aria-label="Kullanılan teknolojiler">
+                      {project.tags.map((tag) => (
+                        <li key={tag} className={styles.tag} lang="en">
+                          {tag}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {isLive ? (
+                    <a
+                      href={project.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={styles.cardLink}
+                      aria-label={`${project.name} projesini incele (yeni sekmede açılır)`}
+                    >
+                      Projeyi İncele
+                      <ArrowUpRight size={15} aria-hidden="true" />
+                    </a>
+                  ) : null}
+                </article>
+              );
+            })}
           </motion.div>
         </AnimatePresence>
       </div>

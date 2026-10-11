@@ -54,17 +54,28 @@
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+/* 16:10 — ürün videolarının ve ekran görüntülerinin doğal oranı. */
 .cardMedia {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 10;
   border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: 0 0 0 1px var(--color-line);
+  transition: box-shadow 0.4s var(--ease);
+}
+
+/* Yalnızca gölge: transform burada yeni bir katman bağlamı açıp video düğmesini
+   kart bağlantısının altında bırakırdı. */
+.card:hover .cardMedia,
+.card:focus-within .cardMedia {
+  box-shadow: 0 0 0 1px var(--color-line), 0 20px 44px -24px rgba(17, 17, 16, 0.4);
 }
 
 .cardMediaIcon {
@@ -84,7 +95,13 @@
   transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
 }
 
-.card:hover .cardMediaIcon {
+.cardMediaIcon {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.card:hover .cardMediaIcon,
+.card:focus-within .cardMediaIcon {
   opacity: 1;
   transform: translateY(0);
 }
@@ -113,6 +130,10 @@
   line-height: 1.6;
   color: var(--color-ink-soft);
   max-width: 46ch;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
 }
 
 .tags {
@@ -131,6 +152,48 @@
   border-radius: var(--radius-pill);
   background: var(--color-bg-soft);
   color: var(--color-ink-soft);
+}
+
+/* Bağlantı kartın altına hizalanır; ::after ile tüm kart tıklanabilir olur. */
+.cardLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-top: auto;
+  padding-block: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--color-ink);
+  transition: gap 0.3s var(--ease);
+}
+
+.cardLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--radius-lg);
+}
+
+.card:hover .cardLink {
+  gap: 10px;
+}
+
+.cardLink:focus-visible {
+  outline: none;
+}
+
+.cardLink:focus-visible::after {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardMedia,
+  .cardLink {
+    transition: none;
+  }
 }
 
 @media (max-width: 720px) {

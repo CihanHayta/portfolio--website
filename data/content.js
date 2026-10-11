@@ -108,7 +108,46 @@ export const processSteps = [
   { id: "launch", label: "Yayına Alma", description: "İzleme, yedekleme ve sonraki adımlar için bir planla birlikte production'a çıkış." },
 ];
 
+// `video` + `poster` verilirse kartta sessiz ürün videosu önizlemesi oynar
+// (video/ klasöründeki Remotion projesiyle üretilir: `cd video && npm run render`).
+// Etiketler ilgili projenin package.json'ından doğrulanmıştır.
 export const projects = [
+  {
+    id: 5,
+    name: "KPI Control Center",
+    year: "2026",
+    description:
+      "Dijital pazarlama ajansları için operasyon paneli — müşterilerden günlük KPI verisi toplar; haftalık raporları, başa baş ROAS hesabını ve takip notlarını tek yerden yönetir.",
+    tags: ["Next.js", "TypeScript", "Supabase", "Recharts"],
+    href: "https://kpi-control-center.vercel.app/login",
+    video: "/videos/projects/kpi-control-center.mp4",
+    poster: "/videos/projects/kpi-control-center-poster.jpg",
+    posterAlt: "KPI Control Center operasyon paneli: KPI bekleyen müşteriler, yaklaşan randevular ve takipler",
+  },
+  {
+    id: 6,
+    name: "Diyetisyen CRM",
+    year: "2026",
+    description:
+      "Diyetisyenler için danışan yönetim sistemi — danışan kartları, vücut ölçümü ve hedef takibi, öğün öğün beslenme programı, randevular ve haftalık takip tek panelde.",
+    tags: ["Next.js", "Express", "Prisma", "PostgreSQL"],
+    href: "https://crm-diyetisyen-l1o3.vercel.app/login",
+    video: "/videos/projects/diyetisyen-crm.mp4",
+    poster: "/videos/projects/diyetisyen-crm-poster.jpg",
+    posterAlt: "Diyetisyen CRM ana sayfası: bugünkü randevular, ilgilenilmesi gereken danışanlar ve ölçüm zamanı gelenler",
+  },
+  {
+    id: 7,
+    name: "Fizyoterapist CRM",
+    year: "2026",
+    description:
+      "Fizyoterapi klinikleri için CRM — hasta kayıtları, randevu takvimi, seans notları, ağrı (VAS) takibi ve klinik uyarılarla tedavi sürecini uçtan uca yönetir.",
+    tags: ["Next.js", "TypeScript", "Prisma", "PostgreSQL"],
+    href: "https://fizyoterapist-crm.vercel.app/login",
+    video: "/videos/projects/fizyoterapist-crm.mp4",
+    poster: "/videos/projects/fizyoterapist-crm-poster.jpg",
+    posterAlt: "Fizyoterapist CRM genel bakış: bugünkü randevular, sıradaki hasta ve yarının programı",
+  },
   {
     id: 0,
     name: "Şahin Emlak CRM",

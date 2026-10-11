@@ -1,0 +1,63 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+  background: var(--color-bg-soft);
+}
+
+.poster {
+  object-fit: cover;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+
+.videoVisible {
+  opacity: 1;
+}
+
+/* Görsel düğme 32px; ::before ile dokunma alanı 44px'e tamamlanır. */
+.toggle {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-dark) 78%, transparent);
+  color: var(--color-on-dark);
+  transition: background 0.3s var(--ease), transform 0.3s var(--ease);
+}
+
+.toggle::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
+.toggle:hover {
+  background: var(--color-dark);
+  transform: scale(1.06);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video,
+  .toggle {
+    transition: none;
+  }
+}

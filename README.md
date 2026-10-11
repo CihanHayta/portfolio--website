@@ -35,6 +35,15 @@ Open [http://localhost:3000](http://localhost:3000).
 3. Add more entries to the `projects` array freely — the Work section
    paginates automatically once there are more than 4.
 
+## Project videos
+
+A project with `video` + `poster` fields in `data/content.js` shows a muted
+product video preview on its card (`components/ProjectVideo.jsx`): poster
+first, plays only while visible, one card at a time, never autoplays under
+`prefers-reduced-motion` or data saver. The videos are generated from real
+app screenshots in `public/projects/` by the Remotion project in `video/` —
+see `video/README.md`.
+
 ## Customizing the look
 
 - Accent color: `--color-accent` in `app/globals.css` (currently a
