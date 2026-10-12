@@ -2,7 +2,8 @@ import { blog, profile } from "@/data/content";
 import { SITE_URL } from "@/lib/supabase/env";
 import { listPublishedForFeeds } from "@/lib/blog/queries";
 
-export const revalidate = 3600;
+// Her istekte üretilir: yeni yayımlanan ya da kaldırılan yazı anında yansır.
+export const dynamic = "force-dynamic";
 
 const escapeXml = (value) =>
   String(value ?? "").replace(

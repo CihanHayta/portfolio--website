@@ -30,8 +30,6 @@ function dbError(error) {
 
 function revalidatePost(slug) {
   revalidatePath("/blog");
-  revalidatePath("/sitemap.xml");
-  revalidatePath("/blog/rss.xml");
   if (slug) revalidatePath(`/blog/${slug}`);
 }
 

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured } from "@/lib/supabase/env";
+import {
+  AUTH_COOKIE_OPTIONS,
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  isSupabaseConfigured,
+} from "@/lib/supabase/env";
 
 // Yönetim rotalarında oturum çerezini yeniler ve giriş yapmamış isteği
 // sayfa hiç render edilmeden giriş ekranına çevirir. Yetki (yönetici mi?)
@@ -18,6 +23,7 @@ export async function proxy(request) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookieOptions: AUTH_COOKIE_OPTIONS,
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (toSet) => {
