@@ -1,0 +1,185 @@
+.field {
+  border-radius: 10px;
+  background: var(--blog-bg);
+}
+
+.field[data-compact="true"] {
+  border: 1px solid var(--blog-line-strong);
+}
+
+.field[data-compact="true"]:focus-within {
+  border-color: var(--blog-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blog-accent) 16%, transparent);
+}
+
+.loading {
+  padding: 14px;
+  color: var(--blog-ink-soft);
+  font-size: 13.5px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--blog-line);
+  border-radius: 8px;
+  background: var(--blog-bg);
+}
+
+.field[data-compact="true"] .toolbar {
+  border: 0;
+  border-bottom: 1px solid var(--blog-line);
+  border-radius: 10px 10px 0 0;
+}
+
+/* Tuvaldeki sürümde araç çubuğu metnin üstünde yapışık kalır. */
+.field[data-compact="false"] .toolbar {
+  position: sticky;
+  top: 8px;
+  z-index: 4;
+  margin-bottom: 10px;
+  box-shadow: var(--blog-shadow-card);
+}
+
+.tool {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--blog-ink);
+  cursor: pointer;
+}
+
+.tool:hover {
+  background: var(--blog-bg-muted);
+}
+
+.tool[aria-pressed="true"] {
+  background: var(--blog-accent-soft);
+  color: var(--blog-accent);
+}
+
+.tool:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  margin-inline: 4px;
+  background: var(--blog-line);
+}
+
+.context {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--blog-bg-muted);
+}
+
+.field[data-compact="true"] .context {
+  margin: 0;
+  border-radius: 0;
+}
+
+.context input {
+  flex: 1 1 160px;
+  min-width: 0;
+  min-height: 34px;
+  padding: 4px 10px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: 6px;
+  background: var(--blog-bg);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+.contextPrimary,
+.contextButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.contextPrimary {
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+}
+
+.contextButton {
+  border: 1px solid var(--blog-line-strong);
+  background: var(--blog-bg);
+}
+
+.contextButton[data-danger="true"] {
+  color: var(--blog-danger);
+}
+
+.contextError {
+  flex-basis: 100%;
+  color: var(--blog-danger);
+  font-size: 12.5px;
+}
+
+.content {
+  cursor: text;
+}
+
+.editable {
+  min-height: 1.75em;
+  outline: none;
+}
+
+.field[data-compact="true"] .editable {
+  min-height: 96px;
+  padding: 10px 12px;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.editable :global(p.is-editor-empty:first-child)::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--blog-ink-faint);
+  pointer-events: none;
+}
+
+.editable :global(.tableWrapper) {
+  overflow-x: auto;
+  border: 1px solid var(--blog-line);
+  border-radius: 12px;
+}
+
+.editable :global(.selectedCell) {
+  background: var(--blog-accent-soft);
+}
+
+@media (pointer: coarse) {
+  .tool {
+    width: 40px;
+    height: 40px;
+  }
+
+  .context input,
+  .contextPrimary,
+  .contextButton {
+    min-height: 42px;
+    font-size: 16px;
+  }
+}

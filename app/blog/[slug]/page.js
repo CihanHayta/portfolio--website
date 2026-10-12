@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { profile } from "@/data/content";
+import { faqSchemaItems } from "@/lib/blog/blocks/model";
 import { SITE_URL } from "@/lib/supabase/env";
 import { getPostBySlug, getRedirectSlug, listRelatedPosts } from "@/lib/blog/queries";
 import ArticleCta from "@/components/blog/ArticleCta";
@@ -93,10 +94,27 @@ export default async function BlogPostPage({ params }) {
     ],
   };
 
+  // Yalnızca yazarın işaretlediği ve sayfada görünen sorular.
+  const faqItems = faqSchemaItems(post.content);
+  const faqSchema = faqItems.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqItems.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: { "@type": "Answer", text: item.answer },
+        })),
+      }
+    : null;
+
   return (
     <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(articleSchema)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(breadcrumbSchema)} />
+      {faqSchema ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(faqSchema)} />
+      ) : null}
 
       <ArticleView post={post}>
         <ArticleCta />

@@ -34,9 +34,11 @@ export async function proxy(request) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims, imzayı projenin açık anahtarıyla yerelde doğrular ve süresi
+  // dolmuş oturumu yeniler. Yetkinin asıl denetimi (getUser + blog_admins)
+  // her sayfada ve sunucu işleminde ayrıca yapılır.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   if (!user && !isLogin) {
     if (isApi) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });

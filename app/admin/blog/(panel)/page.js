@@ -3,8 +3,7 @@ import { FilePlus2, Search } from "lucide-react";
 import { requireAdmin } from "@/lib/blog/admin";
 import { STATE_LABELS, formatDateTime, postState } from "@/lib/blog/format";
 import PostRowActions from "@/components/admin/PostRowActions";
-import { createDraft } from "./actions";
-import styles from "../admin.module.css";
+import styles from "../../admin.module.css";
 
 const first = (value) => (Array.isArray(value) ? value[0] : value) ?? "";
 const VIEW_TITLES = { "": "Tüm Yazılar", drafts: "Taslaklar", trash: "Çöp Kutusu" };
@@ -55,12 +54,10 @@ export default async function AdminPostsPage({ searchParams }) {
     <div className={styles.card}>
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle}>{VIEW_TITLES[view]}</h1>
-        <form action={createDraft}>
-          <button type="submit" className={styles.btnPrimary}>
-            <FilePlus2 size={17} aria-hidden="true" />
-            Yeni yazı
-          </button>
-        </form>
+        <Link href="/admin/blog/new" className={styles.btnPrimary}>
+          <FilePlus2 size={17} aria-hidden="true" />
+          Yeni yazı
+        </Link>
       </div>
 
       <form method="get" className={styles.filters} role="search">

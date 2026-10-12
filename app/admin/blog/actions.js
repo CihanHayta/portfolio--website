@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { profile } from "@/data/content";
 import { ADMIN_POST_FIELDS, getAdmin } from "@/lib/blog/admin";
-import { docText, readingMinutes, sanitizeDoc } from "@/lib/blog/content";
+import { contentText, sanitizeContent } from "@/lib/blog/blocks/model";
+import { readingMinutes } from "@/lib/blog/content";
 import { SLUG_PATTERN, slugify } from "@/lib/blog/slug";
 import { MEDIA_BUCKET } from "@/lib/supabase/env";
 
@@ -39,31 +40,14 @@ function isAutoSlug(slug) {
 
 // --- Yazılar ----------------------------------------------------------------
 
-export async function createDraft() {
-  const admin = await getAdmin();
-  if (!admin) redirect("/admin/login");
-
-  const { data, error } = await admin.supabase
-    .from("blog_posts")
-    .insert({
-      slug: `taslak-${randomUUID().slice(0, 8)}`,
-      author_id: admin.user.id,
-      author_name: admin.displayName || profile.fullName,
-    })
-    .select("id")
-    .single();
-
-  if (error) throw new Error(dbError(error));
-  redirect(`/admin/blog/${data.id}`);
-}
-
 function parsePostInput(input) {
   const slug = slugify(input.slug);
   if (!SLUG_PATTERN.test(slug)) {
     return { error: "Kalıcı bağlantı en az bir harf ya da rakam içermeli." };
   }
 
-  const content = sanitizeDoc(input.content);
+  // Tanınmayan blokları, alanları ve güvensiz adresleri atar.
+  const content = sanitizeContent(input.content);
   if (JSON.stringify(content).length > MAX_CONTENT_BYTES) {
     return { error: "İçerik çok uzun. Yazıyı bölmeyi dene." };
   }
@@ -84,7 +68,7 @@ function parsePostInput(input) {
   }
   if (tags.length > MAX_TAGS) return { error: `En fazla ${MAX_TAGS} etiket eklenebilir.` };
 
-  const contentText = docText(content);
+  const text = contentText(content);
 
   return {
     tags,
@@ -93,8 +77,8 @@ function parsePostInput(input) {
       slug,
       excerpt: clip(input.excerpt, 200),
       content,
-      content_text: contentText,
-      reading_minutes: readingMinutes(contentText),
+      content_text: text,
+      reading_minutes: readingMinutes(text),
       cover_media_id: uuidOrNull(input.coverMediaId),
       cover_alt: clip(input.coverAlt, 300),
       category_id: uuidOrNull(input.categoryId),
@@ -149,6 +133,36 @@ async function updateWithRevision(supabase, id, revision, changes) {
       conflict: true,
     });
   }
+  return { ok: true, post: data };
+}
+
+// Yeni yazı ilk kaydedildiğinde oluşturulur; editörü açmak tek başına
+// veritabanına kayıt atmaz.
+export async function createPost(input) {
+  const admin = await getAdmin();
+  if (!admin) return UNAUTHORIZED;
+  if (!input) return fail("Geçersiz istek.");
+
+  const parsed = parsePostInput({
+    ...input,
+    slug: slugify(input.slug) || `taslak-${randomUUID().slice(0, 8)}`,
+  });
+  if (parsed.error) return fail(parsed.error);
+
+  const { data, error } = await admin.supabase
+    .from("blog_posts")
+    .insert({
+      ...parsed.row,
+      author_id: admin.user.id,
+      author_name: admin.displayName || profile.fullName,
+    })
+    .select("id, slug, status, published_at, revision, updated_at")
+    .single();
+  if (error) return fail(dbError(error));
+
+  const tagError = await syncTags(admin.supabase, data.id, parsed.tags);
+  if (tagError) return fail(dbError(tagError));
+
   return { ok: true, post: data };
 }
 

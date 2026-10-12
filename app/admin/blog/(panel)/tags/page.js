@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/blog/admin";
 import TaxonomyManager from "@/components/admin/TaxonomyManager";
-import styles from "../../admin.module.css";
+import styles from "../../../admin.module.css";
 
 export default async function AdminTagsPage() {
   const { supabase } = await requireAdmin();

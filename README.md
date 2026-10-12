@@ -41,6 +41,15 @@ Open [http://localhost:3000](http://localhost:3000).
 - `/blog/[slug]` — yazı sayfası (içindekiler, ilgili yazılar, JSON-LD)
 - `/admin/blog` — giriş gerektiren yönetim paneli (editör, medya, kategoriler, etiketler)
 
+Yazılar blok tabanlı bir editörle hazırlanır (`components/admin/builder/`):
+solda blok kütüphanesi ve şablonlar, ortada tuval, sağda seçili bloğun
+ayarları. Blok türleri ve alanları tek bir şemada tanımlıdır
+(`lib/blog/blocks/registry.js`); ayar paneli, sunucu doğrulaması ve yayındaki
+görünüm (`components/blog/Blocks.jsx`) aynı şemadan beslenir. İçerik
+`blog_posts.content` sütununda `{ type: "blocks", blocks: [...] }` olarak
+saklanır; eski (Tiptap) biçimindeki yazılar da okunur ve editörde açıldığında
+bloklara çevrilir. Blok modelinin birim testleri: `npm test`.
+
 Veriler Supabase'de durur (Postgres + Storage + Auth). Yetkilendirmenin tamamı
 `supabase/migrations/` içindeki RLS politikalarıyla yapılır; uygulama yalnızca
 anon anahtarı kullanır, `service_role` anahtarına ihtiyaç yoktur.

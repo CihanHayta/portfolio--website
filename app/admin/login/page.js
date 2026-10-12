@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Header from "@/components/Header";
 import { getAdmin } from "@/lib/blog/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import LoginForm from "./LoginForm";
@@ -11,6 +12,8 @@ export default async function LoginPage() {
   const configured = isSupabaseConfigured();
 
   return (
+    <>
+    <Header variant="blog" />
     <main className={styles.loginPage}>
       <div className={styles.loginCard}>
         <h1 className={styles.loginTitle}>Blog Yönetimi</h1>
@@ -27,5 +30,6 @@ export default async function LoginPage() {
         <LoginForm disabled={!configured} />
       </div>
     </main>
+    </>
   );
 }

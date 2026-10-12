@@ -2,15 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays, ChevronRight, Clock, ListTree, UserRound } from "lucide-react";
 import { profile } from "@/data/content";
-import { collectHeadings } from "@/lib/blog/content";
+import { contentHeadings, isBlocksContent } from "@/lib/blog/blocks/model";
 import { formatDate } from "@/lib/blog/format";
+import Blocks from "./Blocks";
 import PostContent from "./PostContent";
 import styles from "./ArticleView.module.css";
 
 // Yazının ziyaretçiye görünen hali. Hem /blog/[slug] sayfası hem de yönetim
 // panelindeki önizleme aynı bileşeni kullanır.
 export default function ArticleView({ post, children }) {
-  const headings = collectHeadings(post.content);
+  const headings = contentHeadings(post.content);
   const showToc = headings.length >= 2;
   const publishedDay = post.published_at?.slice(0, 10);
   const wasUpdated = post.updated_at && publishedDay && post.updated_at.slice(0, 10) > publishedDay;
@@ -98,7 +99,11 @@ export default function ArticleView({ post, children }) {
             </details>
           ) : null}
 
-          <PostContent doc={post.content} />
+          {isBlocksContent(post.content) ? (
+            <Blocks blocks={post.content.blocks} headings={headings} />
+          ) : (
+            <PostContent doc={post.content} />
+          )}
 
           {post.tags?.length ? (
             <ul className={styles.tags} aria-label="Etiketler">

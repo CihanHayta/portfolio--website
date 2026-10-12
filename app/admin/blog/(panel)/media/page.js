@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/blog/admin";
 import MediaLibrary from "@/components/admin/MediaLibrary";
-import styles from "../../admin.module.css";
+import styles from "../../../admin.module.css";
 
 export default async function AdminMediaPage() {
   await requireAdmin();
