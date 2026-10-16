@@ -13,7 +13,7 @@ export default async function LoginPage() {
 
   return (
     <>
-    <Header variant="blog" />
+    <Header />
     <main className={styles.loginPage}>
       <div className={styles.loginCard}>
         <h1 className={styles.loginTitle}>Blog Yönetimi</h1>

@@ -4,7 +4,7 @@
 .blocks {
   container-type: inline-size;
   container-name: blocks;
-  color: #26292a;
+  color: #2b2824;
   font-size: 17px;
   line-height: 1.75;
 }
@@ -146,7 +146,7 @@
 
 .video {
   aspect-ratio: 16 / 9;
-  background: #101513;
+  background: var(--p-night);
   overflow: hidden;
 }
 
@@ -276,8 +276,8 @@ a.button[data-variant="light"]:hover {
   background: var(--callout-bg);
   font-size: 15.5px;
   line-height: 1.6;
-  --callout-color: #1d5fbf;
-  --callout-bg: #eef4fd;
+  --callout-color: var(--p-stone);
+  --callout-bg: var(--blog-bg-muted);
 }
 
 .callout > svg {
@@ -292,13 +292,15 @@ a.button[data-variant="light"]:hover {
 }
 
 .callout[data-variant="success"] {
-  --callout-color: var(--blog-accent);
+  --callout-color: var(--p-night);
   --callout-bg: var(--blog-accent-soft);
 }
 
+/* Öne çıkan not: altın kenar; ikon okunurluk için ceviz. */
 .callout[data-variant="note"] {
-  --callout-color: #6b3fd4;
-  --callout-bg: #f3effd;
+  --callout-color: var(--p-walnut);
+  --callout-bg: #f8f0de;
+  border-left-color: var(--p-gold);
 }
 
 .calloutTitle {
@@ -425,12 +427,12 @@ a.button[data-variant="light"]:hover {
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(8, 14, 12, 0.72), rgba(8, 14, 12, 0.28));
+  background: linear-gradient(90deg, rgba(20, 20, 20, 0.74), rgba(20, 20, 20, 0.28));
 }
 
 .hero[data-align="center"] .heroOverlay,
 .hero[data-align="right"] .heroOverlay {
-  background: rgba(8, 14, 12, 0.5);
+  background: rgba(20, 20, 20, 0.52);
 }
 
 .heroBody {
@@ -544,14 +546,14 @@ a.button[data-variant="light"]:hover {
 
 .cta[data-tone="dark"] {
   border-color: transparent;
-  background: #101513;
+  background: var(--p-night);
   color: #ffffff;
 }
 
 .cta[data-tone="accent"] {
   border-color: transparent;
-  background: var(--blog-accent);
-  color: #ffffff;
+  background: var(--p-gold);
+  color: var(--p-night);
 }
 
 .cta[data-layout="center"] {
@@ -770,7 +772,7 @@ a.button[data-variant="light"]:hover {
 }
 
 .toc a {
-  color: var(--blog-accent);
+  color: var(--blog-link);
   font-weight: 600;
 }
 

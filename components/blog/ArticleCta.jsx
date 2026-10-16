@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Send } from "lucide-react";
 import ContactModal from "@/components/ContactModal";
+import { ctaLabel } from "@/data/content";
 import styles from "./ArticleCta.module.css";
 
 // Sitenin mevcut iletişim formunu (WhatsApp'a yönlenen ContactModal) açar;
@@ -14,19 +15,19 @@ export default function ArticleCta() {
   return (
     <aside className={styles.cta} aria-labelledby="yazi-cta-baslik">
       <h2 id="yazi-cta-baslik" className={styles.title}>
-        Benzer bir projeyi birlikte konuşalım
+        Markanızı doğru kitleye birlikte anlatalım
       </h2>
       <p className={styles.text}>
-        Ürününü geliştirmek ya da doğru kitleye ulaştırmak için destek arıyorsan projeni kısaca
-        anlat; birlikte bir yol haritası çıkaralım.
+        Reklam, içerik ya da görsel tarafında destek arıyorsanız ücretsiz analizle başlayalım;
+        mevcut durumunuzu inceleyip bir yol haritası çıkaralım.
       </p>
       <div className={styles.actions}>
         <button type="button" className={styles.primary} onClick={() => setOpen(true)}>
           <Send size={16} aria-hidden="true" />
-          İletişime geç
+          {ctaLabel}
         </button>
-        <Link href="/#services" className={styles.secondary}>
-          Hizmetleri incele
+        <Link href="/#yontem" className={styles.secondary}>
+          Nasıl çalışıyoruz?
           <ArrowRight size={15} aria-hidden="true" />
         </Link>
       </div>

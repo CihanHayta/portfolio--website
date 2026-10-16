@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { profile } from "@/data/content";
+import { brand, ctaLabel, profile } from "@/data/content";
 import { WhatsappIcon } from "./icons";
 import styles from "./ContactModal.module.css";
 
@@ -20,14 +20,14 @@ const initialForm = {
 
 function buildWhatsappMessage(form) {
   const lines = [
-    `Merhaba ${profile.firstName}, bir proje hakkında konuşmak istiyorum.`,
+    `Merhaba, ${brand.legalName} için ücretsiz analiz talep ediyorum.`,
     "",
     `İsim: ${form.name}`,
     `E-posta: ${form.email}`,
     `Zamanlama: ${form.timeline}`,
-    form.budget ? `Bütçe: $${form.budget}` : null,
+    form.budget ? `Aylık reklam bütçesi: ${form.budget} ₺` : null,
     "",
-    "Proje detayları:",
+    "Markam ve hedefim:",
     form.details,
   ].filter(Boolean);
 
@@ -98,12 +98,12 @@ export default function ContactModal({ open, onClose }) {
             </button>
 
             <div className={styles.header}>
-              <span className={styles.avatar}>{profile.firstName[0]}</span>
+              <span className={styles.avatar}>{brand.name[0]}</span>
               <div>
                 <h2 id="contact-modal-title" className={styles.title}>
-                  İletişime Geç
+                  {ctaLabel}
                 </h2>
-                <p className={styles.subtitle}>Genellikle bir gün içinde dönüş yapıyorum</p>
+                <p className={styles.subtitle}>Genellikle bir iş günü içinde dönüş yapıyoruz</p>
               </div>
             </div>
 
@@ -135,14 +135,14 @@ export default function ContactModal({ open, onClose }) {
 
               <label className={styles.field}>
                 <span className={styles.label}>
-                  Proje detayları <span className={styles.hint}>En az 50 karakter</span>
+                  Markanız ve hedefiniz <span className={styles.hint}>En az 50 karakter</span>
                 </span>
                 <textarea
                   required
                   minLength={50}
                   value={form.details}
                   onChange={update("details")}
-                  placeholder="Ürününüz, hedefleriniz ve neyin geliştirilmesini istediğiniz hakkında bilgi verin."
+                  placeholder="Ne sattığınızı, kime ulaşmak istediğinizi ve şu an reklam ya da içerik tarafında ne yaptığınızı kısaca anlatın."
                   className={styles.textarea}
                   rows={4}
                 />
@@ -164,9 +164,9 @@ export default function ContactModal({ open, onClose }) {
                   </select>
                 </label>
                 <label className={styles.field}>
-                  <span className={styles.label}>Bütçe (USD)</span>
+                  <span className={styles.label}>Aylık reklam bütçesi</span>
                   <div className={styles.budgetInput}>
-                    <span>$</span>
+                    <span>₺</span>
                     <input
                       type="number"
                       min="0"

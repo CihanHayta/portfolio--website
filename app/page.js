@@ -1,10 +1,16 @@
 import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import Gallery from "@/components/Gallery";
-import Services from "@/components/Services";
-import Process from "@/components/Process";
-import Work from "@/components/Work";
-import Contact from "@/components/Contact";
+import SiteFooter from "@/components/SiteFooter";
+import {
+  Audience,
+  Compare,
+  Faq,
+  FinalCta,
+  Hero,
+  Method,
+  Principles,
+  Problems,
+  Start,
+} from "@/components/home/HomeSections";
 
 export default function Home() {
   return (
@@ -12,12 +18,16 @@ export default function Home() {
       <Header />
       <main>
         <Hero />
-        <Work />
-        <Gallery />
-        <Services />
-        <Process />
+        <Problems />
+        <Method />
+        <Principles />
+        <Compare />
+        <Audience />
+        <Start />
+        <Faq />
+        <FinalCta />
       </main>
-      <Contact />
+      <SiteFooter />
     </>
   );
 }

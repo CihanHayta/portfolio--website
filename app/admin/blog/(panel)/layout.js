@@ -15,7 +15,7 @@ export default async function AdminPanelLayout({ children }) {
 
   return (
     <>
-      <Header variant="blog" />
+      <Header />
       <div className={styles.shell}>
         {/* Sayılar gelene kadar menü sayısız görünür; sayfa içeriği beklemez. */}
         <Suspense fallback={<AdminSidebar counts={null} />}>

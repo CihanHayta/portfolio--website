@@ -390,7 +390,7 @@
 
 .skeleton {
   border-radius: var(--blog-radius-card);
-  background: linear-gradient(90deg, var(--blog-bg-muted) 25%, #eceeed 50%, var(--blog-bg-muted) 75%);
+  background: linear-gradient(90deg, var(--blog-bg-muted) 25%, #ebe3d6 50%, var(--blog-bg-muted) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
 }

@@ -1,32 +1,40 @@
-import { Playfair_Display, Manrope } from "next/font/google";
+import { Montserrat, Playfair_Display } from "next/font/google";
+import { brand } from "@/data/content";
 import { SITE_URL } from "@/lib/supabase/env";
 import "./globals.css";
 
-const playfair = Playfair_Display({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
+// Marka fontları: başlık ve metin Montserrat, vurgu Playfair Display İtalik.
+// latin-ext: Türkçe karakterler (ğ, ş, ı, İ) için gerekli.
+const montserrat = Montserrat({
+  variable: "--font-sans",
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
-const manrope = Manrope({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+const playfair = Playfair_Display({
+  variable: "--font-display",
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600"],
+  style: ["italic"],
   display: "swap",
 });
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Cihan Hayta — Full-Stack Geliştirici",
+  title: `${brand.legalName} — Reklam, İçerik ve Görsel`,
   description:
-    "Uçtan uca SaaS ürünleri tasarlayıp geliştiren full-stack yazılım geliştirici. Seçili projelerimi, hizmetlerimi keşfedin ve benimle iletişime geçin.",
+    "Meta reklamları, Reels içerikleri ve yapay zekâ destekli showroom görselleriyle markanızı doğru müşteriye ulaştıran dijital pazarlama ajansı.",
+  openGraph: {
+    type: "website",
+    siteName: brand.legalName,
+    locale: "tr_TR",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="tr" className={`${playfair.variable} ${manrope.variable}`}>
+    <html lang="tr" className={`${montserrat.variable} ${playfair.variable}`}>
       <body>{children}</body>
     </html>
   );

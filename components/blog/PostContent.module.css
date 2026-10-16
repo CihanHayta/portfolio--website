@@ -1,7 +1,7 @@
 .prose {
   font-size: 17px;
   line-height: 1.75;
-  color: #26292a;
+  color: #2b2824;
   overflow-wrap: anywhere;
 }
 
@@ -38,7 +38,7 @@
 }
 
 .prose a {
-  color: var(--blog-accent);
+  color: var(--blog-link);
   font-weight: 600;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -67,7 +67,7 @@
 }
 
 .prose li::marker {
-  color: var(--blog-accent);
+  color: var(--blog-link);
   font-weight: 700;
 }
 
@@ -95,8 +95,8 @@
 .prose pre {
   padding: 18px 20px;
   border-radius: 12px;
-  background: #101513;
-  color: #e8efeb;
+  background: var(--p-night);
+  color: var(--p-cream);
   overflow-x: auto;
   font-size: 14px;
   line-height: 1.65;
@@ -194,7 +194,7 @@
   aspect-ratio: 16 / 9;
   border-radius: 12px;
   overflow: hidden;
-  background: #101513;
+  background: var(--p-night);
 }
 
 .video iframe {

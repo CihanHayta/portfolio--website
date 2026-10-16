@@ -1,130 +1,257 @@
+import { Mail } from "lucide-react";
+import { InstagramIcon, LinkedinIcon } from "@/components/icons";
 import {
-  Mail,
-  LayoutDashboard,
-  Smartphone,
-  BarChart3,
-  Boxes,
-  Megaphone,
-  TrendingUp,
-} from "lucide-react";
-import { GithubIcon, LinkedinIcon, InstagramIcon } from "@/components/icons";
-import {
-  DashboardIllustration,
-  MobileAppIllustration,
-  AnalyticsIllustration,
-  StrategyIllustration,
-  CodeIllustration,
-  MarketingIllustration,
-  SeoIllustration,
-  KanbanIllustration,
   BillingIllustration,
   InboxIllustration,
+  KanbanIllustration,
   LandingIllustration,
 } from "@/components/illustrations";
 
 // ---------------------------------------------------------------------------
-// Bu portfolyoyu kendine göre düzenlemek için aşağıdaki değerleri güncelle.
-// Gerçek görsellerin olduğunda `image` alanlarına /public altındaki bir yolu
-// yaz (örn. "/images/project-1.png") — o zamana kadar bir placeholder gösterilir.
+// Sitedeki metinlerin tamamı bu dosyadadır. Metinleri değiştirmek için kod
+// bilmeye gerek yok: tırnak içindeki yazıları düzenleyip kaydetmek yeterli.
 // ---------------------------------------------------------------------------
+
+export const brand = {
+  name: "Persona",
+  suffix: "Dijital",
+  legalName: "Persona Dijital Pazarlama",
+  tagline: "Dijital Pazarlama Ajansı",
+};
 
 export const profile = {
   firstName: "Cihan",
-  lastNameDisplay: "-Hayta",
   fullName: "Cihan Hayta",
-  role: "Full-Stack Geliştirici",
+  role: "Kurucu · Persona Dijital Pazarlama",
   email: "cihanhayta8080@gmail.com",
-  phone: "+90 539 941 71 05 ",
+  phone: "+90 539 941 71 05",
   // Sadece rakam, başında ülke kodu, + veya boşluk yok — WhatsApp linki için kullanılır.
-  whatsapp: "905551234567",
-  location: "İstanbul, Türkiye",
-  bio: "Cihan Hayta, uçtan uca SaaS ürünleri tasarlayıp geliştiren bir full-stack yazılım geliştiricisidir. Detaylara verdiği önem ve temiz mimariye olan tutkusuyla, girişimcilerin ve ekiplerin fikirlerini hızlı, güvenilir ve production'a hazır yazılımlara dönüştürmesine yardımcı olur.",
+  whatsapp: "905399417105",
 };
 
 export const socials = [
-  { name: "GitHub", href: "https://github.com/CihanHayta", Icon: GithubIcon },
-  { name: "LinkedIn", href: "https://www.linkedin.com/in/cihan-hayta-4586671a0/", Icon: LinkedinIcon },
   { name: "Instagram", href: "https://www.instagram.com/persona_dijital_pazarlama/", Icon: InstagramIcon },
+  { name: "LinkedIn", href: "https://www.linkedin.com/in/cihan-hayta-4586671a0/", Icon: LinkedinIcon },
   { name: "E-posta", href: "mailto:cihanhayta8080@gmail.com", Icon: Mail },
 ];
 
 export const navLinks = [
-  { label: "Projeler", href: "/#work" },
-  { label: "Hizmetler", href: "/#services" },
-  { label: "Süreç", href: "/#process" },
+  { label: "Yöntem", href: "/#yontem" },
+  { label: "Neden Persona", href: "/#neden" },
+  { label: "SSS", href: "/#sss" },
   { label: "Blog", href: "/blog" },
-  { label: "İletişim", href: "/#contact" },
 ];
+
+export const ctaLabel = "Ücretsiz Analiz Al";
+
+// Ana sayfa bölümleri yukarıdan aşağıya bu sırayla görünür.
+export const home = {
+  hero: {
+    badge: "Dijital Pazarlama Ajansı",
+    // Başlık üç parçadır; ortadaki parça altın renkte ve italik görünür.
+    titleStart: "Reklam, içerik ve görselle markanızı",
+    titleAccent: "doğru müşteriye",
+    titleEnd: "ulaştırıyoruz.",
+    description:
+      "Meta reklamları, Reels içerikleri ve yapay zekâ destekli showroom görselleriyle ürününüzü doğru kitleye, doğru mesajla ve ölçülebilir biçimde anlatıyoruz.",
+    secondaryCta: "Nasıl çalışıyoruz?",
+    // Fotoğrafınızı public/images içine koyup yolunu yazın (örn. "/images/cihan.jpg").
+    // Boşken yuvarlak alanda Persona monogramı görünür.
+    portrait: null,
+    portraitAlt: "Cihan Hayta",
+    highlights: [
+      { value: "Meta", label: "Reklam yönetimi" },
+      { value: "Reels", label: "İçerik üretimi" },
+      { value: "AI", label: "Showroom görselleri" },
+    ],
+  },
+
+  problems: {
+    eyebrow: "Tanıdık geliyor mu?",
+    title: "Bunlardan birkaçı size de oluyorsa, konuşmamız gerek.",
+    hint: "Size uyanları işaretleyin",
+    items: [
+      "Reklama para harcıyorum ama hangi kampanyanın satış getirdiğini bilmiyorum.",
+      "Instagram hesabım düzenli içerik paylaşamadığım için durgun.",
+      "Ürün fotoğraflarım ürünün gerçek kalitesini yansıtmıyor.",
+      "Gelen mesajlar fiyat sorup kayboluyor.",
+      "Her ay farklı bir şey deniyorum ama oturan bir sistem yok.",
+      "Rapor alıyorum ama rakamların ne anlama geldiğini bilmiyorum.",
+    ],
+    readyText: "İkiden fazlasını işaretlediyseniz ücretsiz analizle başlayalım.",
+  },
+
+  method: {
+    id: "yontem",
+    eyebrow: "Çalışma yöntemimiz",
+    title: "Her markaya aynı reçete uygulanmaz.",
+    description: "Ürününüze, kitlenize ve bütçenize göre kurulan dört adımlı bir sistemle çalışıyoruz.",
+    steps: [
+      {
+        title: "Marka ve kitle analizi",
+        text: "Mevcut reklamlarınızı, içeriklerinizi, kitlenizi ve rakiplerinizi inceliyoruz.",
+        short: "Analiz & Kitle",
+        icon: "search",
+      },
+      {
+        title: "Strateji ve kreatif plan",
+        text: "Hedef kitle, teklif ve mesajı belirleyip Reels, kapak ve görsel planını çıkarıyoruz.",
+        short: "Strateji & Kreatif",
+        icon: "pen",
+      },
+      {
+        title: "Yayın, test ve optimizasyon",
+        text: "Kampanyaları yayına alıyor, farklı kreatifleri test ediyor ve veriye göre düzenliyoruz.",
+        short: "Yayın & Test",
+        icon: "rocket",
+      },
+      {
+        title: "Raporlama ve ölçekleme",
+        text: "Bütçenin nereye gittiğini ve ne getirdiğini sade bir raporla paylaşıp işe yarayanı büyütüyoruz.",
+        short: "Raporlama & Ölçekleme",
+        icon: "chart",
+      },
+    ],
+  },
+
+  principles: {
+    eyebrow: "Çalışma ilkelerimiz",
+    title: "Tek seferlik bir kampanya değil, büyüyen bir sistem kuruyoruz.",
+    items: [
+      {
+        title: "Sınırlı sayıda marka",
+        text: "Aynı anda çok sayıda markayla çalışmak yerine her projeye yeterli zamanı ayırıyoruz.",
+        icon: "focus",
+      },
+      {
+        title: "Veriyle karar",
+        text: "Bütçe ve kreatif kararlarını tahminle değil, kampanyalardan gelen veriyle veriyoruz.",
+        icon: "chart",
+      },
+      {
+        title: "Markaya özel kreatif",
+        text: "Hazır şablon yerine markanızın diline ve ürününüze uygun içerik üretiyoruz.",
+        icon: "sparkles",
+      },
+      {
+        title: "Gerçek ürün, gerçek renk",
+        text: "Yapay zekâ destekli görsellerde ürününüzün rengini ve kumaşını asla değiştirmiyoruz.",
+        icon: "palette",
+      },
+    ],
+  },
+
+  compare: {
+    id: "neden",
+    eyebrow: "Neden Persona?",
+    title: "Farkı yan yana görün.",
+    tableHeads: ["Konu", "Persona ile"],
+    rows: [
+      ["Strateji", "Markanıza ve ürününüze özel"],
+      ["İçerik", "Reklam planıyla birlikte üretilir"],
+      ["Görseller", "Ürünün gerçek rengi ve dokusu korunur"],
+      ["Raporlama", "Sade, anlaşılır ve düzenli"],
+    ],
+    usualTitle: "Alışılmış yaklaşım",
+    usual: [
+      { title: "Herkese aynı paket", text: "Sektör ve ürün fark etmeksizin aynı kampanya kurgusu." },
+      { title: "Ayrı ayrı ekipler", text: "Reklam bir yerde, içerik başka yerde; mesaj dağılır." },
+      { title: "Anlaşılmayan raporlar", text: "Erişim ve gösterim sayıları var, satışa etkisi belirsiz." },
+      { title: "Tesadüfi denemeler", text: "Performans düşünce bütçe kısılır, nedeni sorulmaz." },
+    ],
+    oursTitle: "Persona yaklaşımı",
+    ours: [
+      { title: "Markaya özel sistem", text: "Ürününüzü ve müşterinizi anlayarak sıfırdan kurulan bir plan." },
+      { title: "Tek elden yönetim", text: "Reklam, Reels ve görseller aynı hedefe hizmet eder." },
+      { title: "Anlaşılır rapor", text: "Hangi kampanyanın ne getirdiğini birlikte görürüz." },
+      { title: "Planlı testler", text: "Her değişiklik bir hipoteze ve ölçüme dayanır." },
+    ],
+  },
+
+  audience: {
+    eyebrow: "Uygunluk",
+    title: "Kimlerle çalışıyoruz?",
+    yes: [
+      "Ürününü daha fazla kişiye doğru biçimde göstermek isteyen markalar",
+      "Reklam, içerik ve görseli tek elden yönetmek isteyen işletmeler",
+      "Test etmeye ve veriyle ilerlemeye açık ekipler",
+    ],
+    no: "Bir hafta içinde mucize sonuç bekleyen ve test sürecine zaman tanımayan işletmeler için uygun değiliz.",
+  },
+
+  start: {
+    eyebrow: "Risksiz başlayın",
+    title: "İlk adım ücretsiz.",
+    description: "Birlikte çalışıp çalışmayacağımıza karar vermeden önce markanızı inceliyoruz.",
+    items: [
+      {
+        title: "Ücretsiz analiz",
+        text: "Mevcut reklamlarınızı, hesabınızı ve içeriklerinizi inceleyip neler yapılabileceğini anlatıyoruz. Hiçbir taahhüt yok.",
+        icon: "search",
+      },
+      {
+        title: "Şeffaf süreç",
+        text: "Çalışmaya başlarsak bütçenin nereye gittiğini ve ne getirdiğini düzenli olarak birlikte görüyoruz.",
+        icon: "clipboard",
+      },
+    ],
+  },
+
+  faq: {
+    id: "sss",
+    eyebrow: "SSS",
+    title: "Sıkça sorulan sorular.",
+    items: [
+      {
+        question: "Ne kadar sürede sonuç görürüm?",
+        answer:
+          "İlk veriler kampanyalar yayına girdikten sonraki birkaç hafta içinde oluşur. Kalıcı iyileşme için genellikle birkaç aylık test ve düzenleme gerekir; kesin süre sektörünüze ve bütçenize bağlıdır.",
+      },
+      {
+        question: "Minimum reklam bütçesi ne olmalı?",
+        answer:
+          "Sabit bir alt sınır yok. Ücretsiz analizde hedefinize ve sektörünüze göre gerçekçi bir bütçe aralığı öneriyoruz.",
+      },
+      {
+        question: "İçerikleri ve görselleri siz mi hazırlıyorsunuz?",
+        answer:
+          "Evet. Reels kurguları, kapak tasarımları ve yapay zekâ destekli showroom görselleri ekibimiz tarafından hazırlanır. Görsellerde ürününüzün gerçek rengi ve kumaşı korunur.",
+      },
+      {
+        question: "Hangi sektörlerle çalışıyorsunuz?",
+        answer:
+          "Ürününü görsel olarak anlatması gereken markalarla çalışıyoruz: mobilya ve ev dekorasyonu başta olmak üzere perakende, hizmet ve yerel işletmeler. Uygun olup olmadığımızı ücretsiz analizde birlikte değerlendiririz.",
+      },
+    ],
+  },
+
+  final: {
+    id: "iletisim",
+    eyebrow: "Başlamaya hazır mısınız?",
+    title: "Markanızın hikâyesini doğru kitleye birlikte anlatalım.",
+    description:
+      "Ücretsiz analiz görüşmesiyle başlıyoruz: sizi dinliyor, mevcut durumunuzu inceliyor ve bir yol haritası çıkarıyoruz.",
+  },
+};
 
 // Blog sayfasının üst bölümü. `heroImage` için /public altına bir görsel koyup
 // yolunu yaz (örn. "/images/blog-hero.jpg"); boşken sade bir panel gösterilir.
 // `avatar` yazar kartındaki fotoğraftır; boşken adının baş harfi gösterilir.
 export const blog = {
-  title: "Teknoloji, dijital pazarlama ve girişimcilik üzerine düşüncelerimi paylaşıyorum.",
+  title: "Dijital pazarlama, içerik ve marka büyütme üzerine yazılar.",
   description:
-    "Deneyimlerim, öğrendiklerim ve uyguladığım stratejilerle ilgili kapsamlı yazılar. Kendi yolculuğumdan edindiğim içgörüleri burada seninle paylaşıyorum.",
-  quote: "Daha iyi projeler, daha iyi insanlar ve daha iyi bir gelecek için.",
+    "Reklam, içerik ve görsel üretiminde uyguladığımız yöntemleri, öğrendiklerimizi ve işe yarayanları burada paylaşıyoruz.",
+  quote: "Doğru mesaj, doğru kitle, ölçülebilir sonuç.",
   heroImage: null,
   heroImageAlt: "",
   avatar: null,
-  authorTagline: "Geliştirici · Dijital Pazarlama · Girişimci",
+  authorTagline: "Kurucu · Persona Dijital Pazarlama",
   authorBio:
-    "Teknoloji, dijital pazarlama ve girişimcilik üzerine yazılar yazıyorum. Deneyimlerimi ve öğrendiklerimi burada paylaşıyorum.",
+    "Markaların ürünlerini doğru kitleye anlatmalarına yardımcı oluyor; reklam, içerik ve görsel üretimi üzerine yazıyorum.",
 };
 
-export const galleryItems = [
-  { id: 1, label: "Şahin Emlak", Icon: LayoutDashboard, Illustration: DashboardIllustration, tone: "neutral", image: "/images/sahin-emlak-cover.png" },
-  { id: 2, label: "Mobil Uygulama", Icon: Smartphone, Illustration: MobileAppIllustration, tone: "accent", image: null },
-  { id: 3, label: "Ürün Analitiği", Icon: BarChart3, Illustration: AnalyticsIllustration, tone: "dark", image: null },
-];
-
-export const services = [
-  {
-    id: "01",
-    title: "Ürün Stratejisi ve Mimarisi",
-    description:
-      "Bir fikri net bir teknik yol haritasına dönüştürmek — sistem tasarımı, veri modelleme ve işin büyümesiyle birlikte ölçeklenen teknoloji kararları.",
-    image: null,
-    Icon: Boxes,
-    Illustration: StrategyIllustration,
-  },
-  {
-    id: "02",
-    title: "Full-Stack Geliştirme",
-    description:
-      "Modern framework'lerle uçtan uca web uygulaması geliştirme — piksel mükemmelliğinde arayüzlerden sağlam, iyi test edilmiş backend mantığına kadar.",
-    image: null,
-    Icon: LayoutDashboard,
-    Illustration: CodeIllustration,
-  },
-  {
-    id: "03",
-    title: "Dijital Pazarlama",
-    description:
-      "SaaS ürününüzün doğru kitleye ulaşması için performans odaklı reklam kampanyaları, sosyal medya yönetimi ve veriye dayalı büyüme stratejileri.",
-    image: null,
-    Icon: Megaphone,
-    Illustration: MarketingIllustration,
-  },
-  {
-    id: "04",
-    title: "SEO ve Büyüme Pazarlaması",
-    description:
-      "Arama motorlarında görünürlüğü artıran SEO çalışmaları, içerik stratejisi ve organik büyümeyi hızlandıran taktiklerle sürdürülebilir trafik.",
-    image: null,
-    Icon: TrendingUp,
-    Illustration: SeoIllustration,
-  },
-];
-
-export const processSteps = [
-  { id: "discovery", label: "Keşif", description: "Tek bir satır kod yazılmadan önce hedefleri, kullanıcıları ve kısıtları anlamak." },
-  { id: "planning", label: "Planlama", description: "Mimariyi, veri akışını ve kilometre taşlarını net bir uygulama planına dökmek." },
-  { id: "build", label: "Geliştirme", description: "Yol boyunca sıkı geri bildirim döngüleriyle temiz, test edilmiş, production kalitesinde kod yazmak.", active: true },
-  { id: "test", label: "Test", description: "Her şeyin sorunsuz çalışması için cihazlar ve uç durumlar genelinde titiz testler." },
-  { id: "launch", label: "Yayına Alma", description: "İzleme, yedekleme ve sonraki adımlar için bir planla birlikte production'a çıkış." },
-];
-
+// Projeler bölümü şu an ana sayfada gösterilmiyor; veriler ve bileşen
+// (components/Work.jsx) ileride yeniden kullanmak için korunuyor.
 // `video` + `poster` verilirse kartta sessiz ürün videosu önizlemesi oynar
 // (video/ klasöründeki Remotion projesiyle üretilir: `cd video && npm run render`).
 // Etiketler ilgili projenin package.json'ından doğrulanmıştır.

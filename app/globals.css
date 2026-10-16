@@ -1,21 +1,34 @@
 :root {
-  --color-bg: #ffffff;
-  --color-bg-soft: #f4f4f0;
-  --color-ink: #111110;
-  --color-ink-soft: #6f6f6a;
-  --color-line: #e6e6e0;
-  --color-accent: #d8fb3f;
-  --color-accent-ink: #1c2400;
-  --color-dark: #0c0c0b;
-  --color-dark-soft: #1c1c1a;
-  --color-on-dark: #f4f4f0;
-  --color-on-dark-soft: #9a9a94;
+  /* Persona marka paleti */
+  --p-night: #141414; /* gece siyahı — zemin */
+  --p-night-2: #1d1c1a; /* koyu yüzey */
+  --p-night-3: #2a2825; /* koyu çizgi / kart */
+  --p-cream: #f5f0e6; /* kumaş kremi — açık zemin ve koyu üstü metin */
+  --p-cream-2: #fbf8f2; /* açık kart yüzeyi */
+  --p-cream-3: #ebe2d1; /* krem üstü çizgi */
+  --p-gold: #c9a24b; /* Persona altını — tek vurgu */
+  --p-gold-hover: #d6b263;
+  --p-stone: #6b6259; /* taş gri — açık zeminde ikincil metin */
+  --p-walnut: #7a4e2d; /* ceviz — nadir vurgu, açık zeminde ikon/bağlantı */
 
-  --container: 1180px;
+  /* Eski bileşenlerin kullandığı adlar marka paletine bağlanır. */
+  --color-bg: var(--p-cream);
+  --color-bg-soft: var(--p-cream-2);
+  --color-ink: var(--p-night);
+  --color-ink-soft: var(--p-stone);
+  --color-line: var(--p-cream-3);
+  --color-accent: var(--p-gold);
+  --color-accent-ink: var(--p-night);
+  --color-dark: var(--p-night);
+  --color-dark-soft: var(--p-night-2);
+  --color-on-dark: var(--p-cream);
+  --color-on-dark-soft: #b5ada1;
 
-  --radius-xl: 32px;
-  --radius-lg: 24px;
-  --radius-md: 16px;
+  --container: 1120px;
+
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
   --radius-sm: 10px;
   --radius-pill: 999px;
 
@@ -25,33 +38,36 @@
 /* Blog ve yönetim paneli için kapsamlı token seti. app/blog ve app/admin
    düzenleri kök öğelerine data-theme="blog" koyar; ana sayfa etkilenmez. */
 [data-theme="blog"] {
-  --blog-accent: #14513f;
-  --blog-accent-hover: #0e3d2f;
-  --blog-on-accent: #ffffff;
-  --blog-accent-soft: #edf5f1;
-  --blog-accent-line: #d3e4db;
+  --blog-accent: var(--p-night);
+  --blog-accent-hover: #2b2926;
+  --blog-on-accent: var(--p-cream);
+  --blog-accent-soft: #f1e9da;
+  --blog-accent-line: #e2d5bd;
+  --blog-gold: var(--p-gold);
+  --blog-link: var(--p-walnut);
 
-  --blog-bg: #ffffff;
-  --blog-bg-muted: #f5f6f5;
-  --blog-ink: #111110;
-  --blog-ink-soft: #5c635f;
-  --blog-ink-faint: #8b918d;
-  --blog-line: #e6e8e6;
-  --blog-line-strong: #d2d6d3;
+  --blog-bg: #fffdf9;
+  --blog-bg-page: var(--p-cream);
+  --blog-bg-muted: #f3ede2;
+  --blog-ink: var(--p-night);
+  --blog-ink-soft: var(--p-stone);
+  --blog-ink-faint: #9a9086;
+  --blog-line: #e8e0d2;
+  --blog-line-strong: #d6cab6;
 
-  --blog-danger: #b42318;
-  --blog-danger-soft: #fdf1f0;
-  --blog-warning: #8a5a00;
-  --blog-warning-soft: #fdf6e3;
+  --blog-danger: #a8321f;
+  --blog-danger-soft: #faefea;
+  --blog-warning: #7a4e2d;
+  --blog-warning-soft: #f6ecdc;
 
   --blog-radius-card: 14px;
   --blog-radius-control: 8px;
-  --blog-shadow-card: 0 1px 2px rgba(17, 24, 20, 0.04), 0 10px 28px rgba(17, 24, 20, 0.05);
-  --blog-shadow-pop: 0 12px 32px rgba(17, 24, 20, 0.12);
+  --blog-shadow-card: 0 1px 2px rgba(20, 20, 20, 0.04), 0 10px 28px rgba(20, 20, 20, 0.06);
+  --blog-shadow-pop: 0 12px 32px rgba(20, 20, 20, 0.14);
 
   --blog-container: 1206px;
 
-  background: var(--blog-bg);
+  background: var(--blog-bg-page);
   color: var(--blog-ink);
   min-height: 100dvh;
 }
@@ -129,15 +145,26 @@ ul {
   margin-inline: auto;
 }
 
+/* Odak halkası: açık zeminde gece siyahı, koyu zeminde altın. Koyu bölümler
+   --focus-ring değişkenini altına çevirir. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--p-night));
+  outline-offset: 3px;
+}
+
+.onDark {
+  --focus-ring: var(--p-gold);
+}
+
 .eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  gap: 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-ink-soft);
+  color: inherit;
 }
 
 .eyebrow::before {
@@ -145,52 +172,80 @@ ul {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
+  background: var(--p-gold);
 }
 
+/* Düğmeler: altın yalnızca birincil eylemde kullanılır. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px 26px;
+  gap: 10px;
+  min-height: 50px;
+  padding: 0 28px;
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.01em;
-  transition: transform 0.35s var(--ease), background 0.35s var(--ease), color 0.35s var(--ease);
+  letter-spacing: 0.005em;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease), color 0.2s var(--ease);
 }
 
-.btnDark {
-  background: var(--color-dark);
-  color: var(--color-on-dark);
+.btn svg {
+  transition: transform 0.2s var(--ease);
 }
 
-.btnDark:hover {
-  background: var(--color-accent);
-  color: var(--color-accent-ink);
-  transform: translateY(-2px);
+.btn:hover svg {
+  transform: translateX(3px);
 }
 
-.btnLight {
-  background: var(--color-accent);
-  color: var(--color-accent-ink);
+.btnGold {
+  background: var(--p-gold);
+  color: var(--p-night);
 }
 
-.btnLight:hover {
-  transform: translateY(-2px);
+.btnGold:hover {
+  background: var(--p-gold-hover);
 }
 
-.btnGhost {
-  background: transparent;
-  border: 1px solid var(--color-line);
+.btnNight {
+  background: var(--p-night);
+  color: var(--p-cream);
 }
 
-.btnGhost:hover {
-  border-color: var(--color-ink);
-  transform: translateY(-2px);
+.btnNight:hover {
+  background: #2b2926;
+}
+
+.btnOutlineLight {
+  border-color: rgba(245, 240, 230, 0.3);
+  color: var(--p-cream);
+}
+
+.btnOutlineLight:hover {
+  border-color: var(--p-gold);
+}
+
+.btnOutline {
+  border-color: #cfc3ad;
+  color: var(--p-night);
+}
+
+.btnOutline:hover {
+  border-color: var(--p-night);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn svg {
+    transition: none;
+  }
+
+  .btn:hover svg {
+    transform: none;
+  }
 }
 
 .sectionLabel {

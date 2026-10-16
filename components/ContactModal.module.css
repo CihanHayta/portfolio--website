@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(12, 12, 11, 0.55);
+  background: rgba(20, 20, 20, 0.6);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
@@ -56,18 +56,16 @@
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: var(--color-dark);
-  color: var(--color-on-dark);
-  font-family: var(--font-display), serif;
+  background: var(--p-night);
+  color: var(--p-gold);
   font-size: 19px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .title {
-  font-family: var(--font-display), serif;
   font-size: 21px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
@@ -176,9 +174,8 @@
 }
 
 .submitBtn:hover {
-  background: var(--color-accent);
-  color: var(--color-accent-ink);
-  transform: translateY(-2px);
+  background: var(--p-gold);
+  color: var(--p-night);
 }
 
 .footnote {

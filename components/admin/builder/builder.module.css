@@ -890,7 +890,7 @@
   background: var(--blog-bg);
   color: var(--blog-accent);
   font-weight: 800;
-  box-shadow: 0 1px 2px rgba(17, 24, 20, 0.08);
+  box-shadow: 0 1px 2px rgba(20, 20, 20, 0.08);
 }
 
 .section {
@@ -1307,7 +1307,7 @@
 }
 
 .dot[data-state="scheduled"] {
-  background: #d39a1c;
+  background: var(--p-gold);
 }
 
 .options {
@@ -1391,7 +1391,7 @@
 }
 
 .dialog::backdrop {
-  background: rgba(17, 20, 18, 0.45);
+  background: rgba(20, 20, 20, 0.45);
 }
 
 .dialogTitle {
@@ -1488,7 +1488,7 @@
     position: fixed;
     inset: 0;
     z-index: 50;
-    background: rgba(17, 20, 18, 0.45);
+    background: rgba(20, 20, 20, 0.45);
   }
 
   .canvas {

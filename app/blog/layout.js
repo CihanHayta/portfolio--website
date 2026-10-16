@@ -1,12 +1,12 @@
 import Header from "@/components/Header";
-import Contact from "@/components/Contact";
+import SiteFooter from "@/components/SiteFooter";
 
 export default function BlogLayout({ children }) {
   return (
     <div data-theme="blog">
-      <Header variant="blog" />
+      <Header />
       {children}
-      <Contact />
+      <SiteFooter />
     </div>
   );
 }

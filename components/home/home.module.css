@@ -1,0 +1,836 @@
+/* Ana sayfa bölümleri. Zemin ritmi: koyu (gece siyahı) ve açık (kumaş kremi)
+   bölümler sırayla gelir; altın yalnızca vurgu ve birincil düğmede kullanılır. */
+
+.container {
+  width: min(var(--container), 100% - 40px);
+  margin-inline: auto;
+}
+
+.night,
+.cream,
+.paper,
+.final {
+  padding-block: clamp(72px, 9vw, 120px);
+}
+
+.night,
+.hero,
+.final {
+  background: var(--p-night);
+  color: var(--p-cream);
+}
+
+.cream {
+  background: var(--p-cream);
+  color: var(--p-night);
+}
+
+.paper {
+  background: var(--p-cream-2);
+  color: var(--p-night);
+}
+
+/* --- Bölüm başlıkları ----------------------------------------------------- */
+
+.head {
+  display: grid;
+  gap: 14px;
+  max-width: 680px;
+  margin-bottom: clamp(36px, 5vw, 56px);
+}
+
+.head[data-center="true"] {
+  justify-items: center;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.h2 {
+  font-size: clamp(30px, 3.8vw, 46px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.lead {
+  max-width: 560px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--p-stone);
+}
+
+.night .lead,
+.final .lead {
+  color: #cbc4b8;
+}
+
+/* --- Giriş ---------------------------------------------------------------- */
+
+.hero {
+  padding-block: clamp(56px, 8vw, 104px) clamp(72px, 9vw, 120px);
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+  gap: clamp(40px, 6vw, 88px);
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border: 1px solid rgba(245, 240, 230, 0.22);
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--p-gold);
+}
+
+.h1 {
+  margin-top: 28px;
+  font-size: clamp(40px, 5.6vw, 68px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+/* Marka vurgusu: Playfair Display İtalik, Persona altını. */
+.accent {
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--p-gold);
+}
+
+.heroText {
+  max-width: 540px;
+  margin-top: 26px;
+  color: #cbc4b8;
+  font-size: 17.5px;
+  line-height: 1.65;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 36px;
+}
+
+.profile {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+.portrait {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(180px, 18vw, 224px);
+  aspect-ratio: 1;
+  border: 3px solid var(--p-gold);
+  border-radius: 50%;
+  background: var(--p-night-2);
+  box-shadow: 0 0 0 8px var(--p-night), 0 0 0 9px var(--p-night-3);
+  overflow: hidden;
+}
+
+.portrait img {
+  object-fit: cover;
+}
+
+.monogram {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 92px;
+  font-style: italic;
+  line-height: 1;
+  color: var(--p-gold);
+}
+
+.nameCard {
+  width: 100%;
+  max-width: 300px;
+  padding: 16px 20px;
+  border: 1px solid var(--p-night-3);
+  border-radius: 16px;
+  background: var(--p-night-2);
+  text-align: center;
+}
+
+.name {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.role {
+  margin-top: 4px;
+  color: #b5ada1;
+  font-size: 13px;
+}
+
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.highlights li {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 14px 6px;
+  border: 1px solid var(--p-night-3);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.highlights strong {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.highlights span {
+  color: #b5ada1;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+/* --- "Tanıdık geliyor mu?" kartları --------------------------------------- */
+
+.checkHint {
+  margin: -24px 0 28px;
+  color: var(--p-stone);
+  font-size: 14px;
+  font-style: italic;
+  text-align: center;
+}
+
+.checkGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.checkCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  height: 100%;
+  padding: 20px;
+  border: 1px solid var(--p-cream-3);
+  border-radius: 16px;
+  background: var(--p-cream-2);
+  font-size: 15px;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+
+.checkCard:hover {
+  border-color: #cdbfa6;
+}
+
+.checkCard[data-checked="true"] {
+  border-color: var(--p-night);
+  background: #efe6d4;
+}
+
+.checkCard:has(.checkInput:focus-visible) {
+  outline: 2px solid var(--p-night);
+  outline-offset: 3px;
+}
+
+/* Gerçek onay kutusu görünmez ama erişilebilir kalır. */
+.checkInput {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.checkBox {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border: 1.5px solid #b9ab92;
+  border-radius: 6px;
+  color: transparent;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.checkCard[data-checked="true"] .checkBox {
+  border-color: var(--p-night);
+  background: var(--p-night);
+  color: var(--p-gold);
+}
+
+.checkFooter {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin-top: 36px;
+}
+
+.checkStatus {
+  min-height: 1.5em;
+  color: var(--p-stone);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* --- Yöntem --------------------------------------------------------------- */
+
+.methodGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(32px, 6vw, 80px);
+  align-items: center;
+}
+
+.steps {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  cursor: default;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+
+.step[data-active="true"] {
+  border-color: var(--p-night-3);
+  background: var(--p-night-2);
+}
+
+.stepNumber {
+  color: var(--p-gold);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  opacity: 0.55;
+  transition: opacity 0.2s var(--ease);
+}
+
+.step[data-active="true"] .stepNumber {
+  opacity: 1;
+}
+
+.stepTitle {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.stepText {
+  margin-top: 6px;
+  color: #b5ada1;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+/* Basamak görünümü: her etiket bir öncekinden biraz içeride başlar. */
+.ladder {
+  display: grid;
+  gap: 10px;
+}
+
+.rung {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: calc(var(--rung) * 18px);
+  margin-right: calc((3 - var(--rung)) * 18px);
+  padding: 16px 20px;
+  border: 1px solid var(--p-night-3);
+  border-radius: 14px;
+  background: var(--p-night-2);
+  color: #cbc4b8;
+  font-size: 14.5px;
+  font-weight: 700;
+  transition: background 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+
+.rung[data-active="true"] {
+  border-color: var(--p-gold);
+  background: var(--p-gold);
+  color: var(--p-night);
+}
+
+/* --- Kartlar ---------------------------------------------------------------- */
+
+.cards4,
+.cards2 {
+  display: grid;
+  gap: 16px;
+}
+
+.cards4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cards2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 26px 24px;
+  border: 1px solid var(--p-cream-3);
+  border-radius: 18px;
+  background: var(--p-cream-2);
+}
+
+.cardIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  background: #ece2cf;
+  color: var(--p-walnut);
+}
+
+.cardTitle {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.cardText {
+  color: var(--p-stone);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+/* --- Karşılaştırma ---------------------------------------------------------- */
+
+.tableWrap {
+  border: 1px solid var(--p-cream-3);
+  border-radius: 18px;
+  background: #fffdf9;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.table thead th {
+  padding: 16px 24px;
+  background: var(--p-night);
+  color: var(--p-cream);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: left;
+}
+
+.table tbody th,
+.table td {
+  padding: 18px 24px;
+  border-top: 1px solid var(--p-cream-3);
+  text-align: left;
+}
+
+.table tbody th {
+  width: 40%;
+  font-weight: 600;
+}
+
+.table td {
+  font-weight: 700;
+}
+
+.table td svg {
+  display: inline;
+  margin-right: 10px;
+  color: var(--p-walnut);
+  vertical-align: -3px;
+}
+
+.versus {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-top: 28px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.versusUsual,
+.versusOurs {
+  padding: clamp(24px, 3.5vw, 40px);
+}
+
+.versusUsual {
+  background: #ede4d3;
+}
+
+.versusOurs {
+  background: var(--p-night);
+  color: var(--p-cream);
+}
+
+.versusLabel {
+  margin-bottom: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.versusOurs .versusLabel {
+  color: var(--p-gold);
+}
+
+.versus ul {
+  display: grid;
+  gap: 18px;
+}
+
+.versus li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.versus li svg {
+  margin-top: 3px;
+}
+
+.versusUsual li svg {
+  color: var(--p-stone);
+}
+
+.versusOurs li svg {
+  color: var(--p-gold);
+}
+
+.versus li strong {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 800;
+}
+
+.versus li span {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--p-stone);
+}
+
+.versusOurs li span {
+  color: #b5ada1;
+}
+
+.vs {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 4px solid var(--p-cream-2);
+  border-radius: 50%;
+  background: var(--p-gold);
+  color: var(--p-night);
+  font-size: 13px;
+  font-weight: 800;
+  translate: -50% -50%;
+}
+
+/* --- Kimler için ----------------------------------------------------------- */
+
+.audienceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(32px, 6vw, 80px);
+  align-items: start;
+}
+
+.audienceGrid .head {
+  margin-bottom: 0;
+}
+
+.fitList {
+  display: grid;
+  gap: 12px;
+}
+
+.fitList li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--p-night-3);
+  border-radius: 14px;
+  background: var(--p-night-2);
+  font-size: 15.5px;
+  line-height: 1.5;
+}
+
+.fitList svg {
+  margin-top: 2px;
+  color: var(--p-gold);
+}
+
+.fitList li[data-fit="no"] {
+  border-style: dashed;
+  border-color: rgba(245, 240, 230, 0.22);
+  background: transparent;
+  color: #cbc4b8;
+}
+
+.fitList li[data-fit="no"] svg {
+  color: #b5ada1;
+}
+
+/* --- SSS ------------------------------------------------------------------ */
+
+.faqGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(32px, 6vw, 80px);
+  align-items: start;
+}
+
+.faqGrid .head {
+  margin-bottom: 0;
+}
+
+.faqList {
+  border-top: 1px solid var(--p-cream-3);
+}
+
+.faqItem {
+  border-bottom: 1px solid var(--p-cream-3);
+}
+
+.faqItem summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 68px;
+  padding-block: 14px;
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faqItem summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqItem summary svg {
+  flex-shrink: 0;
+  color: var(--p-walnut);
+  transition: rotate 0.2s var(--ease);
+}
+
+.faqItem[open] summary svg {
+  rotate: 180deg;
+}
+
+.faqItem p {
+  max-width: 620px;
+  padding-bottom: 22px;
+  color: var(--p-stone);
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+
+/* --- Son çağrı -------------------------------------------------------------- */
+
+.final {
+  border-top: 1px solid var(--p-night-3);
+}
+
+.final .head {
+  max-width: 760px;
+  margin-bottom: 32px;
+}
+
+.finalActions {
+  display: flex;
+  justify-content: center;
+}
+
+/* --- Duyarlı düzen ---------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+  .heroGrid,
+  .methodGrid,
+  .audienceGrid,
+  .faqGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profile {
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-items: start;
+    align-items: center;
+    column-gap: 24px;
+  }
+
+  .portrait {
+    grid-row: span 2;
+    width: 150px;
+  }
+
+  .monogram {
+    font-size: 64px;
+  }
+
+  .nameCard,
+  .highlights {
+    max-width: 420px;
+  }
+
+  .nameCard {
+    text-align: left;
+  }
+
+  .cards4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checkGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .profile {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  .portrait {
+    grid-row: auto;
+  }
+
+  .nameCard {
+    text-align: center;
+  }
+
+  .heroActions :global(.btn) {
+    width: 100%;
+  }
+
+  .checkGrid,
+  .cards4,
+  .cards2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rung {
+    margin-left: calc(var(--rung) * 10px);
+    margin-right: calc((3 - var(--rung)) * 10px);
+  }
+
+  .versus {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vs {
+    position: static;
+    margin: -26px auto;
+    translate: none;
+  }
+
+  /* Dar ekranda tablo satırları alt alta iki satırlık kartlara dönüşür;
+     yatay kaydırma gerekmez. */
+  .tableWrap {
+    overflow: visible;
+  }
+
+  .table {
+    min-width: 0;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .table tr {
+    display: grid;
+    gap: 4px;
+    padding: 16px 18px;
+  }
+
+  .table tbody tr + tr {
+    border-top: 1px solid var(--p-cream-3);
+  }
+
+  .table tbody th,
+  .table td {
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+
+  .table tbody th {
+    color: var(--p-stone);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkCard,
+  .checkBox,
+  .step,
+  .stepNumber,
+  .rung,
+  .faqItem summary svg {
+    transition: none;
+  }
+}
