@@ -1,0 +1,16 @@
+/* Önizleme, yönetim panelinin değil yayındaki blogun ölçülerini kullanır. */
+:global([data-theme="blog"][data-surface="admin"]):has([data-ai-preview]) {
+  --blog-container: 1206px;
+  background: var(--blog-bg);
+}
+
+.preview {
+  min-height: 60vh;
+}
+
+.empty {
+  padding: 80px 24px;
+  color: var(--blog-ink-soft);
+  font-size: 14.5px;
+  text-align: center;
+}

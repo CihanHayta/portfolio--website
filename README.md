@@ -83,6 +83,42 @@ içine, canlıda Vercel → Settings → Environment Variables'a yazılır.
 Blog başlığı, alıntı, üst görsel ve yazar kartı metinleri `data/content.js`
 içindeki `blog` nesnesinden düzenlenir.
 
+### AI ile blog oluşturma
+
+Blok editörünün sol panelinin altındaki **AI ile Blog Oluştur** düğmesi, verilen
+bir makale bağlantısından yazıyı bloklar halinde doldurur. Akış sırayla ilerler ve her adım onay bekler:
+
+1. **Kaynak analizi** — sayfa sunucuda güvenli biçimde okunur (`lib/ai/safeFetch.js`:
+   özel/yerel IP, DNS, yönlendirme, süre ve boyut denetimleri) ve ana içerik
+   çıkarılır (`lib/ai/extract.js`). İçerik yetersizse hata verir, içerik uydurulmaz.
+2. **Görsel planı** — Gemini yalnızca kapak ve yazı içi görsellerin konseptini,
+   alt metnini ve konumunu önerir. Makale bu aşamada yazılmaz.
+3. **Görseller** — plan onaylanınca hazırlanır ve mevcut medya kütüphanesine
+   (Supabase Storage + `blog_media`) kaydedilir.
+4. **Makale** — görseller hazır olduktan sonra SEO alanları ve özgün Türkçe yazı
+   üretilir (`lib/ai/tiptap.js`) ve editörün blok biçimine dönüştürülür
+   (`sanitizeContent`).
+5. **Önizleme ve yayın** — yazı, yayındaki blog sayfasının bileşenleriyle masaüstü
+   ve mobil genişlikte gösterilir; alanlar düzenlenebilir, kalite denetimi
+   (`lib/ai/quality.js`) çalışır. “Onayla ve Blogumu Yayınla” içeriği tek bir
+   güncellemeyle kaydedip yayınlar (`publishGeneratedPost`) ve yazının herkese
+   açık olduğunu doğrulamadan başarı bildirmez.
+
+Maliyet ve servisler:
+
+- **Metin:** Gemini API'nin ücretsiz katmanındaki modeller kullanılır
+  (`FREE_TEXT_MODELS`). Kota ya da yoğunluk hatasında sıradaki ücretsiz modele
+  geçilir; ücretli modele asla geçilmez. Bir yazı iki Gemini çağrısı harcar
+  (plan + makale). Ücretsiz katmanda gönderilen içerik Google tarafından ürün
+  geliştirmede kullanılabilir.
+- **Görsel:** Gemini'nin görsel modellerinin ücretsiz katmanı yoktur, bu yüzden
+  entegre edilmemiştir. Varsayılan, sunucuda çizilen **marka grafiğidir**
+  (`lib/ai/graphics.js`; ücretsiz, sınırsız, yapay zekâ görseli değil). İsteğe
+  bağlı olarak anahtarsız **Pollinations** seçilebilir: ücretsizdir ama düşük
+  çözünürlüklüdür ve görsele kendi filigranını ekler.
+
+Gerekli ortam değişkeni: `GEMINI_API_KEY` (yalnızca sunucu). Testler: `npm test`.
+
 ## Project videos
 
 A project with `video` + `poster` fields in `data/content.js` shows a muted

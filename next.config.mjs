@@ -14,7 +14,13 @@ const nextConfig = {
   // otomatik izlemede atlanabiliyor; yükleme fonksiyonuna açıkça eklenir.
   outputFileTracingIncludes: {
     "/api/admin/media": ["./node_modules/@img/**/*"],
+    "/api/admin/ai/images": ["./node_modules/@img/**/*"],
+    "/api/admin/ai/screenshots": ["./node_modules/@img/**/*"],
+    "/api/admin/ai/import-image": ["./node_modules/@img/**/*"],
   },
+  // İsteğe bağlı tarayıcı okuyucusu (yalnızca yerelde, PLAYWRIGHT_READER=1)
+  // paketlenmez; çalışma anında dinamik olarak yüklenir.
+  serverExternalPackages: ["playwright-core"],
   images: {
     dangerouslyAllowLocalIP: isLocalSupabase,
     remotePatterns: supabaseUrl

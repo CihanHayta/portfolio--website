@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { FileText, FolderOpen, Images, LogOut, NotebookPen, SquarePen, Tags, Trash2 } from "lucide-react";
+import { FileText, FolderOpen, Images, LayoutTemplate, LogOut, NotebookPen, SquarePen, Tags, Trash2 } from "lucide-react";
 import { logout } from "@/app/admin/blog/actions";
 import styles from "./AdminSidebar.module.css";
 
@@ -13,6 +13,7 @@ export default function AdminSidebar({ counts }) {
 
   const links = [
     { href: "/admin/blog", label: "Tüm Yazılar", Icon: FileText, count: counts?.all, active: onList && !view },
+    { href: "/admin/blog/templates", label: "Şablonlar", Icon: LayoutTemplate },
     { href: "/admin/blog/categories", label: "Kategoriler", Icon: FolderOpen, count: counts?.categories },
     { href: "/admin/blog/tags", label: "Etiketler", Icon: Tags, count: counts?.tags },
     { href: "/admin/blog/media", label: "Medya", Icon: Images },

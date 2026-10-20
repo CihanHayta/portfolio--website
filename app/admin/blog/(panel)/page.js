@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FilePlus2, Search } from "lucide-react";
+import { FilePlus2, Search, Wand2 } from "lucide-react";
 import { requireAdmin } from "@/lib/blog/admin";
 import { STATE_LABELS, formatDateTime, postState } from "@/lib/blog/format";
 import PostRowActions from "@/components/admin/PostRowActions";
@@ -54,10 +54,17 @@ export default async function AdminPostsPage({ searchParams }) {
     <div className={styles.card}>
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle}>{VIEW_TITLES[view]}</h1>
-        <Link href="/admin/blog/new" className={styles.btnPrimary}>
-          <FilePlus2 size={17} aria-hidden="true" />
-          Yeni yazı
-        </Link>
+        <div className={styles.headActions}>
+          {/* Telefondan en hızlı yol: link yapıştır, stüdyo gerisini hazırlar. */}
+          <Link href="/admin/blog/new?studio=1" className={styles.btnPrimary}>
+            <Wand2 size={17} aria-hidden="true" />
+            AI ile yaz
+          </Link>
+          <Link href="/admin/blog/new" className={styles.btnSecondary}>
+            <FilePlus2 size={17} aria-hidden="true" />
+            Boş yazı
+          </Link>
+        </div>
       </div>
 
       <form method="get" className={styles.filters} role="search">

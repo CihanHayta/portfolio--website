@@ -77,7 +77,20 @@ function BlockSettings({ block, onChange, onRemove }) {
   );
 }
 
+// Arama sonucunda görünen uzunluklar için öneri: başlık ~60, açıklama 120–155
+// karakter. Sınırlar zorunlu değildir; yalnızca dışına çıkıldığında uyarır.
+function seoHint(length, min, max) {
+  if (length === 0) return { text: "Boş", warn: false };
+  if (length > max) return { text: `${length} karakter · önerilen en fazla ${max}`, warn: true };
+  if (length < min) return { text: `${length} karakter · önerilen en az ${min}`, warn: true };
+  return { text: `${length} karakter · uygun`, warn: false };
+}
+
 function PageSettings({ form, meta, state, categories, siteHost, postId, onUpdate, onCategoryCreated, schedule, onSchedule, onTrash, busy }) {
+  const titleHint = seoHint(form.seoTitle.length, 30, 60);
+  const descriptionHint = seoHint(form.seoDescription.length, 120, 155);
+  const serpTitle = form.seoTitle.trim() || form.title.trim() || "Yazı başlığı";
+  const serpDescription = form.seoDescription.trim() || form.excerpt.trim() || "Meta açıklaması ya da özet burada görünür.";
   const [tagDraft, setTagDraft] = useState("");
   const [newCategory, setNewCategory] = useState(null);
 
@@ -276,13 +289,19 @@ function PageSettings({ form, meta, state, categories, siteHost, postId, onUpdat
         <div className={styles.field}>
           <label htmlFor="seo-title-input" className={styles.label}>SEO başlığı</label>
           <input id="seo-title-input" type="text" className={styles.input} value={form.seoTitle} maxLength={70} placeholder="Boşsa yazı başlığı kullanılır" onChange={(event) => onUpdate({ seoTitle: event.target.value })} />
-          <p className={styles.counter}>{form.seoTitle.length}/70</p>
+          <p className={styles.counter} data-warn={titleHint.warn || undefined} aria-live="polite">{titleHint.text}</p>
         </div>
         <div className={styles.field}>
           <label htmlFor="seo-description-input" className={styles.label}>Meta açıklaması</label>
           <textarea id="seo-description-input" className={`${styles.input} ${styles.textarea}`} rows={3} value={form.seoDescription} maxLength={160} placeholder="Boşsa özet kullanılır" onChange={(event) => onUpdate({ seoDescription: event.target.value })} />
-          <p className={styles.counter}>{form.seoDescription.length}/160</p>
+          <p className={styles.counter} data-warn={descriptionHint.warn || undefined} aria-live="polite">{descriptionHint.text}</p>
         </div>
+        <figure className={styles.serp} aria-label="Arama sonucu önizlemesi">
+          <figcaption>Arama sonucu önizlemesi</figcaption>
+          <span className={styles.serpUrl}>{siteHost} › blog › {form.slug || "kalici-baglanti"}</span>
+          <span className={styles.serpTitle}>{serpTitle}</span>
+          <span className={styles.serpText}>{serpDescription}</span>
+        </figure>
         <details className={styles.advanced}>
           <summary>Gelişmiş</summary>
           <div className={styles.field}>

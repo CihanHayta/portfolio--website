@@ -1,0 +1,135 @@
+.panel {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 55;
+  display: grid;
+  gap: 8px;
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(60vh, 520px);
+  padding: 8px 8px 10px;
+  overflow-y: auto;
+  border: 1px solid var(--blog-line);
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-bg);
+  box-shadow: var(--blog-shadow-pop);
+  color: var(--blog-ink);
+  font-size: 13.5px;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--blog-radius-control);
+  background: none;
+  color: var(--blog-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 800;
+}
+
+.close {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--blog-radius-control);
+  background: none;
+  color: var(--blog-ink-soft);
+  cursor: pointer;
+}
+
+.body {
+  display: grid;
+  gap: 6px;
+  padding: 0 8px;
+  line-height: 1.5;
+}
+
+.muted {
+  color: var(--blog-ink-soft);
+}
+
+.warn {
+  color: var(--blog-warning);
+  font-weight: 700;
+}
+
+.warnings {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--blog-warning);
+}
+
+.warnings li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.warnings svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.images {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 0 8px;
+  padding: 0 14px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: var(--blog-radius-control);
+  background: var(--blog-bg);
+  color: var(--blog-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toggle:focus-visible,
+.close:focus-visible,
+.images:focus-visible {
+  outline: 2px solid var(--blog-gold);
+  outline-offset: 2px;
+}
+
+/* Telefon: ekranın altında tam genişlikte şerit; kapalıyken yalnızca özet satırı. */
+@media (max-width: 760px) {
+  .panel {
+    right: 8px;
+    left: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    width: auto;
+    max-height: 55dvh;
+  }
+
+  .panel:not([data-open]) .images {
+    display: none;
+  }
+}

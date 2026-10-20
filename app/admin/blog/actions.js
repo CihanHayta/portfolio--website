@@ -5,10 +5,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { profile } from "@/data/content";
 import { ADMIN_POST_FIELDS, getAdmin } from "@/lib/blog/admin";
-import { contentText, sanitizeContent } from "@/lib/blog/blocks/model";
+import { contentImages, contentText, sanitizeContent } from "@/lib/blog/blocks/model";
+import { findPlaceholders } from "@/lib/blog/blocks/templates";
 import { readingMinutes } from "@/lib/blog/content";
 import { SLUG_PATTERN, slugify } from "@/lib/blog/slug";
 import { MEDIA_BUCKET } from "@/lib/supabase/env";
+import { createPublicClient } from "@/lib/supabase/server";
 
 // Her işlem yetkiyi sunucuda yeniden doğrular; arayüzdeki düğmelere güvenilmez.
 // İşlemler { ok, error } döndürür; istemci hatayı olduğu gibi gösterir.
@@ -195,6 +197,16 @@ export async function savePost(id, revision, input) {
   return result;
 }
 
+// Şablon ya da blok kütüphanesinden kalan talimat cümleleri gerçek içerik
+// gibi yayınlanmaz. Kullanıcıya kalan ilk cümle gösterilir.
+function placeholderError(text) {
+  const leftovers = findPlaceholders(text);
+  if (leftovers.length === 0) return null;
+  const first = leftovers[0].length > 90 ? `${leftovers[0].slice(0, 88)}…` : leftovers[0];
+  const more = leftovers.length > 1 ? ` (ve ${leftovers.length - 1} yer tutucu daha)` : "";
+  return `Şablondaki örnek metin hâlâ duruyor: “${first}”${more}. Yayınlamadan önce kendi içeriğinle değiştir.`;
+}
+
 export async function publishPost(id, revision, publishAt) {
   const admin = await getAdmin();
   if (!admin) return UNAUTHORIZED;
@@ -211,6 +223,8 @@ export async function publishPost(id, revision, publishAt) {
   if (!post.title) return fail("Yayınlamadan önce bir başlık yaz.");
   if (isAutoSlug(post.slug)) return fail("Yayınlamadan önce bir kalıcı bağlantı belirle.");
   if (!post.content_text.trim()) return fail("Yayınlamadan önce yazı içeriğini ekle.");
+  const leftover = placeholderError(post.content_text);
+  if (leftover) return fail(leftover);
 
   const now = new Date();
   let publishedAt;
@@ -230,6 +244,97 @@ export async function publishPost(id, revision, publishAt) {
   });
   if (result.ok) revalidatePost(result.post.slug);
   return result;
+}
+
+// "AI ile Blog Oluştur" akışının son adımı: önizlemede onaylanan içeriği tek
+// bir güncellemeyle kaydeder ve yayınlar. İçerik ile yayın durumu aynı SQL
+// ifadesinde yazıldığı için yarım kalmış bir kayıt oluşamaz; önce her şey
+// doğrulanır, eksik varsa veritabanına hiç dokunulmaz.
+export async function publishGeneratedPost(id, revision, input) {
+  const admin = await getAdmin();
+  if (!admin) return UNAUTHORIZED;
+  if (!uuidOrNull(id) || !Number.isInteger(revision) || !input) return fail("Geçersiz istek.");
+
+  const parsed = parsePostInput(input);
+  if (parsed.error) return fail(parsed.error);
+  const { row, tags } = parsed;
+
+  if (!row.title) return fail("Yayınlamadan önce bir başlık yaz.");
+  if (isAutoSlug(row.slug)) return fail("Yayınlamadan önce bir kalıcı bağlantı belirle.");
+  if (!row.content_text.trim()) return fail("Yayınlamadan önce yazı içeriğini ekle.");
+  const leftover = placeholderError(row.content_text);
+  if (leftover) return fail(leftover);
+  if (!row.cover_media_id) return fail("Kapak görseli olmadan yayınlanamaz.");
+  if (!row.cover_alt) return fail("Kapak görselinin alt metni boş olamaz.");
+
+  const inlineImages = contentImages(row.content);
+  if (inlineImages.some((image) => !String(image.alt ?? "").trim())) {
+    return fail("Yazı içindeki her görselin alt metni olmalı.");
+  }
+
+  const { data: post, error } = await admin.supabase
+    .from("blog_posts")
+    .select("status, published_at, author_name, deleted_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) return fail(dbError(error));
+  if (!post || post.deleted_at) return fail("Yazı bulunamadı.");
+  if (post.status !== "draft") return fail("Bu yazı zaten yayında. Değişiklikleri editörden güncelle.");
+
+  // Kapak ve yazı içi görsellerin tamamı medya kütüphanesinde gerçekten var mı?
+  const urls = [...new Set(inlineImages.map((image) => image.url))];
+  const [coverResult, inlineResult] = await Promise.all([
+    admin.supabase.from("blog_media").select("id").eq("id", row.cover_media_id).maybeSingle(),
+    urls.length
+      ? admin.supabase.from("blog_media").select("url").in("url", urls)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (coverResult.error || inlineResult.error) return fail(dbError(coverResult.error ?? inlineResult.error));
+  if (!coverResult.data || inlineResult.data.length !== urls.length) {
+    return fail("Görsellerden biri medya kütüphanesinde bulunamadı. Eksik görselle yayınlanmadı.");
+  }
+
+  // Aynı bağlantıyla ikinci bir yazı oluşmasın (çöp kutusundakiler dahil).
+  const { data: clash, error: clashError } = await admin.supabase
+    .from("blog_posts")
+    .select("id")
+    .eq("slug", row.slug)
+    .neq("id", id)
+    .limit(1);
+  if (clashError) return fail(dbError(clashError));
+  if (clash.length > 0) return fail("Bu kalıcı bağlantı başka bir yazıda kullanılıyor. Bağlantıyı değiştir.");
+
+  // Etiketler yayından önce eşitlenir; burada hata olursa yazı taslak kalır.
+  const tagError = await syncTags(admin.supabase, id, tags);
+  if (tagError) return fail(dbError(tagError));
+
+  const now = new Date();
+  const previous = post.published_at ? new Date(post.published_at) : null;
+  const result = await updateWithRevision(admin.supabase, id, revision, {
+    ...row,
+    status: "published",
+    published_at: (previous && previous <= now ? previous : now).toISOString(),
+    author_name: post.author_name || admin.displayName || profile.fullName,
+  });
+  if (!result.ok) return result;
+
+  revalidatePost(result.post.slug);
+
+  // Başarı, yazı ziyaretçi gözüyle (anon rol, RLS) okunabildiğinde bildirilir.
+  const { data: visible, error: verifyError } = await createPublicClient()
+    .from("blog_posts")
+    .select("id, slug, cover_media_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (verifyError || !visible || visible.slug !== row.slug || visible.cover_media_id !== row.cover_media_id) {
+    console.error("[blog] yayın doğrulanamadı:", verifyError ?? "yazı herkese açık sorguda görünmüyor");
+    return fail("Yazı kaydedildi ancak yayında olduğu doğrulanamadı. Yazılar listesinden durumunu kontrol et.", {
+      post: result.post,
+      unverified: true,
+    });
+  }
+
+  return { ...result, verified: true };
 }
 
 export async function unpublishPost(id, revision) {
