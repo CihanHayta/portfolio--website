@@ -1,0 +1,48 @@
+.spacer,
+.bar {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .spacer {
+    display: block;
+    height: calc(72px + env(safe-area-inset-bottom));
+    background: var(--p-night);
+  }
+
+  .bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 90;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--p-night-3);
+    background: rgba(20, 20, 20, 0.97);
+  }
+
+  .call,
+  .whatsapp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 50px;
+    border-radius: var(--radius-pill);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .call {
+    background: var(--p-gold);
+    color: var(--p-night);
+  }
+
+  .whatsapp {
+    border: 1px solid rgba(245, 240, 230, 0.3);
+    color: var(--p-cream);
+  }
+}

@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import MobileCallBar from "@/components/MobileCallBar";
 import SiteFooter from "@/components/SiteFooter";
 
 export default function BlogLayout({ children }) {
@@ -7,6 +8,7 @@ export default function BlogLayout({ children }) {
       <Header />
       {children}
       <SiteFooter />
+      <MobileCallBar />
     </div>
   );
 }

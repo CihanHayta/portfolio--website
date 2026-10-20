@@ -36,191 +36,262 @@ export const socials = [
 ];
 
 export const navLinks = [
-  { label: "Yöntem", href: "/#yontem" },
-  { label: "Neden Persona", href: "/#neden" },
+  { label: "Hizmetler", href: "/#hizmetler" },
+  { label: "Nasıl Çalışıyoruz?", href: "/#calisma-yontemimiz" },
+  { label: "Neden Persona?", href: "/#neden" },
   { label: "SSS", href: "/#sss" },
   { label: "Blog", href: "/blog" },
+  { label: "İletişim", href: "/#iletisim" },
 ];
 
-export const ctaLabel = "Ücretsiz Analiz Al";
+// İki ayrı çağrı aynı iletişim formunu açar; form başlığı ve hazırlanan
+// WhatsApp mesajı seçilen talebe göre değişir. Gerçek bir randevu takvimi
+// olmadığı için "randevu al" yerine "görüşme talep et" denir.
+export const ctaLabel = "Ücretsiz Reklam Analizi Al";
+export const meetingLabel = "Ücretsiz Görüşme Talep Et";
 
-// Ana sayfa bölümleri yukarıdan aşağıya bu sırayla görünür.
+export const contactIntents = {
+  analiz: { title: ctaLabel, request: "ücretsiz reklam analizi talep ediyorum" },
+  gorusme: { title: meetingLabel, request: "ücretsiz bir ön görüşme talep ediyorum" },
+};
+
+// Kısa marka tanımı (alt bilgide görünür).
+export const brandSummary =
+  "Meta reklamları, stratejik kreatifler ve veri odaklı optimizasyonla işletmelerin müşteri kazanımını daha ölçülebilir hale getiren dijital pazarlama ajansı.";
+
+// Ana sayfa bölümleri yukarıdan aşağıya bu sırayla görünür. Sayılar, müşteri
+// sonuçları ya da yorumlar yalnızca gerçek ve doğrulanabilir olduğunda eklenmeli.
 export const home = {
   hero: {
-    badge: "Dijital Pazarlama Ajansı",
-    // Başlık üç parçadır; ortadaki parça altın renkte ve italik görünür.
-    titleStart: "Reklam, içerik ve görselle markanızı",
-    titleAccent: "doğru müşteriye",
-    titleEnd: "ulaştırıyoruz.",
+    badge: "Meta Reklam Yönetimi",
+    // Başlık iki satırdır; ikinci satırdaki vurgulu kelime altın ve italik görünür.
+    titleLine1: "Reklam bütçenizi harcamaya değil,",
+    titleAccent: "büyümeye",
+    titleLine2End: "yönlendirin.",
     description:
-      "Meta reklamları, Reels içerikleri ve yapay zekâ destekli showroom görselleriyle ürününüzü doğru kitleye, doğru mesajla ve ölçülebilir biçimde anlatıyoruz.",
-    secondaryCta: "Nasıl çalışıyoruz?",
-    // Fotoğrafınızı public/images içine koyup yolunu yazın (örn. "/images/cihan.jpg").
-    // Boşken yuvarlak alanda Persona monogramı görünür.
-    portrait: null,
-    portraitAlt: "Cihan Hayta",
-    highlights: [
-      { value: "Meta", label: "Reklam yönetimi" },
-      { value: "Reels", label: "İçerik üretimi" },
-      { value: "AI", label: "Showroom görselleri" },
+      "Meta reklamları, stratejik kreatifler, hedef kitle analizi ve sürekli optimizasyonla işletmelerin müşteri kazanım süreçlerini daha ölçülebilir hale getirmeye yardımcı oluyoruz.",
+    secondaryCta: "Nasıl Çalışıyoruz?",
+  },
+
+  // Giriş alanının sağındaki uzmanlık kartı. Fotoğraf eklemek için görseli
+  // public/images/ içine koyup yolunu `photo` alanına yaz (örn.
+  // "/images/cihan-hayta.jpg"); boşken adın baş harfleri gösterilir.
+  expert: {
+    photo: null,
+    name: "Cihan Hayta",
+    role: "Kurucu · Persona Dijital Pazarlama",
+    focus: "Meta reklam yönetimi ve performans optimizasyonu",
+    message:
+      "Reklam hesabına hazır bir şablonla değil; işletmenin hedefine, müşterisine ve verisine göre kurulan bir sistemle yaklaşıyoruz.",
+    points: [
+      "Veriye dayalı optimizasyon",
+      "Kontrollü kreatif testleri",
+      "İşletmeye özel reklam stratejisi",
+      "Şeffaf performans değerlendirmesi",
+    ],
+    note: "Formunuz WhatsApp üzerinden bize ulaşır",
+  },
+
+  services: {
+    id: "hizmetler",
+    eyebrow: "Hizmetler",
+    title: "Reklam yönetimini bir sisteme dönüştürüyoruz.",
+    items: [
+      {
+        title: "Meta reklam yönetimi",
+        text: "Facebook ve Instagram kampanyalarının kurulumu, bütçe dağılımı ve düzenli takibi.",
+        icon: "target",
+        link: { label: "Süreci inceleyin", href: "#calisma-yontemimiz" },
+      },
+      {
+        title: "Reklam kreatifi ve mesaj stratejisi",
+        text: "Reklam mesajına uygun görseller, Reels kurguları ve yapay zekâ destekli showroom görselleri.",
+        icon: "sparkles",
+        link: { label: "Yaklaşımımızı görün", href: "#neden" },
+      },
+      {
+        title: "Hedef kitle ve dönüşüm optimizasyonu",
+        text: "Hangi kitlenin, mesajın ve kreatifin işe yaradığını kampanya verisinden çıkarır, bütçeyi buna göre yönlendiririz.",
+        icon: "search",
+        link: { label: "Reklamlarınızı test edin", href: "#reklam-kontrolu" },
+      },
+      {
+        title: "Performans analizi ve raporlama",
+        text: "Bütçenin nereye gittiğini ve ne getirdiğini sade, anlaşılır raporlarla paylaşırız.",
+        icon: "clipboard",
+        link: { label: "Raporlama nasıl ilerliyor?", href: "#sss" },
+      },
     ],
   },
 
   problems: {
-    eyebrow: "Tanıdık geliyor mu?",
-    title: "Bunlardan birkaçı size de oluyorsa, konuşmamız gerek.",
-    hint: "Size uyanları işaretleyin",
+    id: "reklam-kontrolu",
+    eyebrow: "Kendinizi test edin",
+    title: "Reklamlarınız çalışıyor mu, yoksa yalnızca bütçe mi harcıyor?",
+    description: "İşletmenizin reklam sürecinde hangi alanların incelenmesi gerektiğini birlikte değerlendirelim.",
     items: [
-      "Reklama para harcıyorum ama hangi kampanyanın satış getirdiğini bilmiyorum.",
-      "Instagram hesabım düzenli içerik paylaşamadığım için durgun.",
-      "Ürün fotoğraflarım ürünün gerçek kalitesini yansıtmıyor.",
-      "Gelen mesajlar fiyat sorup kayboluyor.",
-      "Her ay farklı bir şey deniyorum ama oturan bir sistem yok.",
-      "Rapor alıyorum ama rakamların ne anlama geldiğini bilmiyorum.",
+      { text: "Reklam bütçemin gerçek müşteriye nasıl dönüştüğünü bilmiyorum.", area: "ölçümleme" },
+      { text: "Tıklama geliyor ama yeterli satış veya nitelikli talep oluşmuyor.", area: "dönüşüm" },
+      { text: "Reklam kreatiflerimi hangi verilere göre yenilemem gerektiğinden emin değilim.", area: "kreatif" },
+      { text: "Müşteri edinme maliyetim yükseliyor.", area: "maliyet" },
+      { text: "Hangi kampanyanın neden başarılı olduğunu anlamakta zorlanıyorum.", area: "kampanya analizi" },
+      { text: "Raporları iş kararlarına dönüştürmekte zorlanıyorum.", area: "raporlama" },
     ],
-    readyText: "İkiden fazlasını işaretlediyseniz ücretsiz analizle başlayalım.",
+    empty: "Size uyan maddeleri seçin; incelenmesi gereken alanları burada özetleyelim.",
+    // Kesin teşhis değil: yalnızca görüşmede öncelikle konuşulabilecek başlıklar.
+    result:
+      "Bu alanları ücretsiz analiz görüşmesinde öncelikli olarak ele alabiliriz. Kesin değerlendirme, hesabınızı birlikte inceledikten sonra netleşir.",
+    // Seçimler hiçbir yere kaydedilmez; yalnızca bu sayfada gösterilir.
   },
 
-  method: {
-    id: "yontem",
-    eyebrow: "Çalışma yöntemimiz",
-    title: "Her markaya aynı reçete uygulanmaz.",
-    description: "Ürününüze, kitlenize ve bütçenize göre kurulan dört adımlı bir sistemle çalışıyoruz.",
+  process: {
+    id: "calisma-yontemimiz",
+    eyebrow: "Nasıl çalışıyoruz?",
+    title: "Her işletmeye aynı strateji uygulanmaz.",
+    description:
+      "Her işletmenin hedefi, müşteri profili, reklam bütçesi, teklif yapısı ve mevcut performansı farklıdır. Bu nedenle reklam çalışmalarını işletmenin ihtiyaçlarına göre planlarız.",
     steps: [
       {
-        title: "Marka ve kitle analizi",
-        text: "Mevcut reklamlarınızı, içeriklerinizi, kitlenizi ve rakiplerinizi inceliyoruz.",
-        short: "Analiz & Kitle",
+        title: "Analiz ve hedefler",
+        text: "Mevcut kampanyaları, iş modelini, hedef kitleyi ve müşteri kazanım sürecini değerlendiririz.",
         icon: "search",
       },
       {
-        title: "Strateji ve kreatif plan",
-        text: "Hedef kitle, teklif ve mesajı belirleyip Reels, kapak ve görsel planını çıkarıyoruz.",
-        short: "Strateji & Kreatif",
+        title: "Strateji ve kreatif",
+        text: "Hedeflere uygun reklam mesajlarını, kreatif yaklaşımını ve test planını belirleriz.",
         icon: "pen",
       },
       {
-        title: "Yayın, test ve optimizasyon",
-        text: "Kampanyaları yayına alıyor, farklı kreatifleri test ediyor ve veriye göre düzenliyoruz.",
-        short: "Yayın & Test",
+        title: "Test ve optimizasyon",
+        text: "Kampanyaları izler, kontrollü testler yapar ve veriye göre iyileştirmeler gerçekleştiririz.",
         icon: "rocket",
       },
       {
-        title: "Raporlama ve ölçekleme",
-        text: "Bütçenin nereye gittiğini ve ne getirdiğini sade bir raporla paylaşıp işe yarayanı büyütüyoruz.",
-        short: "Raporlama & Ölçekleme",
+        title: "Raporlama ve gelişim",
+        text: "Sonuçları açıkça değerlendirir, sonraki adımları ve bütçe kararlarını veriye dayandırırız.",
         icon: "chart",
       },
     ],
   },
 
   principles: {
-    eyebrow: "Çalışma ilkelerimiz",
-    title: "Tek seferlik bir kampanya değil, büyüyen bir sistem kuruyoruz.",
+    eyebrow: "Çalışma prensipleri",
+    title: "Başarılı reklam yönetimi, doğru çalışma sistemine dayanır.",
     items: [
       {
-        title: "Sınırlı sayıda marka",
-        text: "Aynı anda çok sayıda markayla çalışmak yerine her projeye yeterli zamanı ayırıyoruz.",
-        icon: "focus",
+        title: "Şeffaf ve odaklı iş birliği",
+        text: "İşletmenin hedefleri, görev kapsamı ve öncelikleri net şekilde belirlenir. İletişim ve raporlama sürecinde belirsizliği azaltırız.",
+        icon: "message",
       },
       {
-        title: "Veriyle karar",
-        text: "Bütçe ve kreatif kararlarını tahminle değil, kampanyalardan gelen veriyle veriyoruz.",
+        title: "Veri odaklı harcamalar",
+        text: "Bütçe kararlarını yalnızca tıklama sayısına göre değil, kampanya hedefleri, dönüşüm verileri ve iş sonuçlarına göre değerlendiririz.",
         icon: "chart",
       },
       {
-        title: "Markaya özel kreatif",
-        text: "Hazır şablon yerine markanızın diline ve ürününüze uygun içerik üretiyoruz.",
-        icon: "sparkles",
-      },
-      {
-        title: "Gerçek ürün, gerçek renk",
-        text: "Yapay zekâ destekli görsellerde ürününüzün rengini ve kumaşını asla değiştirmiyoruz.",
-        icon: "palette",
+        title: "İşletmeye özel sistem",
+        text: "Her işletmeye aynı kampanya planını uygulamak yerine ihtiyaçları ve mevcut verileri dikkate alarak çalışma yaklaşımını belirleriz.",
+        icon: "focus",
       },
     ],
   },
 
-  compare: {
+  difference: {
     id: "neden",
     eyebrow: "Neden Persona?",
-    title: "Farkı yan yana görün.",
-    tableHeads: ["Konu", "Persona ile"],
-    rows: [
-      ["Strateji", "Markanıza ve ürününüze özel"],
-      ["İçerik", "Reklam planıyla birlikte üretilir"],
-      ["Görseller", "Ürünün gerçek rengi ve dokusu korunur"],
-      ["Raporlama", "Sade, anlaşılır ve düzenli"],
-    ],
-    usualTitle: "Alışılmış yaklaşım",
-    usual: [
-      { title: "Herkese aynı paket", text: "Sektör ve ürün fark etmeksizin aynı kampanya kurgusu." },
-      { title: "Ayrı ayrı ekipler", text: "Reklam bir yerde, içerik başka yerde; mesaj dağılır." },
-      { title: "Anlaşılmayan raporlar", text: "Erişim ve gösterim sayıları var, satışa etkisi belirsiz." },
-      { title: "Tesadüfi denemeler", text: "Performans düşünce bütçe kısılır, nedeni sorulmaz." },
-    ],
+    title: "Reklam yönetiminde farkı yaratan şey, yaklaşımdır.",
+    commonTitle: "Sık karşılaşılan sorunlar",
     oursTitle: "Persona yaklaşımı",
-    ours: [
-      { title: "Markaya özel sistem", text: "Ürününüzü ve müşterinizi anlayarak sıfırdan kurulan bir plan." },
-      { title: "Tek elden yönetim", text: "Reklam, Reels ve görseller aynı hedefe hizmet eder." },
-      { title: "Anlaşılır rapor", text: "Hangi kampanyanın ne getirdiğini birlikte görürüz." },
-      { title: "Planlı testler", text: "Her değişiklik bir hipoteze ve ölçüme dayanır." },
+    // Her satır: [sık karşılaşılan sorun, Persona'nın çalışma yaklaşımı]
+    rows: [
+      ["Her işletmeye benzer strateji uygulanması", "İşletmeye özel strateji"],
+      ["Tıklamaların başarı olarak değerlendirilmesi", "Dönüşüm ve müşteri kazanımına odaklı ölçümleme"],
+      ["Yetersiz test ve düzensiz optimizasyon", "Planlı kreatif ve kampanya testleri"],
+      ["Raporlama verisinin iş kararlarına dönüşmemesi", "Anlaşılır raporlama ve optimizasyon"],
     ],
   },
 
   audience: {
     eyebrow: "Uygunluk",
-    title: "Kimlerle çalışıyoruz?",
-    yes: [
-      "Ürününü daha fazla kişiye doğru biçimde göstermek isteyen markalar",
-      "Reklam, içerik ve görseli tek elden yönetmek isteyen işletmeler",
-      "Test etmeye ve veriyle ilerlemeye açık ekipler",
+    title: "Bu iş birliği kimler için uygun?",
+    fitTitle: "Uygun olabilecek işletmeler",
+    fit: [
+      "Reklam bütçesini daha bilinçli değerlendirmek isteyenler",
+      "Müşteri kazanım sürecini geliştirmek isteyen markalar",
+      "Performansını ölçmek ve optimize etmek isteyen ekipler",
+      "Test ve sürekli gelişime açık işletmeler",
     ],
-    no: "Bir hafta içinde mucize sonuç bekleyen ve test sürecine zaman tanımayan işletmeler için uygun değiliz.",
+    notFitTitle: "Beklentilerin uyuşmayabileceği durumlar",
+    notFit: [
+      "Hiçbir test yapılmadan garantili sonuç beklentisi",
+      "Ölçüm ve optimizasyon sürecine öncelik verilmemesi",
+      "Gerçekçi olmayan sonuç veya kesin kazanç garantisi beklentisi",
+    ],
   },
 
-  start: {
-    eyebrow: "Risksiz başlayın",
-    title: "İlk adım ücretsiz.",
-    description: "Birlikte çalışıp çalışmayacağımıza karar vermeden önce markanızı inceliyoruz.",
-    items: [
-      {
-        title: "Ücretsiz analiz",
-        text: "Mevcut reklamlarınızı, hesabınızı ve içeriklerinizi inceleyip neler yapılabileceğini anlatıyoruz. Hiçbir taahhüt yok.",
-        icon: "search",
-      },
-      {
-        title: "Şeffaf süreç",
-        text: "Çalışmaya başlarsak bütçenin nereye gittiğini ve ne getirdiğini düzenli olarak birlikte görüyoruz.",
-        icon: "clipboard",
-      },
-    ],
+  offer: {
+    eyebrow: "Ücretsiz analiz",
+    title: "Reklam hesabınızdaki gelişim fırsatlarını birlikte değerlendirelim.",
+    description:
+      "İşletmenizin hedeflerini, mevcut reklam yaklaşımını ve değerlendirilmesi gereken alanları konuşalım. Sonraki adımları birlikte netleştirelim.",
+    note: "Formunuz WhatsApp mesajı olarak hazırlanır; size dönüş yapıp görüşme zamanını birlikte belirleriz.",
   },
 
   faq: {
     id: "sss",
     eyebrow: "SSS",
     title: "Sıkça sorulan sorular.",
+    description: "Bütçe, süre ve çalışma şekli hakkında en çok sorulanlar.",
     items: [
       {
-        question: "Ne kadar sürede sonuç görürüm?",
+        question: "Reklam yönetimi için minimum bütçe ne kadar olmalı?",
         answer:
-          "İlk veriler kampanyalar yayına girdikten sonraki birkaç hafta içinde oluşur. Kalıcı iyileşme için genellikle birkaç aylık test ve düzenleme gerekir; kesin süre sektörünüze ve bütçenize bağlıdır.",
+          "Herkese uyan sabit bir tutar yok. Gerekli bütçe; sektörünüze, hedefinize, rekabete ve test etmek istediğimiz kampanya sayısına göre değişir. Analiz görüşmesinde işletmenize uygun, gerçekçi bir başlangıç aralığını birlikte değerlendiririz. Buradaki tutar Meta'ya ödenen reklam harcamasını ifade eder; hizmet bedelinin kapsamı görüşmede ayrıca netleştirilir.",
       },
       {
-        question: "Minimum reklam bütçesi ne olmalı?",
+        question: "Reklamlardan ne kadar sürede sonuç alabilirim?",
         answer:
-          "Sabit bir alt sınır yok. Ücretsiz analizde hedefinize ve sektörünüze göre gerçekçi bir bütçe aralığı öneriyoruz.",
+          "Kesin bir süre ya da sonuç garantisi vermiyoruz; çünkü sonuç sektöre, teklif yapısına, kreatiflere, bütçeye, ölçüm kalitesine ve satış sürecine bağlıdır. İlk aşamada kampanyalar veri toplar ve Meta'nın öğrenme süreci tamamlanır. Ardından testlerle neyin işe yaradığını ayırır, kalıcı iyileşmeyi düzenli optimizasyonla hedefleriz.",
       },
       {
-        question: "İçerikleri ve görselleri siz mi hazırlıyorsunuz?",
+        question: "Reklam yönetimi süreci nasıl başlıyor?",
         answer:
-          "Evet. Reels kurguları, kapak tasarımları ve yapay zekâ destekli showroom görselleri ekibimiz tarafından hazırlanır. Görsellerde ürününüzün gerçek rengi ve kumaşı korunur.",
+          "Ücretsiz analiz ya da görüşme talebinizle başlıyoruz. İlk görüşmede hedeflerinizi, mevcut kampanyalarınızı ve ihtiyaçlarınızı konuşup neler yapılabileceğini anlatıyoruz; birlikte çalışıp çalışmamaya ondan sonra karar veriyoruz.",
       },
       {
-        question: "Hangi sektörlerle çalışıyorsunuz?",
+        question: "Hangi sektörlerle çalışabilirsiniz?",
         answer:
-          "Ürününü görsel olarak anlatması gereken markalarla çalışıyoruz: mobilya ve ev dekorasyonu başta olmak üzere perakende, hizmet ve yerel işletmeler. Uygun olup olmadığımızı ücretsiz analizde birlikte değerlendiririz.",
+          "Ürününü ya da hizmetini Meta reklamlarıyla anlatabilecek işletmelerle çalışıyoruz: mobilya ve ev dekorasyonu başta olmak üzere perakende, hizmet ve yerel işletmeler. Uygun olup olmadığımızı ilk görüşmede birlikte değerlendiririz.",
+      },
+      {
+        question: "Reklam bütçesini kim belirliyor?",
+        answer:
+          "Son karar her zaman işletmenindir. Hedeflerinizi, mevcut bütçenizi ve kampanya verilerini değerlendirerek bir öneri sunarız; bütçeyi artırma ya da azaltma gibi kararları da veriye dayanarak birlikte alırız.",
+      },
+      {
+        question: "Reklam performansını nasıl raporluyorsunuz?",
+        answer:
+          "Hangi kampanyanın ne kadar harcadığını ve ne getirdiğini gösteren, teknik terimlerle boğulmamış sade raporlar paylaşıp birlikte yorumluyoruz. Satış ve müşteri edinme maliyeti gibi metrikler ancak ölçüm altyapısı (Meta Pixel ya da dönüşüm takibi) doğru kurulduğunda güvenilir şekilde raporlanabilir; bu yüzden ölçüm durumunu çalışmanın başında birlikte kontrol ederiz.",
+      },
+      {
+        question: "Reklam kreatiflerini kim hazırlıyor?",
+        answer:
+          "Reklam görselleri, Reels kurguları ve yapay zekâ destekli showroom görselleri ekibimiz tarafından hazırlanır. Görsellerde ürününüzün gerçek rengi ve kumaşı korunur.",
+      },
+      {
+        question: "Ücretsiz reklam analizi nasıl ilerliyor?",
+        answer:
+          "Formu doldurduğunuzda bilgileriniz WhatsApp mesajı olarak hazırlanır; mesajı gönderdiğinizde size dönüş yapıp kısa bir görüşme planlıyoruz. Görüşmede mevcut durumu ve öne çıkan fırsatları konuşuyoruz; herhangi bir taahhüt yok.",
+      },
+      {
+        question: "Reklam hesabım zaten varsa mevcut kampanyalarla devam edebilir miyiz?",
+        answer:
+          "Evet. Mevcut hesabınızdaki geçmiş veriler değerli bir başlangıç noktasıdır. Önce var olan kampanyaları inceler, işe yarayanları koruyup geliştirilmesi gereken alanları belirleriz; her şeyi sıfırdan kurmak zorunlu değildir.",
+      },
+      {
+        question: "Kampanyalar ne sıklıkla optimize ediliyor?",
+        answer:
+          "Kampanyaları düzenli olarak takip ediyoruz; değişiklikleri ise anlamlı veri biriktikçe ve planlı testlere dayanarak yapıyoruz. Gereksiz sık müdahale kampanyanın öğrenme sürecini bozabileceği için ritmi veriye göre belirliyoruz.",
       },
     ],
   },
@@ -228,9 +299,9 @@ export const home = {
   final: {
     id: "iletisim",
     eyebrow: "Başlamaya hazır mısınız?",
-    title: "Markanızın hikâyesini doğru kitleye birlikte anlatalım.",
-    description:
-      "Ücretsiz analiz görüşmesiyle başlıyoruz: sizi dinliyor, mevcut durumunuzu inceliyor ve bir yol haritası çıkarıyoruz.",
+    title: "Reklam bütçenizi daha bilinçli yönetmeye hazır mısınız?",
+    description: "İşletmenizin hedeflerini değerlendirelim ve size uygun sonraki adımları netleştirelim.",
+    blogLink: "Önce yazılarımıza göz atmak isterseniz blogu inceleyin",
   },
 };
 

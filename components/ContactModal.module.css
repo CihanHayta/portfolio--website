@@ -196,3 +196,114 @@
     grid-template-columns: 1fr;
   }
 }
+
+.sent {
+  display: grid;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.sentTitle {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.sentText {
+  color: var(--color-ink-soft);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.secondaryBtn {
+  min-height: 46px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.secondaryBtn:hover {
+  border-color: var(--color-ink);
+}
+
+/* Giriş ve çıkış: yalnızca saydamlık ve konum/ölçek (GPU'da çalışır).
+   Çıkış girişten kısadır; süre ContactModal.jsx'teki CLOSE_MS ile aynı. */
+.backdrop {
+  animation: modalFade 0.25s ease both;
+}
+
+.panel {
+  animation: modalIn 0.35s var(--ease) both;
+}
+
+.backdrop[data-state="closing"] {
+  animation: modalFadeOut 0.18s ease both;
+}
+
+.backdrop[data-state="closing"] .panel {
+  animation: modalOut 0.18s ease both;
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modalFadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+}
+
+@keyframes modalOut {
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .panel,
+  .backdrop[data-state="closing"],
+  .backdrop[data-state="closing"] .panel {
+    animation: none;
+  }
+}
+
+/* Ana sayfadaki kontrol listesinden gelen seçimler: mesaja eklenecekleri
+   gönderilmeden önce görülsün diye salt okunur liste. */
+.selections {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-soft);
+}
+
+.selections ul {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.emailBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  transition: border-color 0.2s var(--ease);
+}

@@ -2,11 +2,13 @@ import {
   BarChart3,
   ClipboardCheck,
   Crosshair,
-  Palette,
+  MessagesSquare,
   PenLine,
+  RefreshCw,
   Rocket,
   Search,
   Sparkles,
+  Target,
 } from "lucide-react";
 
 // content.js'teki ikon adlarını ikon bileşenlerine eşler.
@@ -17,6 +19,8 @@ export const HOME_ICONS = {
   chart: BarChart3,
   focus: Crosshair,
   sparkles: Sparkles,
-  palette: Palette,
   clipboard: ClipboardCheck,
+  target: Target,
+  message: MessagesSquare,
+  refresh: RefreshCw,
 };

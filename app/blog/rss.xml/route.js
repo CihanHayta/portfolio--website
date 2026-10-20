@@ -1,4 +1,4 @@
-import { blog, profile } from "@/data/content";
+import { blog, brand } from "@/data/content";
 import { SITE_URL } from "@/lib/supabase/env";
 import { listPublishedForFeeds } from "@/lib/blog/queries";
 
@@ -29,7 +29,7 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${escapeXml(`${profile.fullName} — Blog`)}</title>
+    <title>${escapeXml(`${brand.legalName} — Blog`)}</title>
     <link>${SITE_URL}/blog</link>
     <description>${escapeXml(blog.description)}</description>
     <language>tr-TR</language>

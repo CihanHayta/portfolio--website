@@ -1,4 +1,6 @@
+import { Suspense, cache } from "react";
 import Image from "next/image";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -15,12 +17,16 @@ import {
 } from "lucide-react";
 import { blog, profile } from "@/data/content";
 import { formatDate } from "@/lib/blog/format";
+import { openGraph, twitter } from "@/lib/seo";
+import { isPageInRange, readPageParam } from "@/lib/blog/pagination";
 import {
   POSTS_PER_PAGE,
+  countPosts,
   listCategories,
   listFeaturedPosts,
   listPosts,
 } from "@/lib/blog/queries";
+import BlogContactCard from "@/components/blog/BlogContactCard";
 import BlogSearch from "@/components/blog/BlogSearch";
 import PostCard from "@/components/blog/PostCard";
 import styles from "../blog.module.css";
@@ -44,63 +50,71 @@ function blogHref({ q, kategori, page }) {
   return query ? `/blog?${query}` : "/blog";
 }
 
+const loadCategories = cache(listCategories);
+
 async function readFilters(searchParams) {
   const params = await searchParams;
   const q = first(params.q).trim().slice(0, 80);
   const kategori = first(params.kategori).trim().slice(0, 80);
-  const page = Math.min(Math.max(Number.parseInt(first(params.page), 10) || 1, 1), 500);
-  return { q, kategori, page };
+  const { page, status } = readPageParam(first(params.page));
+  return { q, kategori, page: page ?? 1, pageStatus: status };
 }
 
 export async function generateMetadata({ searchParams }) {
   const { q, kategori, page } = await readFilters(searchParams);
+  // Kategori sayfaları kendi canonical'ına sahip olduğu için başlık ve
+  // açıklaması da kendine özgüdür.
+  const category = kategori ? (await loadCategories()).find((item) => item.slug === kategori) : null;
+  const base = category ? `Blog: ${category.name}` : "Blog";
+  const description = category
+    ? `${category.name} kategorisindeki yazılar: ${category.description || blog.description}`
+    : blog.description;
   return {
-    title: `Blog — ${profile.fullName}`,
-    description: blog.description,
+    title: page > 1 ? `${base} — Sayfa ${page}` : base,
+    description,
     alternates: {
-      canonical: blogHref({ kategori, page }),
+      // Tanınmayan kategori parametresi canonical'a taşınmaz.
+      canonical: blogHref({ kategori: category?.slug, page }),
       types: { "application/rss+xml": "/blog/rss.xml" },
     },
-    // Arama sonuç sayfaları dizine eklenmez.
-    robots: q ? { index: false, follow: true } : undefined,
-    openGraph: {
-      type: "website",
-      title: `Blog — ${profile.fullName}`,
-      description: blog.description,
-      url: "/blog",
-      locale: "tr_TR",
-    },
+    // Arama sonuç sayfaları ve yazısı olmayan kategoriler dizine eklenmez
+    // (site haritası da yalnızca yazısı olan kategorileri listeler).
+    robots: q || category?.postCount === 0 ? { index: false, follow: true } : undefined,
+    openGraph: openGraph({ title: base, description, url: blogHref({ kategori: category?.slug, page }) }),
+    twitter: twitter({ title: base, description }),
   };
 }
 
 export default async function BlogPage({ searchParams }) {
-  const { q, kategori, page } = await readFilters(searchParams);
+  const { q, kategori, page, pageStatus } = await readFilters(searchParams);
 
-  const categories = await listCategories();
-  const activeCategory = categories.find((category) => category.slug === kategori) ?? null;
+  // Sayfa parametresi akış başlamadan çözülür: geçersiz değer (abc, 0, -3,
+  // 2abc, üst sınır aşımı) 404 olur; "1" ve "02" gibi yazımlar aynı içeriğin
+  // kanonik adresine kalıcı olarak yönlendirilir. Hiçbir içerik iki adreste 200 dönmez.
+  if (pageStatus === "invalid") notFound();
+  if (pageStatus === "redirect") permanentRedirect(blogHref({ q, kategori, page }));
 
-  const [{ posts, total }, featured, { total: totalAll }] = await Promise.all([
-    listPosts({ query: q, categoryId: activeCategory?.id ?? null, page }),
-    listFeaturedPosts(3),
-    q || activeCategory ? listPosts({ page: 1 }) : Promise.resolve({ total: null }),
-  ]);
+  // Geçersiz sayfa numarası, akış başlamadan reddedilir; yalnızca bu sayede
+  // yanıt gerçek bir HTTP 404 olur (akış başladıktan sonra durum kodu 200'de
+  // kalır). 1. sayfa her zaman geçerli olduğu için bekletilmez.
+  if (page > 1) {
+    const category = kategori ? (await loadCategories()).find((item) => item.slug === kategori) : null;
+    const total = await countPosts({ query: q, categoryId: category?.id ?? null });
+    if (!isPageInRange(page, total)) notFound();
+  }
 
-  const allCount = totalAll ?? total;
-  const pageCount = Math.max(1, Math.ceil(total / POSTS_PER_PAGE));
-  const isFiltered = Boolean(q || activeCategory);
-  const activeSlug = activeCategory?.slug ?? "";
-
+  // Başlık ve arama alanı veri beklemeden hemen çizilir (sayfanın en büyük
+  // öğesi bu başlıktır); yazılar ve kenar çubuğu veritabanından akarak gelir.
   return (
     <main className={`container ${styles.page}`}>
-      <div className={styles.main}>
-        <section className={styles.hero} aria-labelledby="blog-baslik">
+      <section className={styles.hero} aria-labelledby="blog-baslik">
           <div className={styles.heroText}>
             <p className={styles.eyebrow}>Blog</p>
             <h1 id="blog-baslik" className={styles.heading}>
               {blog.title}
             </h1>
             <p className={styles.lead}>{blog.description}</p>
-            <BlogSearch defaultValue={q} category={activeSlug} />
+            <BlogSearch defaultValue={q} category={kategori} />
           </div>
 
           {/* Görsel yokken panel yalnızca alıntıyı taşır; dar ekranda gizlenir. */}
@@ -123,8 +137,56 @@ export default async function BlogPage({ searchParams }) {
               <figcaption>— {profile.fullName}</figcaption>
             </figure>
           </div>
-        </section>
+      </section>
 
+      <Suspense fallback={<BlogResultsSkeleton />}>
+        <BlogResults q={q} kategori={kategori} page={page} />
+      </Suspense>
+      <BlogContactCard mode="list" />
+    </main>
+  );
+}
+
+function BlogResultsSkeleton() {
+  return (
+    <>
+      <div className={styles.results} aria-busy="true" aria-label="Yazılar yükleniyor">
+        <div className={styles.grid}>
+          {Array.from({ length: 6 }, (_, index) => (
+            <div key={index} className={styles.skeleton} style={{ height: 270 }} />
+          ))}
+        </div>
+      </div>
+      <aside className={styles.sidebar}>
+        <div className={styles.skeleton} style={{ height: 250 }} />
+        <div className={styles.skeleton} style={{ height: 180 }} />
+      </aside>
+    </>
+  );
+}
+
+async function BlogResults({ q, kategori, page }) {
+  const categories = await loadCategories();
+  const activeCategory = categories.find((category) => category.slug === kategori) ?? null;
+
+  const [{ posts, total }, featured, { total: totalAll }] = await Promise.all([
+    listPosts({ query: q, categoryId: activeCategory?.id ?? null, page }),
+    listFeaturedPosts(3),
+    q || activeCategory ? listPosts({ page: 1 }) : Promise.resolve({ total: null }),
+  ]);
+
+  // Aralık denetimiyle bu sorgu arasında yazı silinmiş olabilir: yine de
+  // boş sayfa gösterilmez (bu durumda yanıt noindex'li "bulunamadı" olur).
+  if (page > 1 && posts.length === 0) notFound();
+
+  const allCount = totalAll ?? total;
+  const pageCount = Math.max(1, Math.ceil(total / POSTS_PER_PAGE));
+  const isFiltered = Boolean(q || activeCategory);
+  const activeSlug = activeCategory?.slug ?? "";
+
+  return (
+    <>
+      <div className={styles.results}>
         <nav className={styles.chips} aria-label="Kategoriye göre süz">
           <Link
             href={blogHref({ q })}
@@ -296,6 +358,6 @@ export default async function BlogPage({ searchParams }) {
           </Link>
         </section>
       </aside>
-    </main>
+    </>
   );
 }

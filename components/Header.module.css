@@ -2,17 +2,34 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(20, 20, 20, 0.96);
+  background: rgba(20, 20, 20, 0.86);
   color: var(--p-cream);
-  border-bottom: 1px solid var(--p-night-3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid transparent;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: headerIn 0.5s var(--ease) both;
+  transition:
+    background 0.3s var(--ease),
+    border-color 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+
+@keyframes headerIn {
+  from {
+    opacity: 0;
+  }
+}
+
+.header[data-scrolled="true"] {
+  background: rgba(20, 20, 20, 0.97);
+  border-bottom-color: var(--p-night-3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .inner {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
   width: min(1280px, 100% - 40px);
   min-height: 68px;
   margin-inline: auto;
@@ -40,31 +57,60 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
+/* Bağlantı altında soldan açılan ince çizgi; etkin sayfa için kalıcı. */
 .navLink {
-  padding: 8px 14px;
-  border-radius: var(--radius-pill);
+  position: relative;
+  padding: 10px 12px;
   color: #c9c2b6;
   font-size: 14px;
   font-weight: 600;
-  transition: color 0.2s var(--ease), background 0.2s var(--ease);
+  white-space: nowrap;
+  transition: color 0.2s var(--ease);
 }
 
-.navLink:hover {
-  color: var(--p-cream);
+.navLink::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: 4px;
+  left: 12px;
+  height: 1px;
+  background: var(--p-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s var(--ease);
 }
 
+.navLink:hover,
+.navLink:focus-visible,
 .navLink[aria-current="page"] {
-  background: var(--p-night-3);
   color: var(--p-cream);
 }
 
+.navLink:hover::after,
+.navLink:focus-visible::after,
+.navLink[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+/* Sağ üstteki birincil çağrı: menü bağlantılarından ayrışsın diye altın
+   zemin, biraz daha geniş iç boşluk ve menüden belirgin bir aralık. */
 .cta {
-  min-height: 42px;
+  min-height: 44px;
+  margin-left: 8px;
   padding: 0 20px;
-  font-size: 14px;
+  font-size: 13.5px;
+  white-space: nowrap;
+  /* Etiket iki parçadır (dar ekranda ikincisi gizlenir); aralarına düğmenin
+     ikon aralığı girmesin. */
+  gap: 0;
+}
+
+.ctaRest {
+  white-space: pre;
 }
 
 .menuBtn {
@@ -80,23 +126,58 @@
   background: var(--p-night-3);
 }
 
+/* Mobil menü: yükseklik grid satırıyla açılır, bağlantılar sırayla belirir. */
 .mobileMenu {
   display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.35s var(--ease),
+    visibility 0s linear 0.35s;
+}
+
+.mobileMenu[data-open="true"] {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition:
+    grid-template-rows 0.35s var(--ease),
+    visibility 0s;
+}
+
+.mobileInner {
+  display: grid;
   gap: 2px;
+  min-height: 0;
   width: min(1280px, 100% - 40px);
   margin-inline: auto;
-  padding: 8px 0 20px;
-  border-top: 1px solid var(--p-night-3);
+  overflow: hidden;
 }
 
 .mobileLink {
   display: flex;
   align-items: center;
-  min-height: 48px;
+  min-height: 50px;
   border-bottom: 1px solid var(--p-night-3);
   color: #d6cfc3;
   font-size: 16px;
   font-weight: 600;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.25s var(--ease),
+    transform 0.25s var(--ease),
+    color 0.2s var(--ease);
+}
+
+.mobileLink:first-child {
+  margin-top: 8px;
+  border-top: 1px solid var(--p-night-3);
+}
+
+.mobileMenu[data-open="true"] .mobileLink {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(var(--i) * 35ms + 80ms);
 }
 
 .mobileLink[aria-current="page"] {
@@ -105,13 +186,22 @@
 
 .mobileCta {
   width: 100%;
-  margin-top: 14px;
+  margin-block: 14px 20px;
 }
 
-@media (max-width: 900px) {
-  .nav,
-  .cta {
+@media (max-width: 1120px) {
+  .nav {
     display: none;
+  }
+
+  .inner {
+    gap: 12px;
+  }
+
+  .cta {
+    min-height: 40px;
+    margin-left: 0;
+    padding: 0 16px;
   }
 
   .menuBtn {
@@ -119,8 +209,43 @@
   }
 }
 
-@media (max-width: 380px) {
-  .logo {
-    font-size: 16px;
+@media (max-width: 640px) {
+  .ctaRest {
+    display: none;
+  }
+
+  .cta {
+    padding: 0 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logoSuffix {
+    display: none;
+  }
+}
+
+/* En dar ekranlarda çağrı mobil menüde ve alttaki arama çubuğunda kalır. */
+@media (max-width: 359px) {
+  .cta {
+    display: none;
+  }
+}
+
+@media (min-width: 1121px) {
+  .mobileMenu {
+    display: none;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .mobileMenu,
+  .mobileLink,
+  .navLink::after {
+    animation: none;
+    transition: none;
   }
 }

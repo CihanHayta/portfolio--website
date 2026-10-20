@@ -1,10 +1,13 @@
 import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { profile } from "@/data/content";
-import { faqSchemaItems } from "@/lib/blog/blocks/model";
-import { SITE_URL } from "@/lib/supabase/env";
+import { contentText, faqSchemaItems } from "@/lib/blog/blocks/model";
+import { DEFAULT_OG_IMAGE, ORGANIZATION_ID, openGraph, organizationJsonLd, twitter } from "@/lib/seo";
+import { PRODUCTION_SITE_URL, SITE_URL } from "@/lib/supabase/env";
+import { postCanonical } from "@/lib/blog/canonical";
 import { getPostBySlug, getRedirectSlug, listRelatedPosts } from "@/lib/blog/queries";
 import ArticleCta from "@/components/blog/ArticleCta";
+import BlogContactCard from "@/components/blog/BlogContactCard";
 import ArticleView from "@/components/blog/ArticleView";
 import PostCard from "@/components/blog/PostCard";
 import styles from "./page.module.css";
@@ -19,38 +22,55 @@ export async function generateStaticParams() {
 
 const loadPost = cache(getPostBySlug);
 
+const canonicalOf = (post) =>
+  postCanonical({ slug: post.slug, canonicalUrl: post.canonical_url }, { siteUrl: SITE_URL, ownHosts: [new URL(PRODUCTION_SITE_URL).host] });
+
+// Açıklama: önce yazarın SEO açıklaması, sonra özet; ikisi de boşsa yazının
+// ilk cümlelerinden en fazla 155 karakter (kelime ortasında kesilmez).
+function postDescription(post) {
+  const manual = (post.seo_description || post.excerpt || "").trim();
+  if (manual) return manual;
+  const text = contentText(post.content).replace(/\s+/g, " ").trim();
+  if (text.length <= 155) return text || undefined;
+  return `${text.slice(0, 155).replace(/\s+\S*$/, "")}…`;
+}
+
 // JSON-LD içindeki "<" kaçırılır; içerik <script> etiketini kapatamaz.
 const jsonLd = (data) => ({ __html: JSON.stringify(data).replace(/</g, "\\u003c") });
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const post = await loadPost(slug);
-  if (!post) return { title: `Yazı bulunamadı — ${profile.fullName}`, robots: { index: false } };
+  if (!post) return { title: "Yazı bulunamadı", robots: { index: false } };
 
   const title = post.seo_title || post.title;
-  const description = post.seo_description || post.excerpt;
+  const description = postDescription(post);
+  // Kapak görseli yoksa markanın varsayılan paylaşım görseli kullanılır.
   const images = post.cover
-    ? [{ url: post.cover.url, width: post.cover.width, height: post.cover.height, alt: post.cover_alt }]
-    : undefined;
+    ? [{ url: post.cover.url, width: post.cover.width, height: post.cover.height, alt: post.cover_alt || post.title }]
+    : [DEFAULT_OG_IMAGE];
+
+  // Dış kanonik adres varsa paylaşım adresi de odur; canonical ile og:url çelişmez.
+  const canonical = canonicalOf(post);
+  const canonicalHref = canonical.external ? canonical.url : canonical.path;
 
   return {
-    title: `${title} — ${profile.fullName}`,
+    title,
     description,
-    alternates: { canonical: post.canonical_url || `/blog/${post.slug}` },
-    openGraph: {
+    alternates: { canonical: canonicalHref },
+    openGraph: openGraph({
       type: "article",
       title,
       description,
-      url: `/blog/${post.slug}`,
-      locale: "tr_TR",
+      url: canonicalHref,
+      images,
       publishedTime: post.published_at,
       modifiedTime: post.updated_at,
       authors: [post.author_name || profile.fullName],
       section: post.category?.name,
       tags: post.tags?.map((tag) => tag.name),
-      images,
-    },
-    twitter: { card: images ? "summary_large_image" : "summary", title, description },
+    }),
+    twitter: twitter({ title, description, images: images.map((image) => image.url) }),
   };
 }
 
@@ -72,13 +92,13 @@ export default async function BlogPostPage({ params }) {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: post.title,
-    description: post.seo_description || post.excerpt || undefined,
-    image: post.cover ? [post.cover.url] : undefined,
+    description: postDescription(post),
+    image: post.cover ? [post.cover.url] : [new URL(DEFAULT_OG_IMAGE.url, SITE_URL).href],
     datePublished: post.published_at,
     dateModified: post.updated_at,
     author: { "@type": "Person", name: author, url: SITE_URL },
-    publisher: { "@type": "Person", name: profile.fullName, url: SITE_URL },
-    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    publisher: { "@id": ORGANIZATION_ID },
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonicalOf(post).url },
     articleSection: post.category?.name,
     keywords: post.tags?.length ? post.tags.map((tag) => tag.name).join(", ") : undefined,
     inLanguage: "tr-TR",
@@ -112,6 +132,7 @@ export default async function BlogPostPage({ params }) {
     <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(articleSchema)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(breadcrumbSchema)} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(organizationJsonLd())} />
       {faqSchema ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(faqSchema)} />
       ) : null}
@@ -132,6 +153,8 @@ export default async function BlogPostPage({ params }) {
           </div>
         </section>
       ) : null}
+
+      <BlogContactCard mode="article" />
     </main>
   );
 }

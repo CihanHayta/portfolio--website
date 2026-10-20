@@ -5,14 +5,28 @@
 }
 
 .inner {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px 32px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "brand nav contact"
+    "copy copy copy";
+  gap: 28px 40px;
   width: min(1280px, 100% - 40px);
-  min-height: 92px;
   margin-inline: auto;
-  padding-block: 20px;
+  padding-block: 48px 28px;
+}
+
+.brand {
+  grid-area: brand;
+  display: grid;
+  gap: 10px;
+  max-width: 340px;
+}
+
+.summary {
+  color: #b5ada1;
+  font-size: 13.5px;
+  line-height: 1.6;
 }
 
 .logo {
@@ -32,15 +46,19 @@
 }
 
 .nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 20px;
-  margin-right: auto;
+  grid-area: nav;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  align-content: start;
+  gap: 0 28px;
   font-size: 14px;
   font-weight: 600;
 }
 
 .nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
   color: #c9c2b6;
 }
 
@@ -51,6 +69,7 @@
 .socials {
   display: flex;
   gap: 8px;
+  margin-top: 10px;
 }
 
 .socials a {
@@ -69,14 +88,59 @@
   color: var(--p-gold);
 }
 
+.contact {
+  grid-area: contact;
+  display: grid;
+  align-content: start;
+  gap: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+/* Dokunma alanı en az 32px yüksek (WCAG 2.2 hedef boyutu). */
+.contact a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--p-cream);
+}
+
+.contact a:hover,
+.legal:hover {
+  color: var(--p-gold);
+}
+
 .copy {
+  grid-area: copy;
+  padding-top: 20px;
+  border-top: 1px solid var(--p-night-3);
   color: #b5ada1;
   font-size: 13px;
 }
 
-@media (max-width: 720px) {
+.legal {
+  color: #d6cfc3;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 860px) {
   .inner {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "brand brand"
+      "nav contact"
+      "copy copy";
+  }
+}
+
+@media (max-width: 520px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "brand"
+      "nav"
+      "contact"
+      "copy";
   }
 }

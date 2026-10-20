@@ -1,9 +1,25 @@
 .page {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 310px;
-  gap: 36px;
+  grid-template-areas:
+    "hero side"
+    "results side";
+  column-gap: 36px;
   padding-block: 22px 72px;
   align-items: start;
+}
+
+.page > .hero {
+  grid-area: hero;
+}
+
+.results {
+  grid-area: results;
+  min-width: 0;
+}
+
+.page > .sidebar {
+  grid-area: side;
 }
 
 /* --- Üst bölüm ----------------------------------------------------------- */
@@ -406,6 +422,11 @@
 @media (max-width: 1120px) {
   .page {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "hero"
+      "results"
+      "side";
+    row-gap: 36px;
   }
 
   .sidebar {

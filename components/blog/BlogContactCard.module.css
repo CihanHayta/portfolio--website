@@ -1,0 +1,211 @@
+/* Persona marka paleti: gece siyahı zemin, krem metin, altın vurgu.
+   Kart sabit konumludur; açılırken sayfa düzenini kaydırmaz (CLS yok). */
+.card {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 80;
+  display: grid;
+  gap: 8px;
+  width: min(360px, calc(100vw - 48px));
+  padding: 22px 22px 20px;
+  border: 1px solid var(--p-night-3);
+  border-top: 2px solid var(--p-gold);
+  border-radius: var(--radius-md);
+  background: var(--p-night);
+  color: var(--p-cream);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  animation: rise 0.42s var(--ease) both;
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+}
+
+.card[data-phase="leaving"] {
+  animation: sink 0.2s ease-in both;
+}
+
+/* Yazının sonundaki CTA görünürken kart geri çekilir. */
+.card[data-tucked] {
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sink {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #b5ada1;
+  cursor: pointer;
+  transition: color 0.2s var(--ease), background 0.2s var(--ease);
+}
+
+.close:hover {
+  background: var(--p-night-2);
+  color: var(--p-cream);
+}
+
+.eyebrow {
+  padding-right: 40px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--p-gold);
+}
+
+.title {
+  padding-right: 24px;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--p-cream);
+}
+
+/* Taş gri (#6B6259) koyu zeminde okunabilirlik eşiğinin altında kaldığı için
+   açıklama metninde kremin yumuşatılmış tonu kullanılır. */
+.text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #b5ada1;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  margin-top: 6px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--p-gold);
+  color: var(--p-night);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.cta:hover {
+  background: var(--p-gold-hover);
+  transform: translateY(-1px);
+}
+
+.cta svg {
+  transition: transform 0.2s var(--ease);
+}
+
+.cta:hover svg {
+  transform: translateX(3px);
+}
+
+.close:focus-visible,
+.cta:focus-visible {
+  outline: 2px solid var(--p-gold);
+  outline-offset: 3px;
+}
+
+/* Mobil: sabit arama çubuğunun (72px + güvenli alan) üstünde, kompakt. */
+@media (max-width: 760px) {
+  .card {
+    right: 12px;
+    left: 12px;
+    bottom: calc(72px + env(safe-area-inset-bottom) + 10px);
+    width: auto;
+    gap: 6px;
+    padding: 16px 16px 14px;
+  }
+
+  .eyebrow {
+    display: none;
+  }
+
+  .title {
+    padding-right: 40px;
+    font-size: 16px;
+  }
+
+  .text {
+    font-size: 13px;
+  }
+
+  .cta {
+    min-height: 44px;
+    margin-top: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation-name: fadeIn;
+    animation-duration: 0.15s;
+    transform: none;
+  }
+
+  .card[data-phase="leaving"] {
+    animation-name: fadeOut;
+    animation-duration: 0.15s;
+  }
+
+  .card[data-tucked] {
+    transform: none;
+  }
+
+  .cta,
+  .cta svg,
+  .cta:hover,
+  .cta:hover svg {
+    transform: none;
+    transition: none;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+}

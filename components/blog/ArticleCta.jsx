@@ -13,7 +13,7 @@ export default function ArticleCta() {
   const [open, setOpen] = useState(false);
 
   return (
-    <aside className={styles.cta} aria-labelledby="yazi-cta-baslik">
+    <aside className={styles.cta} aria-labelledby="yazi-cta-baslik" data-inline-cta>
       <h2 id="yazi-cta-baslik" className={styles.title}>
         Markanızı doğru kitleye birlikte anlatalım
       </h2>
@@ -26,7 +26,7 @@ export default function ArticleCta() {
           <Send size={16} aria-hidden="true" />
           {ctaLabel}
         </button>
-        <Link href="/#yontem" className={styles.secondary}>
+        <Link href="/#calisma-yontemimiz" className={styles.secondary}>
           Nasıl çalışıyoruz?
           <ArrowRight size={15} aria-hidden="true" />
         </Link>

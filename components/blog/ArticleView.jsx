@@ -88,7 +88,7 @@ export default function ArticleView({ post, children }) {
       ) : null}
 
       <div className={styles.layout} data-toc={showToc}>
-        <div className={styles.content}>
+        <div className={styles.content} data-reading-body>
           {showToc ? (
             <details className={styles.tocMobile}>
               <summary>
