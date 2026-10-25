@@ -17,10 +17,27 @@ const nextConfig = {
     "/api/admin/ai/images": ["./node_modules/@img/**/*"],
     "/api/admin/ai/screenshots": ["./node_modules/@img/**/*"],
     "/api/admin/ai/import-image": ["./node_modules/@img/**/*"],
+    "/api/admin/ai/visual-image": ["./node_modules/@img/**/*"],
   },
   // İsteğe bağlı tarayıcı okuyucusu (yalnızca yerelde, PLAYWRIGHT_READER=1)
   // paketlenmez; çalışma anında dinamik olarak yüklenir.
   serverExternalPackages: ["playwright-core"],
+  // Temel güvenlik başlıkları. Çerçeve yalnızca aynı kaynakta izinli: yönetimdeki
+  // AI önizlemesi (/admin/ai-preview) kendi sitesinde iframe içinde açılır.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+        ],
+      },
+    ];
+  },
   images: {
     dangerouslyAllowLocalIP: isLocalSupabase,
     remotePatterns: supabaseUrl

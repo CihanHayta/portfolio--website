@@ -16,10 +16,13 @@ export async function POST(request) {
 
   let file;
   let altText = "";
+  let caption = "";
   try {
     const form = await request.formData();
     file = form.get("file");
     altText = String(form.get("alt") ?? "").trim().slice(0, 300);
+    // İsteğe bağlı köken notu (ör. "AI: Cloudflare Workers AI · FLUX.1 [schnell]").
+    caption = String(form.get("caption") ?? "").trim().slice(0, 300);
   } catch {
     return json({ error: "Yükleme okunamadı." }, 400);
   }
@@ -33,7 +36,7 @@ export async function POST(request) {
   }
   if (encoded.error) return json({ error: "Dosya geçerli bir görsel değil." }, 415);
 
-  const stored = await storeMedia(admin, encoded.output, altText);
+  const stored = await storeMedia(admin, encoded.output, altText, { caption });
   if (stored.error) return json({ error: stored.error }, stored.status);
 
   return json({ media: stored.media }, 201);

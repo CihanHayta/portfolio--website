@@ -3,7 +3,7 @@ import { instantiateTemplate, templateByKey } from "@/lib/blog/blocks/templates"
 import { SITE_URL } from "@/lib/supabase/env";
 import BlogBuilder from "@/components/admin/builder/BlogBuilder";
 
-export const metadata = { title: "Yeni Yazı — Blog Yönetimi" };
+export const metadata = { title: "Yeni Blog Yazısı — Blog Yönetimi" };
 
 // Editör yalnızca kategori listesini bekler; yazı kaydı ilk kaydetmede açılır.
 // `?template=<anahtar>` ile şablon galerisinden gelinirse taslak o şablonun

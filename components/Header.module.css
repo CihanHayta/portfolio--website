@@ -44,6 +44,10 @@
   font-weight: 800;
   letter-spacing: -0.01em;
   white-space: nowrap;
+  /* Uzun basma (yönetici kısayolu) tarayıcının bağlantı önizlemesini açmasın. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .logoMark {

@@ -17,12 +17,15 @@ export function GithubIcon({ size = 20, className, ...props }) {
   );
 }
 
+// Dolgulu logo 24'lük ızgarayı kenardan kenara doldurur; çizgisel ikonlar
+// (Instagram, Lucide) ise ~2px iç boşlukla çizilir. Görünür boyutları eşit
+// olsun diye görünüm kutusuna aynı oranda boşluk eklenir; logo değişmez.
 export function LinkedinIcon({ size = 20, className, ...props }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="-2.5 -2.5 29 29"
       fill="currentColor"
       className={className}
       {...props}

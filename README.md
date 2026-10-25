@@ -119,6 +119,25 @@ Maliyet ve servisler:
 
 Gerekli ortam değişkeni: `GEMINI_API_KEY` (yalnızca sunucu). Testler: `npm test`.
 
+Gemini dışındaki ücretsiz sağlayıcılar (OVHcloud anonim yedek; anahtarla Groq,
+OpenRouter, Cloudflare FLUX, ComfyUI), panelden yönetilen sıra ve limitler ile
+canlıda gereken `AI_USAGE_STORE=supabase` için: `docs/AI_PROVIDERS_AND_LIMITS.md`.
+
+### Operasyon belgeleri (`docs/`)
+
+| Belge | İçerik |
+|---|---|
+| `PRODUCT_READINESS.md` | Genel durum, test sonuçları, açık konular |
+| `DEPLOYMENT.md` | Vercel, ortam değişkenleri, canlıya alma ve geri alma |
+| `SUPABASE_SETUP.md` | Projeler, şema, Auth, bakım betikleri, entegrasyon testi |
+| `BACKUP_AND_RESTORE.md` | Yedek alma, test projesine geri yükleme, felaket adımları |
+| `AI_PROVIDERS_AND_LIMITS.md` | Ücretsiz AI sağlayıcıları, ücret risk sınıfları, rotasyon, limitler |
+| `SECURITY_CHECKLIST.md` | Güvenlik kontrolleri ve düzenli tekrar komutları |
+| `COMMERCIAL_READINESS.md` | Lisanslar, platform şartları, KVKK, maliyet |
+
+Panelde deneme yapmak için canlı yerine test veritabanına bağlı sunucuyu kullanın:
+`node scripts/supabase/dev-test.mjs` (http://localhost:3100).
+
 ## Project videos
 
 A project with `video` + `poster` fields in `data/content.js` shows a muted

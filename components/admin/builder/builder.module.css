@@ -1735,3 +1735,55 @@
     left: -30px;
   }
 }
+
+/* AI Görsel Stüdyosu'nun önerdiği, henüz eklenmemiş görsel noktası. */
+.visualMark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  margin: 6px 0 10px;
+  padding: 8px 12px;
+  border: 1px dashed var(--blog-line-strong);
+  border-radius: var(--blog-radius-control);
+  background: transparent;
+  color: var(--blog-ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.visualMark:hover {
+  border-color: var(--blog-ink);
+  color: var(--blog-ink);
+}
+
+/* Masaüstü üst çubuğa özgü düğme; küçük ekranlarda aynı işlev mobil çubukta. */
+@media (max-width: 1180px) {
+  .desktopOnly {
+    display: none;
+  }
+}
+
+/* Telefonda mobil çubuktaki düğmeler (Bloklar, Ayarlar, AI ile Yaz, AI Görselleri)
+   iki sütuna dizilir; ikonlar ezilmez, metinler kesilmez. */
+@media (max-width: 560px) {
+  .mobileBar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mobileBar > .topButton {
+    justify-content: center;
+  }
+
+  .mobileBar > .mobileSave {
+    grid-column: 1 / -1;
+  }
+}
+
+.mobileBar .topButton svg {
+  flex: none;
+}

@@ -43,3 +43,12 @@ next-env.d.ts
 
 # supabase cli
 supabase/.temp
+
+# yerel AI kullanım ve limit deposu (kişisel veri/anahtar içermez; yine de izlenmez)
+/.data/
+
+# next dev'in yapay zekâ ajanları için otomatik yazdığı genel not (projeye ait değil)
+/AGENTS.md
+
+# git'e girmeyen yerel belgeler (güvenlik ayrıntıları; depo herkese açık)
+/docs/private/

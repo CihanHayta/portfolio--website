@@ -1,6 +1,7 @@
 import { getAdmin } from "@/lib/blog/admin";
 import { encodeImage, isSameOrigin } from "@/lib/blog/media";
-import { AiError, generateJson } from "@/lib/ai/gemini";
+import { AiError } from "@/lib/ai/gemini";
+import { generateJsonRouted as generateJson } from "@/lib/ai/textRouter";
 import { errorResponse, json } from "@/lib/ai/http";
 import { MAX_SCREENSHOTS, SCREENSHOT_SCHEMA, SCREENSHOT_SYSTEM, buildScreenshotPrompt, normalizeScreenshots } from "@/lib/ai/screenshots";
 
@@ -42,6 +43,8 @@ export async function POST(request) {
 
   try {
     const result = await generateJson({
+      task: "screenshot-read",
+      db: admin.supabase,
       system: SCREENSHOT_SYSTEM,
       prompt: buildScreenshotPrompt(images.length),
       schema: SCREENSHOT_SCHEMA,

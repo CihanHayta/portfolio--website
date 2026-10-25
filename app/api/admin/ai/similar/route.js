@@ -1,5 +1,5 @@
 import { compareWithArchive, buildSuggestPrompt, normalizeSuggestions, SUGGEST_SCHEMA, SUGGEST_SYSTEM } from "@/lib/ai/archiveCompare";
-import { generateJson } from "@/lib/ai/gemini";
+import { generateJsonRouted as generateJson } from "@/lib/ai/textRouter";
 import { errorResponse, json, readAdminRequest } from "@/lib/ai/http";
 import { contentHeadings, contentText, toBlocks } from "@/lib/blog/blocks/model";
 
@@ -67,7 +67,7 @@ export async function POST(request) {
 
   const source = readSource(body.source);
   if (!source) return json({ error: "Karşılaştırılacak kaynak metni yok." }, 400);
-  const generate = (options) => generateJson({ ...options });
+  const generate = (options) => generateJson({ task: "similarity", db: admin.supabase, ...options });
 
   try {
     if (body.mode === "suggest") {

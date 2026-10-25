@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "NODE_NO_WARNINGS=1 NEXT_PUBLIC_SUPABASE_URL=https://test.supabase.co node --import ./tests/register.mjs --test \"lib/**/*.test.js\" \"tests/*.test.mjs\""
+    "test": "NODE_NO_WARNINGS=1 NEXT_PUBLIC_SUPABASE_URL=https://test.supabase.co node --import ./tests/register.mjs --test \"lib/**/*.test.js\" \"tests/*.test.mjs\"",
+    "test:integration": "NODE_NO_WARNINGS=1 node --test --test-concurrency=1 \"tests/integration/*.int.mjs\""
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -21,7 +22,7 @@
     "@tiptap/starter-kit": "^3.31.4",
     "framer-motion": "^12.43.0",
     "lucide-react": "^1.28.0",
-    "next": "16.2.12",
+    "next": "16.4.3",
     "playwright-core": "1.63.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -29,6 +30,6 @@
   },
   "devDependencies": {
     "eslint": "^9",
-    "eslint-config-next": "16.2.12"
+    "eslint-config-next": "16.4.3"
   }
 }

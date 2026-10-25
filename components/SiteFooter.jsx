@@ -29,27 +29,33 @@ export default function SiteFooter() {
         <div className={styles.contact}>
           <a href={`tel:${profile.phone.replace(/[^+\d]/g, "")}`}>{profile.phone}</a>
           <a href={`mailto:${profile.email}`}>{profile.email}</a>
-          <ul className={styles.socials}>
+        </div>
+
+        {/* Sosyal bağlantılar sütunların altında, tam genişlikte ve ortalı durur;
+            böylece hiçbir ekran boyutunda bir sütunun hizasına bağlı kalmaz. */}
+        <div className={styles.bottom}>
+          <ul className={styles.socials} aria-label="Sosyal medya ve e-posta">
             {socials.map(({ name, href, Icon }) => (
               <li key={name}>
                 <a
                   href={href}
                   aria-label={name}
+                  className={styles.social}
                   {...(href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
                 >
-                  <Icon size={17} strokeWidth={1.8} />
+                  <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                 </a>
               </li>
             ))}
           </ul>
-        </div>
 
-        <p className={styles.copy}>
-          © {new Date().getFullYear()} — {brand.legalName} ·{" "}
-          <Link href="/gizlilik" className={styles.legal}>
-            Gizlilik Politikası
-          </Link>
-        </p>
+          <p className={styles.copy}>
+            © {new Date().getFullYear()} — {brand.legalName} ·{" "}
+            <Link href="/gizlilik" className={styles.legal}>
+              Gizlilik Politikası
+            </Link>
+          </p>
+        </div>
       </div>
     </footer>
   );

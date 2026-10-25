@@ -1,23 +1,38 @@
+import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import Header from "@/components/Header";
+import { ArrowLeft } from "lucide-react";
+import { brand } from "@/data/content";
 import { getAdmin } from "@/lib/blog/admin";
+import { safeAdminPath } from "@/lib/blog/adminRedirect";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import LoginForm from "./LoginForm";
 import styles from "../admin.module.css";
 
-export const metadata = { title: "Giriş — Blog Yönetimi" };
+export const metadata = { title: { absolute: `Yönetici Girişi — ${brand.legalName}` } };
 
-export default async function LoginPage() {
-  if (await getAdmin()) redirect("/admin/blog");
+// `/admin` ve her korumalı yönetim sayfası oturum yoksa buraya gelir.
+// Oturum açık bir yönetici doğrudan hedef sayfaya (yoksa yazı listesine) geçer.
+export default async function LoginPage({ searchParams }) {
+  const { next } = await searchParams;
+  const target = safeAdminPath(typeof next === "string" ? next : "");
+  if (await getAdmin()) redirect(target);
   const configured = isSupabaseConfigured();
 
   return (
-    <>
-    <Header />
     <main className={styles.loginPage}>
       <div className={styles.loginCard}>
-        <h1 className={styles.loginTitle}>Blog Yönetimi</h1>
-        <p className={styles.muted}>Devam etmek için yönetici hesabınla giriş yap.</p>
+        <Link href="/" className={styles.loginBrand} aria-label={`${brand.legalName} ana sayfa`}>
+          <Image src="/brand/persona-mark.png" alt="" width={36} height={36} className={styles.loginMark} priority />
+          <span>
+            <span className={styles.loginBrandName}>{brand.name}</span> Dijital Pazarlama
+          </span>
+        </Link>
+
+        <div className={styles.loginIntro}>
+          <h1 className={styles.loginTitle}>Yönetici Girişi</h1>
+          <p className={styles.muted}>Blog yazılarını yönetmek için hesabınla giriş yap.</p>
+        </div>
 
         {configured ? null : (
           <p className={styles.alertWarning} role="status">
@@ -27,9 +42,13 @@ export default async function LoginPage() {
           </p>
         )}
 
-        <LoginForm disabled={!configured} />
+        <LoginForm disabled={!configured} next={target} />
       </div>
+
+      <Link href="/" className={styles.loginBack}>
+        <ArrowLeft size={16} aria-hidden="true" />
+        Siteye dön
+      </Link>
     </main>
-    </>
   );
 }

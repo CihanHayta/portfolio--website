@@ -9,7 +9,7 @@
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
   grid-template-areas:
     "brand nav contact"
-    "copy copy copy";
+    "bottom bottom bottom";
   gap: 28px 40px;
   width: min(1280px, 100% - 40px);
   margin-inline: auto;
@@ -66,24 +66,41 @@
   color: var(--p-cream);
 }
 
-.socials {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
+/* Alt şerit: sosyal ikonlar ve telif satırı, footer genişliğinde ortalı. */
+.bottom {
+  grid-area: bottom;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding-top: 24px;
+  border-top: 1px solid var(--p-night-3);
+  text-align: center;
 }
 
-.socials a {
+.socials {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 44px dokunma alanı; ikon dairenin tam ortasında. */
+.social {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--p-night-3);
   border-radius: 50%;
   color: var(--p-cream);
   transition: border-color 0.2s var(--ease), color 0.2s var(--ease);
 }
 
-.socials a:hover {
+.social svg {
+  display: block;
+}
+
+.social:hover {
   border-color: var(--p-gold);
   color: var(--p-gold);
 }
@@ -111,11 +128,9 @@
 }
 
 .copy {
-  grid-area: copy;
-  padding-top: 20px;
-  border-top: 1px solid var(--p-night-3);
   color: #b5ada1;
   font-size: 13px;
+  text-wrap: balance;
 }
 
 .legal {
@@ -130,7 +145,7 @@
     grid-template-areas:
       "brand brand"
       "nav contact"
-      "copy copy";
+      "bottom bottom";
   }
 }
 
@@ -141,6 +156,6 @@
       "brand"
       "nav"
       "contact"
-      "copy";
+      "bottom";
   }
 }

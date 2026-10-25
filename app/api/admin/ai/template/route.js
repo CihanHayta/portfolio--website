@@ -1,5 +1,6 @@
 import { extractArticle, fitLines, sourceToText } from "@/lib/ai/extract";
-import { AiError, generateJson } from "@/lib/ai/gemini";
+import { AiError } from "@/lib/ai/gemini";
+import { generateJsonRouted as generateJson } from "@/lib/ai/textRouter";
 import { errorResponse, json, readAdminRequest } from "@/lib/ai/http";
 import { fetchPage } from "@/lib/ai/safeFetch";
 import {
@@ -176,6 +177,8 @@ async function fill(admin, body) {
     const hasSourceText = sources.some((source) => source.kind !== "text");
     const extraShare = hasSourceText ? extraShareFor(slots, sources) : 0;
     const result = await generateJson({
+      task: "draft",
+      db: admin.supabase,
       system: FILL_SYSTEM,
       prompt: buildFillPrompt({ brief, template, slots, links, categories, sources, targetWords: Math.min(targetWords, FIRST_PASS_MAX_WORDS), extraShare, images, related, angle }),
       schema: buildFillSchema(slots, { extra: extraShare > 0, coverage: hasSourceText, images: images.length > 0 }),
@@ -262,6 +265,8 @@ async function expand(admin, body) {
     ];
     const selected = items.map((item) => item.slot);
     const result = await generateJson({
+      task: "draft-expand",
+      db: admin.supabase,
       system: FILL_SYSTEM,
       prompt: buildExpandPrompt({ brief, template, items, blocks, missingTopics, links, sources }),
       schema: buildFillSchema(selected, { seo: false, append: true }),

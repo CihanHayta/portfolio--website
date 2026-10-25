@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, ChevronUp, Copy, GripVertical, Plus, Settings2, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, GripVertical, ImagePlus, Plus, Settings2, Trash2 } from "lucide-react";
 import { BLOCKS } from "@/lib/blog/blocks/registry";
 import { PALETTE_ITEMS } from "@/lib/blog/blocks/palette";
 import { Block, blockStyles } from "@/components/blog/Blocks";
@@ -189,6 +189,8 @@ export default function Canvas({
   onQuickAdd,
   onDragStart,
   onDragEnd,
+  visualMarks = null, // { başlık bloğu kimliği: [öneri amacı, …] } — AI Görsel Stüdyosu planı
+  onOpenVisuals = null,
 }) {
   // Başlıklar değişmedikçe aynı bağlam nesnesi kullanılır; böylece bir blokta
   // yazarken diğer bloklar yeniden çizilmez.
@@ -301,6 +303,12 @@ export default function Canvas({
                 onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
               />
+              {!preview && visualMarks?.[block.id] ? (
+                <button type="button" className={styles.visualMark} onClick={onOpenVisuals}>
+                  <ImagePlus size={15} aria-hidden="true" />
+                  <span>Önerilen görsel: {visualMarks[block.id].join(" · ")}</span>
+                </button>
+              ) : null}
             </div>
           ))}
           {blocks.length > 0 ? zone(blocks.length) : null}

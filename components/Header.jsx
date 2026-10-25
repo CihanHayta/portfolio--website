@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { brand, meetingLabel, navLinks } from "@/data/content";
 import ContactModal from "./ContactModal";
+import { useAdminLogoShortcut } from "./adminShortcut";
 import styles from "./Header.module.css";
 
 export default function Header() {
@@ -15,6 +16,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const menuButton = useRef(null);
+  const logoShortcut = useAdminLogoShortcut();
   // Blog yönetimi de "Blog" bağlantısının altında sayılır.
   const isActive = (href) =>
     !href.includes("#") && (pathname.startsWith(href) || pathname.startsWith(`/admin${href}`));
@@ -48,7 +50,7 @@ export default function Header() {
     <>
       <header className={`${styles.header} onDark`} data-scrolled={scrolled}>
         <div className={styles.inner}>
-          <Link href="/" className={styles.logo} aria-label={`${brand.legalName} ana sayfa`}>
+          <Link href="/" className={styles.logo} aria-label={`${brand.legalName} ana sayfa`} {...logoShortcut}>
             <Image src="/brand/persona-mark.png" alt="" width={30} height={30} className={styles.logoMark} priority />
             <span>
               <span className={styles.logoName}>{brand.name}</span>

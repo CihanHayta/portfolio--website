@@ -12,6 +12,7 @@ import SimilarityStep from "./SimilarityStep";
 import { STAGE_STATUS_TEXT, ShotsPanel, analyzeScreenshots, streamSource } from "./SourceStep";
 import styles from "./studio.module.css";
 import { autoTarget, normalizeUrl } from "./studioInput";
+import { saveSourceContext } from "@/lib/blog/sourceContext";
 
 const CURRENT = "__current";
 const TIMEOUT_MS = 80_000;
@@ -516,6 +517,9 @@ export default function StudioDialog({
         placedImages: placement.placed,
       },
     });
+    // Kaynak bağlamı taslağa bağlı saklanır: AI Görselleri aşamasında URL
+    // yeniden sorulmaz, makale yeniden indirilmez.
+    if (read) saveSourceContext(postId, { ...read, url: read.url ?? cache.current.source?.url });
     clearSession(key);
     onClose();
   };

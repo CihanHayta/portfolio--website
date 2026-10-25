@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { FileText, FolderOpen, Images, LayoutTemplate, LogOut, NotebookPen, SquarePen, Tags, Trash2 } from "lucide-react";
+import { Cpu, FileText, FolderOpen, Images, LayoutTemplate, LogOut, NotebookPen, SquarePen, Tags, Trash2 } from "lucide-react";
 import { logout } from "@/app/admin/blog/actions";
+import { useMarkAdminDevice } from "../adminShortcut";
 import styles from "./AdminSidebar.module.css";
 
 export default function AdminSidebar({ counts }) {
   const pathname = usePathname();
   const view = useSearchParams().get("view") ?? "";
   const onList = pathname === "/admin/blog";
+  // Bu cihaz yönetici cihazı olarak işaretlenir: mobilde logoya dokunmak admin'e götürür.
+  useMarkAdminDevice();
 
   const links = [
     { href: "/admin/blog", label: "Tüm Yazılar", Icon: FileText, count: counts?.all, active: onList && !view },
@@ -24,6 +27,7 @@ export default function AdminSidebar({ counts }) {
       count: counts?.drafts,
       active: onList && view === "drafts",
     },
+    { href: "/admin/blog/ai-servisleri", label: "AI Servisleri", Icon: Cpu },
     {
       href: "/admin/blog?view=trash",
       label: "Çöp Kutusu",
@@ -55,7 +59,7 @@ export default function AdminSidebar({ counts }) {
         <li>
           <Link href="/admin/blog/new" className={styles.link}>
             <SquarePen size={18} aria-hidden="true" />
-            <span>Yeni Yazı</span>
+            <span>Yeni Blog Yazısı</span>
           </Link>
         </li>
         {links.slice(1).map(item)}

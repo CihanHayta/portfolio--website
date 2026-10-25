@@ -1,4 +1,5 @@
-import { AiError, generateJson } from "@/lib/ai/gemini";
+import { AiError } from "@/lib/ai/gemini";
+import { generateJsonRouted as generateJson } from "@/lib/ai/textRouter";
 import { errorResponse, json, readAdminRequest } from "@/lib/ai/http";
 import { ARTICLE_SCHEMA, ARTICLE_SYSTEM, MAX_INLINE_IMAGES, buildArticlePrompt, normalizeArticle } from "@/lib/ai/prompts";
 import { blocksToDoc } from "@/lib/ai/tiptap";
@@ -72,6 +73,8 @@ export async function POST(request) {
     };
 
     const result = await generateJson({
+      task: "article",
+      db: admin.supabase,
       system: ARTICLE_SYSTEM,
       prompt: buildArticlePrompt({ source, plan, images, categories }),
       schema: ARTICLE_SCHEMA,

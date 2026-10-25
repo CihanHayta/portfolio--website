@@ -6,6 +6,7 @@ import {
   SUPABASE_ANON_KEY,
   isSupabaseConfigured,
 } from "@/lib/supabase/env";
+import { loginUrlFor } from "@/lib/blog/adminRedirect";
 
 // Yönetim rotalarında oturum çerezini yeniler ve giriş yapmamış isteği
 // sayfa hiç render edilmeden giriş ekranına çevirir. Yetki (yönetici mi?)
@@ -42,7 +43,9 @@ export async function proxy(request) {
 
   if (!user && !isLogin) {
     if (isApi) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
-    const url = new URL("/admin/login", request.url);
+    // `/admin` dahil her yönetim sayfası giriş ekranına çevrilir; açılmak
+    // istenen sayfa (ör. AI ile Yaz) girişten sonra dönülmek üzere korunur.
+    const url = new URL(loginUrlFor(pathname, request.nextUrl.search), request.url);
     return NextResponse.redirect(url);
   }
 

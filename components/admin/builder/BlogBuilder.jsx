@@ -12,6 +12,7 @@ import {
   Check,
   Eye,
   EyeOff,
+  ImagePlus,
   LoaderCircle,
   Monitor,
   PanelLeftClose,
@@ -38,6 +39,8 @@ import {
 import { contentHeadings, createBlock, toBlocks } from "@/lib/blog/blocks/model";
 import { instantiateTemplate } from "@/lib/blog/blocks/templates";
 import { placeImages } from "@/lib/blog/blocks/placeImages";
+import { insertVisuals } from "@/lib/blog/blocks/insertVisuals";
+import { adoptNewContext, loadVisualState } from "@/lib/blog/sourceContext";
 import { PALETTE_ITEMS } from "@/lib/blog/blocks/palette";
 import { STATE_LABELS, formatDateTime, postState } from "@/lib/blog/format";
 import { slugify } from "@/lib/blog/slug";
@@ -55,6 +58,21 @@ import styles from "./builder.module.css";
 
 // Taslak aktarıldıktan sonra "Görsel ekle" ile açılan stüdyo (yalnızca gerektiğinde yüklenir).
 const StudioDialog = dynamic(() => import("../studio/StudioDialog"), { ssr: false });
+const VisualStudio = dynamic(() => import("../visual/VisualStudio"), { ssr: false });
+
+// Görsel planında olup henüz taslağa eklenmemiş öneriler: { başlık kimliği: [amaç] }.
+function visualMarksFor(postId) {
+  const state = loadVisualState(postId);
+  if (!state?.plan?.items) return null;
+  const marks = {};
+  for (const item of state.plan.items) {
+    const card = state.cards?.[item.id];
+    const target = card?.target ?? item.target;
+    if (target === "cover" || card?.inserted) continue;
+    (marks[target] ??= []).push(item.purpose || "görsel");
+  }
+  return Object.keys(marks).length ? marks : null;
+}
 
 const AUTOSAVE_DELAY = 2500;
 const isAutoSlug = (slug) => /^taslak-[0-9a-f]{8}$/.test(slug);
@@ -243,6 +261,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
         // Yazı ilk kez kaydedildi: adres çubuğu sayfa yenilenmeden güncellenir.
         idRef.current = result.post.id;
         setPostId(result.post.id);
+        adoptNewContext(result.post.id); // kaynak bağlamı ve görsel planı yazıya bağlanır
         window.history.replaceState(null, "", `/admin/blog/${result.post.id}`);
       }
       setMeta((value) => ({ ...value, updated_at: result.post.updated_at, slug: result.post.slug }));
@@ -362,6 +381,37 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
   );
   const [draftNotes, setDraftNotes] = useState(null);
   const [imagesOpen, setImagesOpen] = useState(false);
+  const [visualOpen, setVisualOpen] = useState(false);
+  const [visualMarks, setVisualMarks] = useState(null);
+  // Plan işaretleri yalnızca tarayıcıda saklıdır; sunucu çiziminden sonra okunur.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVisualMarks(visualMarksFor(postId));
+  }, [postId]);
+
+  // AI Görsel Stüdyosu'nda seçilen görseller: tek geri alınabilir adımda doğru
+  // bölümlere eklenir; kapak görseli kapak alanına gider. Yayın durumu değişmez.
+  const insertVisualPicks = (picks) => {
+    const result = insertVisuals(blocksRef.current, picks);
+    const coverChange = result.cover
+      ? { before: { cover: formRef.current.cover, coverAlt: formRef.current.coverAlt }, after: { cover: result.cover.media, coverAlt: result.cover.alt } }
+      : null;
+    // Bloklar ve kapak tek geri alınabilir adımda değişir ("Geri al" kapağı da geri getirir).
+    if (result.placed > 0 || coverChange) actions.replaceAll(result.placed > 0 ? result.blocks : [...blocksRef.current], coverChange);
+    if (coverChange) updateForm(coverChange.after);
+    const count = result.placed + (result.cover ? 1 : 0);
+    if (count) toast(`${count} görsel taslağa eklendi. “Geri al” ile kaldırabilirsin; hiçbir şey yayımlanmadı.`);
+    return result;
+  };
+  // Geri al / ileri al: geçişe iliştirilmiş form değişikliği (kapak) da uygulanır.
+  const undo = useCallback(() => {
+    const restore = actions.undo();
+    if (restore) updateForm(restore);
+  }, [actions, updateForm]);
+  const redo = useCallback(() => {
+    const restore = actions.redo();
+    if (restore) updateForm(restore);
+  }, [actions, updateForm]);
   const [studioSignal, setStudioSignal] = useState(0);
 
   // Taslaktan sonra eklenen görseller mevcut (düzenlenmiş olabilecek) bloklara
@@ -462,6 +512,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
       revisionRef.current = created.post.revision;
       savedSlugRef.current = created.post.slug;
       setPostId(created.post.id);
+      adoptNewContext(created.post.id);
       window.history.replaceState(null, "", `/admin/blog/${created.post.id}`);
       setMeta((value) => ({ ...value, updated_at: created.post.updated_at, slug: created.post.slug }));
     }
@@ -616,8 +667,8 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
       } else if (mod && key === "z" && !isTyping(event.target)) {
         // Metin alanlarında tarayıcının/editörün kendi geri alması çalışır.
         event.preventDefault();
-        if (event.shiftKey) actions.redo();
-        else actions.undo();
+        if (event.shiftKey) redo();
+        else undo();
       } else if (event.key === "Escape") {
         setMenuOpen(false);
         setDrawer(null);
@@ -630,7 +681,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
       window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [actions, flush]);
+  }, [actions, flush, undo, redo]);
 
   const isBusy = busy !== null;
   const insertHint =
@@ -663,10 +714,10 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
         <SaveStatus state={saveState} autosaves={autosaves} updatedAt={meta.updated_at} saved={postId !== null} onRetry={flush} />
 
         <div className={styles.topGroup} role="group" aria-label="Geçmiş">
-          <button type="button" className={styles.iconButton} aria-label="Geri al" title="Geri al (⌘Z)" disabled={!canUndo} onClick={actions.undo}>
+          <button type="button" className={styles.iconButton} aria-label="Geri al" title="Geri al (⌘Z)" disabled={!canUndo} onClick={undo}>
             <Undo2 size={17} />
           </button>
-          <button type="button" className={styles.iconButton} aria-label="İleri al" title="İleri al (⌘⇧Z)" disabled={!canRedo} onClick={actions.redo}>
+          <button type="button" className={styles.iconButton} aria-label="İleri al" title="İleri al (⌘⇧Z)" disabled={!canRedo} onClick={redo}>
             <Redo2 size={17} />
           </button>
         </div>
@@ -678,6 +729,13 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
             </button>
           ))}
         </div>
+
+        {!preview ? (
+          <button type="button" className={`${styles.topButton} ${styles.desktopOnly}`} aria-label="AI Görselleri" onClick={() => setVisualOpen(true)}>
+            <ImagePlus size={16} aria-hidden="true" />
+            <span>AI Görselleri</span>
+          </button>
+        ) : null}
 
         <button type="button" className={styles.topButton} aria-label={preview ? "Düzenle" : "Önizle"} aria-pressed={preview} onClick={() => { setPreview((value) => !value); setSelectedId(null); }}>
           {preview ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
@@ -738,9 +796,13 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           {meta.status === "draft" ? (
             <button type="button" className={styles.topButton} data-kind="ai" disabled={isBusy} onClick={() => { setDrawer(null); setStudioSignal((value) => value + 1); }}>
               <Wand2 size={16} aria-hidden="true" />
-              AI ile yaz
+              AI ile Yaz
             </button>
           ) : null}
+          <button type="button" className={styles.topButton} data-kind="outline" onClick={() => { setDrawer(null); setVisualOpen(true); }}>
+            <ImagePlus size={16} aria-hidden="true" />
+            AI Görselleri
+          </button>
           {saveState.kind === "error" || saveState.kind === "conflict" ? (
             <p className={styles.mobileSave} role="alert">
               <CloudOff size={16} aria-hidden="true" />
@@ -812,6 +874,8 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           onQuickAdd={addFromPalette}
           onDragStart={startDrag}
           onDragEnd={endDrag}
+          visualMarks={visualMarks}
+          onOpenVisuals={() => setVisualOpen(true)}
         />
       </main>
 
@@ -848,6 +912,18 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
 
       {draftNotes && !preview ? (
         <DraftNotes notes={draftNotes} onAddImages={meta.status === "draft" ? () => setImagesOpen(true) : null} onClose={() => setDraftNotes(null)} />
+      ) : null}
+      {visualOpen ? (
+        <VisualStudio
+          postId={postId}
+          title={form.title}
+          getBlocks={() => blocksRef.current}
+          onInsert={insertVisualPicks}
+          onClose={() => {
+            setVisualOpen(false);
+            setVisualMarks(visualMarksFor(postId));
+          }}
+        />
       ) : null}
       {imagesOpen ? (
         <StudioDialog

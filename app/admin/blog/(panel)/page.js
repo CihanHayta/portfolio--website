@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { FilePlus2, Search, Wand2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { requireAdmin } from "@/lib/blog/admin";
 import { STATE_LABELS, formatDateTime, postState } from "@/lib/blog/format";
 import PostRowActions from "@/components/admin/PostRowActions";
+import PostsHead from "@/components/admin/PostsHead";
 import styles from "../../admin.module.css";
 
 const first = (value) => (Array.isArray(value) ? value[0] : value) ?? "";
@@ -52,20 +53,7 @@ export default async function AdminPostsPage({ searchParams }) {
 
   return (
     <div className={styles.card}>
-      <div className={styles.pageHead}>
-        <h1 className={styles.pageTitle}>{VIEW_TITLES[view]}</h1>
-        <div className={styles.headActions}>
-          {/* Telefondan en hızlı yol: link yapıştır, stüdyo gerisini hazırlar. */}
-          <Link href="/admin/blog/new?studio=1" className={styles.btnPrimary}>
-            <Wand2 size={17} aria-hidden="true" />
-            AI ile yaz
-          </Link>
-          <Link href="/admin/blog/new" className={styles.btnSecondary}>
-            <FilePlus2 size={17} aria-hidden="true" />
-            Boş yazı
-          </Link>
-        </div>
-      </div>
+      <PostsHead title={VIEW_TITLES[view]} />
 
       <form method="get" className={styles.filters} role="search">
         {view ? <input type="hidden" name="view" value={view} /> : null}
@@ -113,7 +101,7 @@ export default async function AdminPostsPage({ searchParams }) {
               ? "Arama ya da filtreleri değiştirmeyi dene."
               : view === "trash"
                 ? "Sildiğin yazılar kalıcı olarak silinene kadar burada durur."
-                : "İlk yazını oluşturmak için “Yeni yazı” düğmesini kullan."}
+                : "İlk yazını “AI ile Yaz” ya da “Yeni Blog Yazısı” düğmesiyle oluştur."}
           </p>
           {isFiltered ? (
             <Link href={view ? `/admin/blog?view=${view}` : "/admin/blog"} className={styles.btnSecondary}>

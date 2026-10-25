@@ -1,5 +1,6 @@
 import { extractArticle, sourceToText } from "@/lib/ai/extract";
-import { AiError, generateJson } from "@/lib/ai/gemini";
+import { AiError } from "@/lib/ai/gemini";
+import { generateJsonRouted as generateJson } from "@/lib/ai/textRouter";
 import { errorResponse, json, readAdminRequest } from "@/lib/ai/http";
 import { PLAN_SCHEMA, PLAN_SYSTEM, buildPlanPrompt, inlineImageCount, normalizePlan } from "@/lib/ai/prompts";
 import { fetchPage } from "@/lib/ai/safeFetch";
@@ -36,6 +37,8 @@ export async function POST(request) {
 
     const inlineCount = inlineImageCount(article.wordCount);
     const result = await generateJson({
+      task: "source-analysis",
+      db: admin.supabase,
       system: PLAN_SYSTEM,
       prompt: buildPlanPrompt(source, inlineCount),
       schema: PLAN_SCHEMA,

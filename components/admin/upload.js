@@ -3,7 +3,8 @@ export const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 // İlerleme bilgisi için fetch yerine XMLHttpRequest kullanılır. Buradaki tür ve
 // boyut denetimi yalnızca hızlı geri bildirim içindir; asıl doğrulama sunucudadır.
-export function uploadMedia(file, onProgress) {
+// `meta`: isteğe bağlı { alt, caption } (ör. AI görselinin sağlayıcı/model kaydı).
+export function uploadMedia(file, onProgress, meta = {}) {
   return new Promise((resolve, reject) => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
       return reject(new Error("Yalnızca JPG, PNG ve WebP görselleri yüklenebilir."));
@@ -14,6 +15,8 @@ export function uploadMedia(file, onProgress) {
 
     const body = new FormData();
     body.append("file", file);
+    if (meta.alt) body.append("alt", meta.alt);
+    if (meta.caption) body.append("caption", meta.caption);
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/admin/media");

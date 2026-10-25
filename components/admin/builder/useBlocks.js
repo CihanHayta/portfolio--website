@@ -1,10 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { cloneBlock } from "@/lib/blog/blocks/model";
 
 // Blok listesi ve geri al / ileri al geçmişi. Her değişiklik yeni bir dizi
 // üretir; aynı alana art arda yazılanlar (coalesceKey) tek adımda toplanır.
+// Bir değişiklik blok dışı bir alanı da etkiliyorsa (ör. görsel eklerken kapak),
+// `replaceAll(blocks, { before, after })` ile bu alanın önceki/sonraki değeri
+// geçişe iliştirilir; undo/redo bu değeri döndürür, çağıran onu forma uygular.
 const HISTORY_LIMIT = 100;
 const COALESCE_MS = 1200;
 
@@ -61,6 +64,12 @@ export function useBlocks(initialBlocks) {
       dispatch({ type: "commit", key, at: Date.now(), blocks: update }),
     []
   );
+  // Geçişe iliştirilen form değişiklikleri: hedef blok dizisi → { before, after }.
+  const metaFor = useRef(new WeakMap());
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const { blocks } = state;
 
@@ -68,7 +77,10 @@ export function useBlocks(initialBlocks) {
     () => ({
       insert: (current, index, newBlocks) =>
         commit([...current.slice(0, index), ...newBlocks, ...current.slice(index)]),
-      replaceAll: (newBlocks) => commit(newBlocks),
+      replaceAll: (newBlocks, meta = null) => {
+        if (meta) metaFor.current.set(newBlocks, meta);
+        commit(newBlocks);
+      },
       updateProps: (current, id, patch, field) =>
         commit(
           current.map((block) =>
@@ -94,8 +106,19 @@ export function useBlocks(initialBlocks) {
         return copy.id;
       },
       remove: (current, id) => commit(current.filter((block) => block.id !== id)),
-      undo: () => dispatch({ type: "undo" }),
-      redo: () => dispatch({ type: "redo" }),
+      // Dönüş: geri alınan geçişin form değişikliği varsa önceki değeri, yoksa null.
+      undo: () => {
+        const current = stateRef.current;
+        if (current.past.length === 0) return null;
+        dispatch({ type: "undo" });
+        return metaFor.current.get(current.blocks)?.before ?? null;
+      },
+      redo: () => {
+        const current = stateRef.current;
+        if (current.future.length === 0) return null;
+        dispatch({ type: "redo" });
+        return metaFor.current.get(current.future[0])?.after ?? null;
+      },
     }),
     [commit]
   );
