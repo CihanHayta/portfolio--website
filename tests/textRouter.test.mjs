@@ -233,3 +233,19 @@ test("Türkçe içerik kalitesi zayıf olduğu bilinen model taslak görevine g�
     TEXT_PROVIDERS.ovh.turkish = original;
   }
 });
+
+test("kapalı servisler yedek sayılmaz: tek kullanılabilir servis bütçenin tamamını kullanır", async () => {
+  // OVH 4,5 sn'de yanıt verir. LLM7 ve Pollinations varsayılan kapalıdır; yedek sayılsaydı
+  // OVH'ye en fazla 4 sn verilir ve yanıt gelmeden zaman aşımı olurdu.
+  const fetchImpl = (url, init) =>
+    new Promise((resolve, reject) => {
+      const timer = setTimeout(() => resolve(new Response(JSON.stringify({ model: "Meta-Llama-3_3-70B-Instruct", choices: [{ message: { content: JSON.stringify({ ok: true }) } }], usage: { prompt_tokens: 10, completion_tokens: 5 } }), { status: 200, headers: { "content-type": "application/json" } })), 4_500);
+      init.signal.addEventListener("abort", () => {
+        clearTimeout(timer);
+        reject(new DOMException("aborted", "TimeoutError"));
+      });
+    });
+  const result = await generateJsonRouted({ task: "visual-plan", system: "s", prompt: "p", schema: { type: "OBJECT", properties: { ok: { type: "BOOLEAN" } }, required: ["ok"] }, budgetMs: 6_000, env: {}, fetchImpl, order: ["ovh", "llm7", "pollinations"], store: createTestStore(), log: () => {} });
+  assert.equal(result.provider, "ovh");
+});
+

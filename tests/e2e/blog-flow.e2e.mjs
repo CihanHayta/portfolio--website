@@ -13,8 +13,14 @@ import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
 import { projectKeys, sql } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
+import { prepareContext, targetFetch } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3100";
+// Görsel planını üretmesi beklenen metin servisi. Preview'da Gemini anahtarı yoktur:
+//   E2E_TEXT_SERVICE=text:ovh
+const TEXT_SERVICE = process.env.E2E_TEXT_SERVICE ?? "text:gemini";
+const TEXT_LABEL = { "text:gemini": "Google Gemini", "text:ovh": "OVHcloud AI Endpoints (anonim)" }[TEXT_SERVICE];
+if (!TEXT_LABEL) throw new Error(`Bilinmeyen E2E_TEXT_SERVICE: ${TEXT_SERVICE}`);
 const out = process.env.QA_OUT ?? mkdtempSync(join(tmpdir(), "persona-flow-"));
 const RUN = `e2e-${Date.now().toString(36)}`;
 const ref = resolveRef("test");
@@ -33,22 +39,31 @@ const { data: created, error: createError } = await service.auth.admin.createUse
 if (createError) throw createError;
 const userId = created.user.id;
 await service.from("blog_admins").insert({ user_id: userId, display_name: "E2E Test" }).throwOnError();
+// Test, panelden bu servisin limitini değiştirir; önceki değer sonunda aynen geri konur.
+const { data: priorOverride } = await service.from("ai_limit_overrides").select("*").eq("key", TEXT_SERVICE).maybeSingle();
 
 const browser = await chromium.launch();
 const errors = [];
+const where = (page) => {
+  try {
+    return new URL(page.url()).pathname;
+  } catch {
+    return "?";
+  }
+};
 const watch = (page) => {
-  page.on("pageerror", (error) => errors.push(error.message));
-  page.on("console", (message) => message.type() === "error" && !/Failed to load resource|401|status of 4\d\d/.test(message.text()) && errors.push(message.text()));
+  page.on("pageerror", (error) => errors.push(`${where(page)}: ${error.message}`));
+  page.on("console", (message) => message.type() === "error" && !/Failed to load resource|401|status of 4\d\d/.test(message.text()) && errors.push(`${where(page)}: ${message.text()}`));
 };
 const toast = (page, text, timeout = 20_000) => page.getByText(text).first().waitFor({ timeout }).then(() => true, () => false);
 const field = async (locator) => (await locator.count()) ? locator.inputValue() : null;
 
 try {
-  const sourceCheck = await (await fetch(`${base}/blog`)).text();
+  const sourceCheck = await (await targetFetch(base, "/blog")).text();
   check(sourceCheck.includes(ref) || !sourceCheck.includes("supabase.co"), "sunucu test projesine bağlı (canlı veritabanı kullanılmıyor)");
 
   // ---------------------------------------------------------------- Telefon (390)
-  const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const mobile = await prepareContext(await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }), base);
   const page = await mobile.newPage();
   watch(page);
   const logo = () => page.getByRole("link", { name: /ana sayfa$/ }).first();
@@ -130,7 +145,7 @@ try {
   await dialog.getByRole("button", { name: "Görsel planını hazırla" }).click();
   const firstCard = dialog.locator("li[aria-labelledby^='visual-v']").first();
   const planned = await firstCard.waitFor({ timeout: 70_000 }).then(() => true, () => false);
-  check(planned, "gerçek Gemini ile görsel planı oluştu");
+  check(planned, `gerçek ücretsiz metin servisiyle görsel planı oluştu (beklenen: ${TEXT_LABEL})`);
   let coverInserted = false;
   if (planned) {
     await firstCard.getByRole("radio", { name: "AI ile üret" }).click();
@@ -218,15 +233,15 @@ try {
   await page.goto(`${base}/admin/blog/ai-servisleri`, { waitUntil: "networkidle" });
   const panel = await page.locator("main").innerText();
   check(/Depo: supabase/.test(panel), "kalıcı depo: supabase (test projesi)");
-  const gemini = page.locator("li").filter({ has: page.getByRole("heading", { name: "Google Gemini", exact: true }) });
+  const gemini = page.locator("li").filter({ has: page.getByRole("heading", { name: TEXT_LABEL, exact: true }) });
   const geminiText = await gemini.innerText();
-  check(/İstek \(uygulama sayacı\)\n[1-9]/.test(geminiText), "Gemini istek sayacı veritabanından geldi (>0)");
+  check(/İstek \(uygulama sayacı\)\n[1-9]/.test(geminiText), `${TEXT_LABEL} istek sayacı veritabanından geldi (>0)`);
   await gemini.getByText("Limitleri düzenle").click();
   await gemini.getByRole("spinbutton", { name: /Günlük istek/ }).fill("299");
   await gemini.getByRole("button", { name: "Limitleri kaydet" }).click();
   check(await gemini.getByText(/Kaydedildi/).waitFor({ timeout: 15_000 }).then(() => true, () => false), "limit kaydedildi");
   await page.reload({ waitUntil: "networkidle" });
-  check((await page.locator("li").filter({ has: page.getByRole("heading", { name: "Google Gemini", exact: true }) }).innerText()).includes("/ 299"), "limit değişikliği yenilemeden sonra korunuyor (kalıcı)");
+  check((await page.locator("li").filter({ has: page.getByRole("heading", { name: TEXT_LABEL, exact: true }) }).innerText()).includes("/ 299"), "limit değişikliği yenilemeden sonra korunuyor (kalıcı)");
   check(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth) <= 0, "AI Servisleri ekranında taşma yok");
 
   step("Çıkış");
@@ -239,7 +254,7 @@ try {
 
   // ---------------------------------------------------------------- Masaüstü (1440)
   step("Masaüstü: logo davranışı değişmedi");
-  const desktop = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const desktop = await prepareContext(await browser.newContext({ viewport: { width: 1440, height: 900 } }), base);
   const dpage = await desktop.newPage();
   watch(dpage);
   await dpage.goto(`${base}/blog`, { waitUntil: "networkidle" });
@@ -248,7 +263,7 @@ try {
   await dpage.waitForURL((url) => url.pathname === "/", { timeout: 15_000 });
   check(true, "masaüstünde (işaretli olsa bile) logo ana sayfaya gider");
   await desktop.close();
-  check(errors.length === 0, `JS hatası yok ${errors.join(" | ").slice(0, 300)}`);
+  check(errors.length === 0, `JS hatası yok ${errors.join(" | ").slice(0, 900)}`);
 } catch (error) {
   failures++;
   const waiting = (error.message.match(/waiting for (.+)/) ?? [])[1] ?? "";
@@ -264,7 +279,8 @@ try {
     await service.from("blog_media").delete().in("id", media.map((item) => item.id));
     await service.storage.from("blog-media").remove(media.map((item) => item.storage_path));
   }
-  await service.from("ai_limit_overrides").delete().eq("key", "text:gemini");
+  if (priorOverride) await service.from("ai_limit_overrides").upsert(priorOverride);
+  else await service.from("ai_limit_overrides").delete().eq("key", TEXT_SERVICE);
   await service.auth.admin.deleteUser(userId);
   const [left] = await sql(ref, `select (select count(*) from public.blog_posts where slug like '${RUN}%') posts, (select count(*) from auth.users where email = '${email}') users, (select count(*) from public.blog_media where created_by = '${userId}') media`);
   const clean = Object.values(left).every((count) => Number(count) === 0);

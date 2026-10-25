@@ -16,7 +16,8 @@ const STATE = {
 const KIND = { ok: "başarılı", quota: "kota", rate: "hız sınırı", timeout: "zaman aşımı", server: "sunucu hatası", auth: "geçersiz anahtar", forbidden: "yetki", invalid: "geçersiz çıktı", capability: "yetenek yok", limit: "uygulama limiti", disabled: "pasif", billing: "ücret koruması", store: "depo hatası", paid: "ücretli istendi", config: "yapılandırma", concurrency: "eşzamanlı sınır", busy: "yoğun", truncated: "yarım yanıt", missing: "model yok", badrequest: "geçersiz istek", blocked: "içerik reddi", error: "hata" };
 
 const number = (value) => (typeof value === "number" ? value.toLocaleString("tr-TR") : "—");
-const time = (value) => (value ? new Date(value).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—");
+// Saat dilimi sabit: sunucu (Vercel, UTC) ile tarayıcı aynı metni üretmeli (hydration).
+const time = (value) => (value ? new Date(value).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Istanbul" }) : "—");
 
 function Meter({ label, used, limit, note }) {
   const ratio = typeof limit === "number" && limit > 0 ? Math.min(1, used / limit) : null;

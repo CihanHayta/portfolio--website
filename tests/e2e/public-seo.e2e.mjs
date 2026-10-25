@@ -5,6 +5,7 @@
 // güvenlik başlıkları, JS/ağ hataları ve 390/1440 genişlikte yatay taşma.
 
 import { chromium } from "playwright-core";
+import { prepareContext, targetFetch } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3000";
 const expectHeaders = process.env.EXPECT_SECURITY_HEADERS !== "0";
@@ -13,7 +14,7 @@ const check = (ok, label) => {
   if (!ok) failures++;
   console.log(`${ok ? "  ok  " : "  FAIL"} ${label}`);
 };
-const raw = (path) => fetch(base + path, { redirect: "manual" });
+const raw = (path) => targetFetch(base, path, { redirect: "manual" });
 
 const sitemapResponse = await raw("/sitemap.xml");
 const sitemap = await sitemapResponse.text();
@@ -31,14 +32,15 @@ if (expectHeaders) {
   check(headers["x-content-type-options"] === "nosniff" && headers["x-frame-options"] === "SAMEORIGIN" && /frame-ancestors 'self'/.test(headers["content-security-policy"] ?? "") && Boolean(headers["referrer-policy"]) && Boolean(headers["permissions-policy"]), "güvenlik başlıkları gönderiliyor");
 }
 for (const path of ["/api/admin/ai/services", "/api/admin/ai/visual-plan", "/api/admin/media"]) {
-  const response = await fetch(base + path, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+  const response = await targetFetch(base, path, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
   check(response.status === 401, `oturumsuz POST ${path} → ${response.status}`);
 }
 
 const browser = await chromium.launch();
 for (const [w, h] of [[390, 844], [1440, 900]]) {
   for (const path of ["/", "/blog", ...(slug ? [`/blog/${slug}`] : [])]) {
-    const page = await browser.newPage({ viewport: { width: w, height: h }, isMobile: w < 1024 });
+    const context = await prepareContext(await browser.newContext({ viewport: { width: w, height: h }, isMobile: w < 1024 }), base);
+    const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
@@ -64,7 +66,7 @@ for (const [w, h] of [[390, 844], [1440, 900]]) {
     }
     check(info.overflow <= 0, `${label}: yatay taşma yok`);
     check(errors.length === 0, `${label}: JS/ağ hatası yok ${errors.join(" | ").slice(0, 160)}`);
-    await page.close();
+    await context.close();
   }
 }
 await browser.close();
