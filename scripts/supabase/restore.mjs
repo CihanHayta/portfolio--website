@@ -8,6 +8,7 @@
 // - Görseller hedefin blog-media kovasına yüklenir ve URL'ler hedefe çevrilir.
 // - Hedef tablolar boş olmalıdır (üzerine yazma yapılmaz).
 
+import { createHash } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { projectKeys, sql } from "./_api.mjs";
@@ -74,4 +75,25 @@ const [after] = await sql(ref, `select json_build_object(
 ) as r`);
 const result = after.r;
 const mismatches = Object.keys(result).filter((table) => manifest.tables[table] && Number(result[table]) !== manifest.tables[table].rows);
-console.log(JSON.stringify({ restoredInto: "test", counts: result, uploadedFiles: uploaded.length, mismatches, ok: mismatches.length === 0 && result.orphan_post_tags === 0 && result.broken_covers === 0 && result.foreign_storage_urls === 0 }, null, 1));
+
+// İçerik doğrulaması: her yazının slug'ı ve içeriği yedektekiyle birebir aynı mı?
+// (jsonb anahtar sırasını değiştirebilir; karşılaştırma sıralı anahtarlarla yapılır.)
+const canonical = (value) => (Array.isArray(value) ? value.map(canonical) : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])])) : value);
+const restoredPosts = await sql(ref, "select id, slug, title, content from public.blog_posts");
+const byId = new Map(restoredPosts.map((post) => [post.id, post]));
+const contentMismatches = posts.filter((post) => {
+  const restored = byId.get(post.id);
+  return !restored || restored.slug !== post.slug || restored.title !== post.title || JSON.stringify(canonical(restored.content)) !== JSON.stringify(canonical(post.content));
+}).map((post) => post.slug);
+
+// Dosya doğrulaması: yüklenen her görsel hedeften indirilir, SHA-256 yedekle aynı olmalı.
+const fileMismatches = [];
+for (const path of uploaded) {
+  const response = await fetch(`${url}/storage/v1/object/public/blog-media/${path}`);
+  const remote = response.ok ? createHash("sha256").update(Buffer.from(await response.arrayBuffer())).digest("hex") : null;
+  const local = createHash("sha256").update(readFileSync(join(dir, "storage", path))).digest("hex");
+  if (remote !== local) fileMismatches.push(path);
+}
+const ok = mismatches.length === 0 && result.orphan_post_tags === 0 && result.broken_covers === 0 && result.foreign_storage_urls === 0 && contentMismatches.length === 0 && fileMismatches.length === 0;
+console.log(JSON.stringify({ restoredInto: "test", counts: result, uploadedFiles: uploaded.length, filesVerified: uploaded.length - fileMismatches.length, fileMismatches, contentVerified: posts.length - contentMismatches.length, contentMismatches, mismatches, ok }, null, 1));
+process.exitCode = ok ? 0 : 1;
