@@ -270,10 +270,19 @@ export default function StudioDialog({
     const missingTopics = (result.coverage?.items ?? []).filter((item) => !item.covered).map((item) => item.topic);
     for (let round = 1; round <= MAX_EXPAND_ROUNDS && result.stats.words < result.stats.targetWords * 0.9; round += 1) {
       setStage("draft", "active", `Taslak ${result.stats.words} sözcük (hedef ≈${result.stats.targetWords}); kısa kalan bölümler genişletiliyor (${round}/${MAX_EXPAND_ROUNDS})…`);
-      const expanded = await postTemplate(
-        { ...base, mode: "expand", blocks: result.blocks, targetWords: result.stats.targetWords, missingTopics, links: hrefsIn(result.blocks).map((href) => ({ href, label: href })) },
-        signal
-      );
+      let expanded;
+      try {
+        expanded = await postTemplate(
+          { ...base, mode: "expand", blocks: result.blocks, targetWords: result.stats.targetWords, missingTopics, links: hrefsIn(result.blocks).map((href) => ({ href, label: href })) },
+          signal
+        );
+      } catch (error) {
+        // Genişletme isteğe bağlı bir iyileştirmedir: servis yoğunsa hazır taslak
+        // atılmaz, notla birlikte incelemeye geçilir (kullanıcı iptali hariç).
+        if (signal.aborted) throw error;
+        result = { ...result, warnings: [`Kısa kalan bölümler şu an genişletilemedi (${error.message}). Taslak ${result.stats.words} sözcükle bırakıldı; “Yeniden oluştur” ile ya da elle genişletebilirsin.`, ...result.warnings] };
+        break;
+      }
       // Uzayan metin her zaman benimsenir; artış %3'ün altındaysa turlar durur.
       if (!expanded.stats.expanded || expanded.stats.words <= result.stats.words) break;
       const gain = expanded.stats.words / result.stats.words;
