@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table";
@@ -75,6 +75,25 @@ export default function RichTextField({
   useEffect(() => {
     onChangeRef.current = onChange;
   });
+  // Değişiklik üst bileşene her ProseMirror işleminde senkron gönderilmez:
+  // aynı görev içindeki işlemler birleştirilip bir sonraki görevde tek seferde
+  // iletilir. Yazarken her tuş tüm editör ağacını iç içe yeniden çizdiriyordu
+  // (canlıda aralıklı React #185, ayrıca telefonda gereksiz yük). Odak kaybında ve
+  // bileşen kapanırken bekleyen değişiklik hemen gönderilir; veri kaybolmaz.
+  const pendingEditor = useRef(null);
+  const emitTimer = useRef(null);
+  const emitNow = useCallback(() => {
+    clearTimeout(emitTimer.current);
+    emitTimer.current = null;
+    const instance = pendingEditor.current;
+    pendingEditor.current = null;
+    if (!instance || instance.isDestroyed) return;
+    // ProseMirror nesneleri prototipsizdir; düz JSON'a çevrilerek saklanır.
+    const json = JSON.parse(JSON.stringify(instance.getJSON()));
+    lastEmitted.current = json;
+    onChangeRef.current(json);
+  }, []);
+  useEffect(() => emitNow, [emitNow]);
   // Seçenekler çizimden çizime SABİT kalır: useEditor her çizimde seçenekleri
   // karşılaştırır ve fark görürse editor.setOptions() çağırır. Her tuşta değişen
   // `content` ya da her çizimde yeni oluşan `editorProps` verilirse bu her tuşta
@@ -104,11 +123,10 @@ export default function RichTextField({
     autofocus: initialAutofocus,
     editorProps,
     onUpdate: ({ editor: instance }) => {
-      // ProseMirror nesneleri prototipsizdir; düz JSON'a çevrilerek saklanır.
-      const json = JSON.parse(JSON.stringify(instance.getJSON()));
-      lastEmitted.current = json;
-      onChangeRef.current(json);
+      pendingEditor.current = instance;
+      if (!emitTimer.current) emitTimer.current = setTimeout(emitNow, 0);
     },
+    onBlur: () => emitNow(),
   });
 
   // Araç çubuğu durumu: yalnızca bu değerlerden biri değişince yeniden çizilir.
@@ -135,6 +153,10 @@ export default function RichTextField({
   // Değer dışarıdan değiştiyse (geri al / ileri al) editör içeriği eşitlenir.
   useEffect(() => {
     if (!editor || value === lastEmitted.current) return;
+    // Dışarıdan gelen değişiklik (geri al vb.) bekleyen yazımdan önceliklidir.
+    clearTimeout(emitTimer.current);
+    emitTimer.current = null;
+    pendingEditor.current = null;
     lastEmitted.current = value;
     editor.commands.setContent(value, { emitUpdate: false });
   }, [editor, value]);

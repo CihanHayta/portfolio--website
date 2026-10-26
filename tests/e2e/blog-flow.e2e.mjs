@@ -59,6 +59,7 @@ const where = (page) => {
 };
 const shot = (page) => page.screenshot({ path: join(out, `jshata-${Date.now()}.png`) }).catch(() => {});
 const watch = (page) => {
+  if (process.env.E2E_STACKS) page.addInitScript(() => { Error.stackTraceLimit = 100; });
   page.on("pageerror", (error) => {
     errors.push(`[${currentStep}] ${where(page)}: ${error.message}`);
     shot(page);
@@ -70,7 +71,7 @@ const watch = (page) => {
     shot(page);
     if (process.env.E2E_STACKS) {
       const stacks = await Promise.all(message.args().map((arg) => arg.evaluate((value) => value?.stack ?? null).catch(() => null)));
-      console.log(`\n[yığın] ${stacks.filter(Boolean).join("\n").slice(0, 4000)}`);
+      console.log(`\n[yığın] ${stacks.filter(Boolean).join("\n").slice(0, 12000)}`);
     }
   });
   if (LATENCY_MS > 0) {
