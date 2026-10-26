@@ -62,6 +62,7 @@ const watch = (page) => {
   page.on("pageerror", (error) => {
     errors.push(`[${currentStep}] ${where(page)}: ${error.message}`);
     shot(page);
+    if (process.env.E2E_STACKS) console.log(`\n[yığın] ${String(error.stack).slice(0, 4000)}`);
   });
   page.on("console", async (message) => {
     if (message.type() !== "error" || /Failed to load resource|401|status of 4\d\d/.test(message.text())) return;
@@ -139,6 +140,13 @@ try {
   const paragraph = page.getByRole("textbox", { name: "Paragraf metni" });
   await paragraph.click();
   await page.keyboard.type("Küçük işletmeler reklam bütçesini hedef kitle büyüklüğüne ve dönüşüm maliyetine göre planlamalıdır.");
+  // Araç çubuğu durumu editörden okunur: seçili metin kalın yapılınca düğme basılı görünür.
+  await page.keyboard.press("ControlOrMeta+A");
+  const boldTool = page.getByRole("button", { name: "Kalın" }).first();
+  await boldTool.click();
+  check((await boldTool.getAttribute("aria-pressed")) === "true", "metin araç çubuğu: kalın düğmesi seçili metinde etkin");
+  await boldTool.click();
+  check((await boldTool.getAttribute("aria-pressed")) === "false", "metin araç çubuğu: kalın geri alınınca düğme pasif");
   await bar.getByRole("button", { name: "Ayarlar" }).click();
   await page.getByRole("tab", { name: "Sayfa Ayarları" }).click();
   await page.getByRole("textbox", { name: "Kalıcı bağlantı" }).fill(`${RUN}-butce`);

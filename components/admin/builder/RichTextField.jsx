@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
@@ -71,27 +71,65 @@ export default function RichTextField({
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState("");
   const lastEmitted = useRef(value);
-
-  const editor = useEditor({
-    extensions,
-    content: value,
-    immediatelyRender: false,
-    shouldRerenderOnTransaction: true,
-    autofocus: autoFocus ? "end" : false,
-    editorProps: {
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
+  // Seçenekler çizimden çizime SABİT kalır: useEditor her çizimde seçenekleri
+  // karşılaştırır ve fark görürse editor.setOptions() çağırır. Her tuşta değişen
+  // `content` ya da her çizimde yeni oluşan `editorProps` verilirse bu her tuşta
+  // olur; her işlemde yeniden çizimle birleşince React'in iç içe güncelleme
+  // sınırı aşılabiliyordu (canlıda aralıklı React #185). İçerik başta bir kez
+  // verilir; sonraki dış değişiklikler aşağıdaki effect ile eşitlenir.
+  const [initialContent] = useState(value);
+  const [initialAutofocus] = useState(autoFocus ? "end" : false);
+  const editorProps = useMemo(
+    () => ({
       attributes: {
         class: `${proseStyles.prose} ${styles.editable}`,
         role: "textbox",
         "aria-multiline": "true",
         "aria-label": label,
       },
-    },
+    }),
+    [label]
+  );
+
+  const editor = useEditor({
+    extensions,
+    content: initialContent,
+    immediatelyRender: false,
+    // Her işlemde yeniden çizilmez; araç çubuğu yalnızca kendi durumu değişince çizilir.
+    shouldRerenderOnTransaction: false,
+    autofocus: initialAutofocus,
+    editorProps,
     onUpdate: ({ editor: instance }) => {
       // ProseMirror nesneleri prototipsizdir; düz JSON'a çevrilerek saklanır.
       const json = JSON.parse(JSON.stringify(instance.getJSON()));
       lastEmitted.current = json;
-      onChange(json);
+      onChangeRef.current(json);
     },
+  });
+
+  // Araç çubuğu durumu: yalnızca bu değerlerden biri değişince yeniden çizilir.
+  const active = useEditorState({
+    editor,
+    selector: ({ editor: instance }) =>
+      instance
+        ? {
+            bold: instance.isActive("bold"),
+            italic: instance.isActive("italic"),
+            underline: instance.isActive("underline"),
+            strike: instance.isActive("strike"),
+            link: instance.isActive("link"),
+            bulletList: instance.isActive("bulletList"),
+            orderedList: instance.isActive("orderedList"),
+            blockquote: instance.isActive("blockquote"),
+            code: instance.isActive("code"),
+            codeBlock: instance.isActive("codeBlock"),
+            table: instance.isActive("table"),
+          }
+        : null,
   });
 
   // Değer dışarıdan değiştiyse (geri al / ileri al) editör içeriği eşitlenir.
@@ -101,10 +139,10 @@ export default function RichTextField({
     editor.commands.setContent(value, { emitUpdate: false });
   }, [editor, value]);
 
-  if (!editor) return <div className={styles.loading}>Metin alanı yükleniyor…</div>;
+  if (!editor || !active) return <div className={styles.loading}>Metin alanı yükleniyor…</div>;
 
   const chain = () => editor.chain().focus();
-  const inTable = !compact && editor.isActive("table");
+  const inTable = !compact && active.table;
 
   const applyLink = (event) => {
     event.preventDefault();
@@ -119,25 +157,25 @@ export default function RichTextField({
   return (
     <div className={styles.field} data-compact={compact}>
       <div className={styles.toolbar} role="toolbar" aria-label="Metin biçimlendirme">
-        <Tool label="Kalın" active={editor.isActive("bold")} onClick={() => chain().toggleBold().run()}>
+        <Tool label="Kalın" active={active.bold} onClick={() => chain().toggleBold().run()}>
           <Bold size={16} />
         </Tool>
-        <Tool label="İtalik" active={editor.isActive("italic")} onClick={() => chain().toggleItalic().run()}>
+        <Tool label="İtalik" active={active.italic} onClick={() => chain().toggleItalic().run()}>
           <Italic size={16} />
         </Tool>
         {compact ? null : (
           <>
-            <Tool label="Altı çizili" active={editor.isActive("underline")} onClick={() => chain().toggleUnderline().run()}>
+            <Tool label="Altı çizili" active={active.underline} onClick={() => chain().toggleUnderline().run()}>
               <Underline size={16} />
             </Tool>
-            <Tool label="Üstü çizili" active={editor.isActive("strike")} onClick={() => chain().toggleStrike().run()}>
+            <Tool label="Üstü çizili" active={active.strike} onClick={() => chain().toggleStrike().run()}>
               <Strikethrough size={16} />
             </Tool>
           </>
         )}
         <Tool
           label="Bağlantı"
-          active={editor.isActive("link") || linkOpen}
+          active={active.link || linkOpen}
           onClick={() => {
             setUrl(editor.getAttributes("link").href ?? "");
             setUrlError("");
@@ -147,22 +185,22 @@ export default function RichTextField({
           <LinkIcon size={16} />
         </Tool>
         <span className={styles.divider} />
-        <Tool label="Madde işaretli liste" active={editor.isActive("bulletList")} onClick={() => chain().toggleBulletList().run()}>
+        <Tool label="Madde işaretli liste" active={active.bulletList} onClick={() => chain().toggleBulletList().run()}>
           <List size={16} />
         </Tool>
-        <Tool label="Numaralı liste" active={editor.isActive("orderedList")} onClick={() => chain().toggleOrderedList().run()}>
+        <Tool label="Numaralı liste" active={active.orderedList} onClick={() => chain().toggleOrderedList().run()}>
           <ListOrdered size={16} />
         </Tool>
         {compact ? null : (
           <>
             <span className={styles.divider} />
-            <Tool label="Alıntı" active={editor.isActive("blockquote")} onClick={() => chain().toggleBlockquote().run()}>
+            <Tool label="Alıntı" active={active.blockquote} onClick={() => chain().toggleBlockquote().run()}>
               <TextQuote size={16} />
             </Tool>
-            <Tool label="Satır içi kod" active={editor.isActive("code")} onClick={() => chain().toggleCode().run()}>
+            <Tool label="Satır içi kod" active={active.code} onClick={() => chain().toggleCode().run()}>
               <Code size={16} />
             </Tool>
-            <Tool label="Kod bloğu" active={editor.isActive("codeBlock")} onClick={() => chain().toggleCodeBlock().run()}>
+            <Tool label="Kod bloğu" active={active.codeBlock} onClick={() => chain().toggleCodeBlock().run()}>
               <SquareCode size={16} />
             </Tool>
             <Tool
@@ -194,7 +232,7 @@ export default function RichTextField({
           <button type="submit" className={styles.contextPrimary}>
             Uygula
           </button>
-          {editor.isActive("link") ? (
+          {active.link ? (
             <button
               type="button"
               className={styles.contextButton}
