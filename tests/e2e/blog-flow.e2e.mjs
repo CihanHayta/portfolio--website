@@ -92,19 +92,17 @@ try {
   const mobile = await prepareContext(await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }), base);
   const page = await mobile.newPage();
   watch(page);
-  const logo = () => page.getByRole("link", { name: /ana sayfa$/ }).first();
+  const logo = () => page.getByRole("link", { name: /yönetim girişi$/ }).first();
 
-  step("Mobil logo");
+  step("Mobil logo → yönetici girişi (tek dokunuş)");
   await page.goto(`${base}/blog`, { waitUntil: "networkidle" });
+  check((await logo().getAttribute("href")) === "/admin", "telefonda logo gerçek bir bağlantı: /admin");
+  await page.getByRole("button", { name: "Menüyü aç" }).tap();
+  check(await page.getByRole("link", { name: "Ana sayfa", exact: true }).isVisible(), "ziyaretçi için mobil menüde 'Ana sayfa' bağlantısı var");
+  await page.getByRole("button", { name: "Menüyü kapat" }).tap();
   await logo().tap();
-  await page.waitForURL((url) => url.pathname === "/", { timeout: 15_000 });
-  check(true, "ziyaretçi logoya dokununca ana sayfaya gider");
-  await page.goto(`${base}/blog`, { waitUntil: "networkidle" });
-  await logo().dispatchEvent("pointerdown", { pointerType: "touch", isPrimary: true, button: 0 });
-  await page.waitForTimeout(800);
-  await logo().dispatchEvent("pointerup", { pointerType: "touch", isPrimary: true, button: 0 });
   await page.waitForURL(/\/admin\/login/, { timeout: 15_000 });
-  check(true, "logoya uzun basınca yönetici girişi açılır");
+  check(true, "giriş yapılmamışken logoya tek dokunuş giriş ekranını açar");
 
   step("Giriş");
   await page.getByLabel("E-posta").fill(email);
@@ -116,13 +114,10 @@ try {
   await page.getByRole("button", { name: "Giriş Yap" }).click();
   await page.waitForURL(/\/admin\/blog$/, { timeout: 30_000 });
   check(true, "doğru şifreyle yönetim paneli açıldı");
-  // İşaret, panel bileşenleri yerleşince (useEffect) konur; adres ondan önce değişebilir.
-  const marked = await page.waitForFunction(() => localStorage.getItem("persona-admin-device") === "1", null, { timeout: 15_000 }).then(() => true, () => false);
-  check(marked, "bu telefon yönetici cihazı olarak işaretlendi");
   await page.goto(`${base}/`, { waitUntil: "networkidle" });
   await logo().tap();
   await page.waitForURL(/\/admin\/blog/, { timeout: 20_000 });
-  check(true, "işaretli telefonda logoya dokunmak yönetim paneline götürür");
+  check(true, "giriş yapılmışken logoya dokunmak yönetim panelini açar");
 
   step("Yeni yazı: oluştur, kaydet, yenile");
   await page.getByRole("link", { name: "Yeni Blog Yazısı" }).last().click();
@@ -140,7 +135,11 @@ try {
   await page.getByRole("button", { name: "Kütüphaneyi kapat" }).click({ timeout: 1_500 }).catch(() => {});
   const paragraph = page.getByRole("textbox", { name: "Paragraf metni" });
   await paragraph.click();
-  await page.keyboard.type("Küçük işletmeler reklam bütçesini hedef kitle büyüklüğüne ve dönüşüm maliyetine göre planlamalıdır.");
+  // Hızlı ve uzun yazım: tek karakter bile kaybolmamalı (editör eşitleme yarışı regresyonu).
+  const typed = "Küçük işletmeler reklam bütçesini hedef kitle büyüklüğüne ve dönüşüm maliyetine göre planlamalıdır. ".repeat(4).trim();
+  await page.keyboard.type(typed);
+  await page.waitForTimeout(300);
+  check((await page.getByRole("textbox", { name: "Paragraf metni" }).innerText()).trim() === typed, `hızlı yazımda metin birebir korundu (${typed.length} karakter)`);
   // Araç çubuğu durumu editörden okunur: seçili metin kalın yapılınca düğme basılı görünür.
   await page.keyboard.press("ControlOrMeta+A");
   const boldTool = page.getByRole("button", { name: "Kalın" }).first();
@@ -233,9 +232,23 @@ try {
     await dialog.getByRole("button", { name: "Görsel stüdyosunu kapat" }).click();
   }
 
-  step("Yayınlama ve herkese açık sayfa");
-  await page.getByRole("button", { name: "Yayınla" }).click();
+  step("Mobil alt çubuk: önizleme, onaylı yayın");
+  const actions = page.getByRole("navigation", { name: "Yazı işlemleri" });
+  check(await actions.isVisible(), "telefonda alt işlem çubuğu görünüyor");
+  const sizes = await actions.getByRole("button").evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect()).map((rect) => Math.min(rect.width, rect.height)));
+  check(sizes.length >= 3 && sizes.every((size) => size >= 44), `alt çubuk dokunma hedefleri ≥44 px (${sizes.map(Math.round).join(", ")})`);
+  const status = await page.locator("header [role=status], header [role=alert]").first();
+  check(await status.evaluate((node) => node.scrollWidth <= node.clientWidth + 1 && node.innerText.trim().length > 6), `kayıt durumu okunur: "${(await status.innerText()).trim()}"`);
+  await actions.getByRole("button", { name: "Önizle" }).click();
+  check(await page.getByRole("heading", { level: 1 }).filter({ hasText: "E2E Reklam Bütçesi" }).first().isVisible(), "önizleme yazıyı gösteriyor");
+  await actions.getByRole("button", { name: "Düzenle" }).click();
+  await actions.getByRole("button", { name: "Yayınla" }).click();
+  const confirmPublish = page.getByRole("dialog", { name: "Yazı yayınlansın mı?" });
+  check(await confirmPublish.isVisible(), "yayından önce kısa onay soruldu (adres gösteriliyor)");
+  // Çift dokunma: yalnızca bir yayın isteği gider, hata bildirimi çıkmaz.
+  await confirmPublish.getByRole("button", { name: "Yayınla" }).dblclick();
   check(await toast(page, "Yazı yayında."), "yazı yayınlandı");
+  check(!(await page.getByText(/başka bir sekmede|beklenmeyen/).first().isVisible().catch(() => false)), "onaya çift dokunma hata ya da çift yayın üretmedi");
   const publicPage = await mobile.newPage();
   const response = await publicPage.goto(`${base}/blog/${RUN}-butce`, { waitUntil: "networkidle" });
   check(response.status() === 200 && (await publicPage.locator("h1").innerText()).includes("E2E Reklam Bütçesi"), "yayındaki yazı herkese açık sayfada görünüyor");
@@ -291,10 +304,10 @@ try {
   const dpage = await desktop.newPage();
   watch(dpage);
   await dpage.goto(`${base}/blog`, { waitUntil: "networkidle" });
-  await dpage.evaluate(() => localStorage.setItem("persona-admin-device", "1"));
+  check((await dpage.getByRole("link", { name: /ana sayfa$/ }).first().getAttribute("href")) === "/", "masaüstünde logo ana sayfa bağlantısı");
   await dpage.getByRole("link", { name: /ana sayfa$/ }).first().click();
   await dpage.waitForURL((url) => url.pathname === "/", { timeout: 15_000 });
-  check(true, "masaüstünde (işaretli olsa bile) logo ana sayfaya gider");
+  check(true, "masaüstünde logo ana sayfaya gider (değişmedi)");
   await desktop.close();
   check(errors.length === 0, `JS hatası yok ${errors.join(" | ").slice(0, 900)}`);
 } catch (error) {

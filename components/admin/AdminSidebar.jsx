@@ -4,15 +4,12 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Cpu, FileText, FolderOpen, Images, LayoutTemplate, LogOut, NotebookPen, SquarePen, Tags, Trash2 } from "lucide-react";
 import { logout } from "@/app/admin/blog/actions";
-import { useMarkAdminDevice } from "../adminShortcut";
 import styles from "./AdminSidebar.module.css";
 
 export default function AdminSidebar({ counts }) {
   const pathname = usePathname();
   const view = useSearchParams().get("view") ?? "";
   const onList = pathname === "/admin/blog";
-  // Bu cihaz yönetici cihazı olarak işaretlenir: mobilde logoya dokunmak admin'e götürür.
-  useMarkAdminDevice();
 
   const links = [
     { href: "/admin/blog", label: "Tüm Yazılar", Icon: FileText, count: counts?.all, active: onList && !view },

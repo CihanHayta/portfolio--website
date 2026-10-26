@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { brand, meetingLabel, navLinks } from "@/data/content";
 import ContactModal from "./ContactModal";
-import { useAdminLogoShortcut } from "./adminShortcut";
+import { useMobileLayout } from "./adminShortcut";
 import styles from "./Header.module.css";
 
 export default function Header() {
@@ -16,7 +16,8 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const menuButton = useRef(null);
-  const logoShortcut = useAdminLogoShortcut();
+  // Telefonda logo yönetime gider (tek dokunuş); masaüstünde ana sayfadır.
+  const mobileLayout = useMobileLayout();
   // Blog yönetimi de "Blog" bağlantısının altında sayılır.
   const isActive = (href) =>
     !href.includes("#") && (pathname.startsWith(href) || pathname.startsWith(`/admin${href}`));
@@ -50,7 +51,12 @@ export default function Header() {
     <>
       <header className={`${styles.header} onDark`} data-scrolled={scrolled}>
         <div className={styles.inner}>
-          <Link href="/" className={styles.logo} aria-label={`${brand.legalName} ana sayfa`} {...logoShortcut}>
+          <Link
+            href={mobileLayout ? "/admin" : "/"}
+            prefetch={mobileLayout ? false : undefined}
+            className={styles.logo}
+            aria-label={mobileLayout ? `${brand.legalName} yönetim girişi` : `${brand.legalName} ana sayfa`}
+          >
             <Image src="/brand/persona-mark.png" alt="" width={30} height={30} className={styles.logoMark} priority />
             <span>
               <span className={styles.logoName}>{brand.name}</span>
@@ -95,12 +101,16 @@ export default function Header() {
             kapalıyken görünmez ve klavye/ekran okuyucu için erişilemezdir. */}
         <div id="mobil-menu" className={styles.mobileMenu} data-open={open} inert={!open}>
           <div className={styles.mobileInner}>
+            {/* Telefonda logo yönetime gittiği için ziyaretçinin ana sayfa yolu burada. */}
+            <Link href="/" className={styles.mobileLink} style={{ "--i": 0 }} aria-current={pathname === "/" ? "page" : undefined} onClick={() => setOpen(false)}>
+              Ana sayfa
+            </Link>
             {navLinks.map((link, index) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={styles.mobileLink}
-                style={{ "--i": index }}
+                style={{ "--i": index + 1 }}
                 aria-current={isActive(link.href) ? "page" : undefined}
                 onClick={() => setOpen(false)}
               >

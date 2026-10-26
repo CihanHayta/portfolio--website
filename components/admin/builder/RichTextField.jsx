@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table";
@@ -151,7 +151,10 @@ export default function RichTextField({
   });
 
   // Değer dışarıdan değiştiyse (geri al / ileri al) editör içeriği eşitlenir.
-  useEffect(() => {
+  // useLayoutEffect: karşılaştırma commit anında yapılır. Pasif effect boyamadan
+  // sonra çalıştığı için araya yeni bir yazım girebiliyor ve eski çizimin değeri
+  // "dış değişiklik" sanılıp editör geri sarılıyordu (hızlı yazımda karakter kaybı).
+  useLayoutEffect(() => {
     if (!editor || value === lastEmitted.current) return;
     // Dışarıdan gelen değişiklik (geri al vb.) bekleyen yazımdan önceliklidir.
     clearTimeout(emitTimer.current);

@@ -61,19 +61,10 @@ try {
   page.on("pageerror", (error) => errors.push(`[${currentStep}] ${error.message}`));
   page.on("console", (message) => message.type() === "error" && !/Failed to load resource|401|status of 4\d\d/.test(message.text()) && errors.push(`[${currentStep}] ${message.text().slice(0, 300)}`));
 
-  step("Mobil logo → giriş");
+  step("Mobil logo → giriş (tek dokunuş)");
   await page.goto(`${base}/blog`, { waitUntil: "networkidle" });
-  const logo = page.getByRole("link", { name: /ana sayfa$/ }).first();
-  await logo.tap();
-  const byTap = await page.waitForURL(/\/admin/, { timeout: 8_000 }).then(() => true, () => false);
-  if (!byTap) {
-    await page.goto(`${base}/blog`, { waitUntil: "networkidle" });
-    await logo.dispatchEvent("pointerdown", { pointerType: "touch", isPrimary: true, button: 0 });
-    await page.waitForTimeout(800);
-    await logo.dispatchEvent("pointerup", { pointerType: "touch", isPrimary: true, button: 0 });
-    await page.waitForURL(/\/admin\/login/, { timeout: 15_000 });
-  }
-  check(/\/admin\/login/.test(page.url()), `logodan giriş ekranı açıldı (${byTap ? "tek dokunuş" : "uzun basma"})`);
+  await page.getByRole("link", { name: /yönetim girişi$/ }).first().tap();
+  check(await page.waitForURL(/\/admin\/login/, { timeout: 15_000 }).then(() => true, () => false), "logoya tek dokunuş giriş ekranını açtı");
 
   step("Giriş");
   await page.getByLabel("E-posta").fill(email);
@@ -93,7 +84,10 @@ try {
   await page.getByRole("complementary", { name: "Blok kütüphanesi" }).getByRole("button", { name: /^Paragraf/ }).first().click();
   await page.getByRole("button", { name: "Kütüphaneyi kapat" }).click({ timeout: 1_500 }).catch(() => {});
   await page.getByRole("textbox", { name: "Paragraf metni" }).click();
-  await page.keyboard.type("Bu yazı otomatik canlı ortam testidir ve birkaç saniye içinde silinir.");
+  const typed = "Bu yazı otomatik canlı ortam testidir ve birkaç saniye içinde silinir. ".repeat(3).trim();
+  await page.keyboard.type(typed);
+  await page.waitForTimeout(300);
+  check((await page.getByRole("textbox", { name: "Paragraf metni" }).innerText()).trim() === typed, "hızlı yazımda metin birebir korundu");
   await bar.getByRole("button", { name: "Ayarlar" }).click();
   await page.getByRole("tab", { name: "Sayfa Ayarları" }).click();
   await page.getByRole("textbox", { name: "Kalıcı bağlantı" }).fill(RUN);
@@ -113,10 +107,11 @@ try {
   const [row] = await sql(ref, `select title, slug, seo_title, status from public.blog_posts where id = '${postId}'`);
   check(row?.title === `E2E canlı test düzenlendi ${RUN}` && row.slug === RUN && row.seo_title === "E2E canlı SEO" && row.status === "draft", "başlık, slug ve SEO canlı veritabanında doğrulandı (taslak)");
 
-  step("Önizleme");
-  await page.getByRole("button", { name: "Önizle" }).first().click();
+  step("Önizleme (alt işlem çubuğu)");
+  const actions = page.getByRole("navigation", { name: "Yazı işlemleri" });
+  await actions.getByRole("button", { name: "Önizle" }).click();
   check(await page.getByText("Bu yazı otomatik canlı ortam testidir").first().isVisible(), "önizleme içeriği gösteriyor");
-  await page.getByRole("button", { name: "Düzenle" }).first().click();
+  await actions.getByRole("button", { name: "Düzenle" }).click();
 
   step("Gerçek AI: tek görsel planı (görsel üretilmez)");
   await bar.getByRole("button", { name: "AI Görselleri" }).click();
@@ -130,12 +125,15 @@ try {
   check(usageAfter > usageBefore, `AI kullanım sayacı canlı Supabase'de arttı (${usageBefore} → ${usageAfter}; AI_USAGE_STORE=supabase çalışıyor)`);
 
   step("Yayınla → herkese açık → yayından kaldır");
-  await page.getByRole("button", { name: "Yayınla" }).click();
+  await actions.getByRole("button", { name: "Yayınla" }).click();
+  const confirmPublish = page.getByRole("dialog", { name: "Yazı yayınlansın mı?" });
+  check(await confirmPublish.isVisible(), "yayından önce onay soruldu");
+  await confirmPublish.getByRole("button", { name: "Yayınla" }).click();
   check(await toast(page, "Yazı yayında."), "yazı yayınlandı");
   const publicPage = await context.newPage();
   const response = await publicPage.goto(`${base}/blog/${RUN}`, { waitUntil: "domcontentloaded" });
   check(response.status() === 200 && (await publicPage.locator("h1").innerText()).includes(RUN), "herkese açık sayfa yeni yazıyı gösteriyor");
-  await page.getByRole("button", { name: "Diğer yayın seçenekleri" }).click();
+  await actions.getByRole("button", { name: "Diğer yayın seçenekleri" }).click();
   await page.getByRole("menuitem", { name: "Yayından kaldır" }).click();
   check(await toast(page, "Yazı yayından kaldırıldı ve taslağa alındı."), "arayüzden yayından kaldırıldı");
   const gone = await publicPage.goto(`${base}/blog/${RUN}`, { waitUntil: "domcontentloaded" });

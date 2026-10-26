@@ -10,6 +10,7 @@ import {
   CircleAlert,
   CloudOff,
   Check,
+  Ellipsis,
   Eye,
   EyeOff,
   ImagePlus,
@@ -183,7 +184,8 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
   const [drawer, setDrawer] = useState(null); // "left" | "right" | null (dar ekran)
   const [schedule, setSchedule] = useState("");
   const [busy, setBusy] = useState(null); // "publish" | "unpublish" | "manual" | "trash"
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(null); // "top" | "bottom" | null
+  const [confirmPublish, setConfirmPublish] = useState(false);
   const [pendingTemplate, setPendingTemplate] = useState(null);
   // Son uygulanan şablon: "Yapay Zekâ ile Bu Şablonu Doldur" yapı yönergesini buradan alır.
   const [activeTemplate, setActiveTemplate] = useState(initialTemplate?.key ?? null);
@@ -204,6 +206,8 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
   const selectedRef = useRef(null);
   const insertRef = useRef(null);
   const templateDialog = useRef(null);
+  const builderRef = useRef(null);
+  const publishingRef = useRef(false);
 
   useEffect(() => {
     selectedRef.current = selectedId;
@@ -324,22 +328,28 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
     else if (result.error) toast(result.error, "error");
   };
 
+  // Yayın onay penceresinden çağrılır. Çift dokunma koruması: istek sürerken
+  // ikinci bir yayın isteği gönderilmez (düğme durumu güncellenmeden önce de).
   const publish = async () => {
+    if (publishingRef.current) return;
+    publishingRef.current = true;
     setBusy("publish");
-    dirtyRef.current = true;
-    const saved = await flush();
-    if (!saved.ok) {
+    try {
+      dirtyRef.current = true;
+      const saved = await flush();
+      if (!saved.ok) return saved.error && toast(saved.error, "error");
+      const publishAt = schedule ? new Date(schedule).toISOString() : null;
+      const result = await publishPost(idRef.current, revisionRef.current, publishAt);
+      if (!result.ok) return toast(result.error, "error");
+      applyPost(result.post);
+      setSchedule("");
+      const scheduled = new Date(result.post.published_at) > new Date();
+      toast(scheduled ? `Yazı ${formatDateTime(result.post.published_at)} için planlandı.` : "Yazı yayında.");
+    } finally {
+      publishingRef.current = false;
       setBusy(null);
-      return saved.error && toast(saved.error, "error");
+      setConfirmPublish(false);
     }
-    const publishAt = schedule ? new Date(schedule).toISOString() : null;
-    const result = await publishPost(idRef.current, revisionRef.current, publishAt);
-    setBusy(null);
-    if (!result.ok) return toast(result.error, "error");
-    applyPost(result.post);
-    setSchedule("");
-    const scheduled = new Date(result.post.published_at) > new Date();
-    toast(scheduled ? `Yazı ${formatDateTime(result.post.published_at)} için planlandı.` : "Yazı yayında.");
   };
 
   const unpublish = async () => {
@@ -650,6 +660,20 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
     if (!pendingTemplate && dialog.open) dialog.close();
   }, [pendingTemplate]);
 
+  // Telefon klavyesi açıkken alt işlem çubuğu gizlenir: yazı alanı daralmaz;
+  // kayıt durumu üst çubukta görünür kalır. Yakınlaştırma klavye sayılmaz.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const root = builderRef.current;
+    if (!viewport || !root) return;
+    const update = () => {
+      root.dataset.keyboard = viewport.scale <= 1.01 && window.innerHeight - viewport.height > 150 ? "open" : "closed";
+    };
+    update();
+    viewport.addEventListener("resize", update);
+    return () => viewport.removeEventListener("resize", update);
+  }, []);
+
   useEffect(() => {
     const onBeforeUnload = (event) => {
       if (dirtyRef.current || savingRef.current) event.preventDefault();
@@ -670,7 +694,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
         if (event.shiftKey) redo();
         else undo();
       } else if (event.key === "Escape") {
-        setMenuOpen(false);
+        setMenuOpen(null);
         setDrawer(null);
       }
     };
@@ -684,11 +708,35 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
   }, [actions, flush, undo, redo]);
 
   const isBusy = busy !== null;
+  const togglePreview = () => {
+    setPreview((value) => !value);
+    setSelectedId(null);
+    setMenuOpen(null);
+  };
+  const publishLabel = schedule ? "Planla" : "Yayınla";
+  const publishSlug = slugify(form.slug) || meta.slug;
+  const updateLabel = state === "published" ? "Yayındaki yazı güncellendi." : "Değişiklikler kaydedildi.";
+  const publishMenu = (
+    <div className={styles.menu} role="menu">
+      {meta.status === "draft" ? (
+        <button type="button" role="menuitem" onClick={() => { setMenuOpen(null); openPageSettings(); setTimeout(() => document.getElementById("schedule-at")?.focus(), 50); }}>
+          İleri bir tarihe planla…
+        </button>
+      ) : (
+        <button type="button" role="menuitem" disabled={isBusy} onClick={() => { setMenuOpen(null); unpublish(); }}>
+          Yayından kaldır
+        </button>
+      )}
+      <button type="button" role="menuitem" onClick={() => { setMenuOpen(null); openPageSettings(); }}>
+        Sayfa ayarları
+      </button>
+    </div>
+  );
   const insertHint =
     insertAt !== null ? `Seçtiğiniz blok ${insertAt + 1}. sıraya eklenecek.` : null;
 
   return (
-    <div className={styles.builder} data-preview={preview} data-left={leftOpen} data-drawer={drawer ?? "none"}>
+    <div ref={builderRef} className={styles.builder} data-preview={preview} data-left={leftOpen} data-drawer={drawer ?? "none"}>
       <header className={styles.topbar}>
         <button
           type="button"
@@ -737,7 +785,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           </button>
         ) : null}
 
-        <button type="button" className={styles.topButton} aria-label={preview ? "Düzenle" : "Önizle"} aria-pressed={preview} onClick={() => { setPreview((value) => !value); setSelectedId(null); }}>
+        <button type="button" className={styles.topButton} aria-label={preview ? "Düzenle" : "Önizle"} aria-pressed={preview} onClick={togglePreview}>
           {preview ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
           <span>{preview ? "Düzenle" : "Önizle"}</span>
         </button>
@@ -751,35 +799,20 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
 
         <div className={styles.publishGroup}>
           {meta.status === "draft" ? (
-            <button type="button" className={styles.publishButton} aria-label={schedule ? "Planla" : "Yayınla"} disabled={isBusy} onClick={publish}>
+            <button type="button" className={styles.publishButton} aria-label={publishLabel} disabled={isBusy} onClick={() => setConfirmPublish(true)}>
               {busy === "publish" ? <LoaderCircle size={16} className={styles.spin} aria-hidden="true" /> : <Send size={16} aria-hidden="true" />}
-              <span>{schedule ? "Planla" : "Yayınla"}</span>
+              <span>{publishLabel}</span>
             </button>
           ) : (
-            <button type="button" className={styles.publishButton} aria-label="Güncelle" disabled={isBusy} onClick={() => saveManually(state === "published" ? "Yayındaki yazı güncellendi." : "Değişiklikler kaydedildi.")}>
+            <button type="button" className={styles.publishButton} aria-label="Güncelle" disabled={isBusy} onClick={() => saveManually(updateLabel)}>
               {busy === "manual" ? <LoaderCircle size={16} className={styles.spin} aria-hidden="true" /> : <Send size={16} aria-hidden="true" />}
               <span>Güncelle</span>
             </button>
           )}
-          <button type="button" className={styles.publishMore} aria-label="Diğer yayın seçenekleri" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)}>
+          <button type="button" className={styles.publishMore} aria-label="Diğer yayın seçenekleri" aria-haspopup="menu" aria-expanded={menuOpen === "top"} onClick={() => setMenuOpen((value) => (value === "top" ? null : "top"))}>
             <ChevronDown size={16} />
           </button>
-          {menuOpen ? (
-            <div className={styles.menu} role="menu">
-              {meta.status === "draft" ? (
-                <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); openPageSettings(); setTimeout(() => document.getElementById("schedule-at")?.focus(), 50); }}>
-                  İleri bir tarihe planla…
-                </button>
-              ) : (
-                <button type="button" role="menuitem" disabled={isBusy} onClick={() => { setMenuOpen(false); unpublish(); }}>
-                  Yayından kaldır
-                </button>
-              )}
-              <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); openPageSettings(); }}>
-                Sayfa ayarları
-              </button>
-            </div>
-          ) : null}
+          {menuOpen === "top" ? publishMenu : null}
         </div>
       </header>
 
@@ -879,6 +912,38 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
         />
       </main>
 
+      {/* Telefonda ana işlemler başparmak erişiminde: Önizle · Kaydet · Yayınla.
+          Taslak kaydı ile yayın ayrı düğmelerdir; yayın kısa bir onay ister. */}
+      <nav className={styles.actionBar} aria-label="Yazı işlemleri">
+        <button type="button" className={styles.actionButton} aria-pressed={preview} onClick={togglePreview}>
+          {preview ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+          <span>{preview ? "Düzenle" : "Önizle"}</span>
+        </button>
+        {meta.status === "draft" ? (
+          <button type="button" className={styles.actionButton} aria-label="Taslak Kaydet" disabled={isBusy} onClick={() => saveManually("Taslak kaydedildi.")}>
+            {busy === "manual" ? <LoaderCircle size={18} className={styles.spin} aria-hidden="true" /> : <Save size={18} aria-hidden="true" />}
+            <span>Kaydet</span>
+          </button>
+        ) : null}
+        {meta.status === "draft" ? (
+          <button type="button" className={styles.actionPrimary} disabled={isBusy} onClick={() => setConfirmPublish(true)}>
+            {busy === "publish" ? <LoaderCircle size={18} className={styles.spin} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
+            <span>{publishLabel}</span>
+          </button>
+        ) : (
+          <button type="button" className={styles.actionPrimary} disabled={isBusy} onClick={() => saveManually(updateLabel)}>
+            {busy === "manual" ? <LoaderCircle size={18} className={styles.spin} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
+            <span>Güncelle</span>
+          </button>
+        )}
+        <div className={styles.actionMore}>
+          <button type="button" className={styles.actionButton} aria-label="Diğer yayın seçenekleri" aria-haspopup="menu" aria-expanded={menuOpen === "bottom"} onClick={() => setMenuOpen((value) => (value === "bottom" ? null : "bottom"))}>
+            <Ellipsis size={20} aria-hidden="true" />
+          </button>
+          {menuOpen === "bottom" ? publishMenu : null}
+        </div>
+      </nav>
+
       {preview ? null : (
         <aside className={styles.right} aria-label="Ayarlar">
           <button type="button" className={styles.drawerClose} aria-label="Ayarları kapat" onClick={() => setDrawer(null)}>
@@ -968,6 +1033,20 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           </button>
         </div>
       </dialog>
+
+      <ConfirmDialog
+        open={confirmPublish}
+        title={schedule ? "Yazı planlansın mı?" : "Yazı yayınlansın mı?"}
+        confirmLabel={publishLabel}
+        busy={busy === "publish"}
+        onCancel={() => setConfirmPublish(false)}
+        onConfirm={publish}
+      >
+        {schedule
+          ? `Yazı ${formatDateTime(new Date(schedule).toISOString())} tarihinde herkese açık olur.`
+          : `Yazı herkese açık olur: ${siteHost}/blog/${publishSlug || "…"}.`}{" "}
+        Gerekirse daha sonra “Yayından kaldır” ile taslağa alabilirsin.
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={confirmTrash}

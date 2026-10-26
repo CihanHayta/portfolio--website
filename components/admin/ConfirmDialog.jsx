@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import styles from "./ConfirmDialog.module.css";
 
 // Yerel <dialog>: odak tuzağı, Esc ile kapanma ve arka plan perdesi tarayıcıdan gelir.
@@ -15,6 +15,9 @@ export default function ConfirmDialog({
   onCancel,
 }) {
   const ref = useRef(null);
+  // Aynı sayfada birden fazla onay penceresi olabilir (ör. yayınla + çöp kutusu).
+  const titleId = useId();
+  const bodyId = useId();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -26,16 +29,17 @@ export default function ConfirmDialog({
     <dialog
       ref={ref}
       className={styles.dialog}
-      aria-labelledby="confirm-title"
+      aria-labelledby={titleId}
+      aria-describedby={bodyId}
       onCancel={(event) => {
         event.preventDefault();
         if (!busy) onCancel();
       }}
     >
-      <h2 id="confirm-title" className={styles.title}>
+      <h2 id={titleId} className={styles.title}>
         {title}
       </h2>
-      <div className={styles.body}>{children}</div>
+      <div id={bodyId} className={styles.body}>{children}</div>
       <div className={styles.actions}>
         <button type="button" className={styles.cancel} onClick={onCancel} disabled={busy}>
           Vazgeç
