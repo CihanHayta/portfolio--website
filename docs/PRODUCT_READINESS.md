@@ -1,6 +1,6 @@
 # Ürün hazırlık durumu
 
-Durum tarihi: **2026-10-26**. Canlı kod: `18bbab7` (`dpl_56NFmG1Afsoye79g8PM9AoJ63wQg`), Next.js 16.4.3.
+Durum tarihi: **2026-10-26**. Canlı kod: `31a1dc6` (`dpl_38XKSBdiotWabMpHmfUiJsvAi2AJ`), Next.js 16.4.3.
 
 ## Özet
 
@@ -24,7 +24,7 @@ Durum tarihi: **2026-10-26**. Canlı kod: `18bbab7` (`dpl_56NFmG1Afsoye79g8PM9Ao
 | Aralıklı React #185 | Yeni yazı ekranında sonsuz güncelleme döngüsü | Tiptap seçenekleri sabit; değişiklikler birleştirilerek iletiliyor |
 | Görsel planında yedek yetişmiyordu | Gemini yoğunken plan üretilemiyordu | Yedeğe süre ayrılıyor; kapalı servisler yedek sayılmıyor; OVH'de hızlı model önce |
 | AI Servisleri saat dilimi | Vercel'de hydration hatası (#418) | Europe/Istanbul sabit |
-| Genişletme turu taslağı siliyordu | Servis yoğunken hazır taslak kayboluyordu | Taslak notla korunuyor (canlıya bu belgeyle birlikte çıkıyor) |
+| Genişletme turu taslağı siliyordu | Servis yoğunken hazır taslak kayboluyordu | Taslak notla korunuyor |
 | Özet ipucu kontrastı | 3,1:1 | 5,9:1 |
 
 ## Test sonuçları (güncel)

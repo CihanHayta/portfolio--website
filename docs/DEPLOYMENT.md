@@ -11,7 +11,7 @@ Durum tarihi: **2026-10-26**.
 | Fonksiyonlar | Fluid compute, bölge `iad1` |
 | Next.js | **16.4.3** (`latest`). Canlı tarayıcıda `window.next.version` ile doğrulandı. |
 | Canlıya çıkış | `main`'e push → otomatik production dağıtımı. Diğer dallar korumalı Preview. |
-| Son kod dağıtımı | `18bbab7` → `dpl_56NFmG1Afsoye79g8PM9AoJ63wQg` (2026-10-26). Sonraki commit'ler belge ve araç değişikliğidir. |
+| Son kod dağıtımı | `31a1dc6` → `dpl_38XKSBdiotWabMpHmfUiJsvAi2AJ` (2026-10-26). Bundan sonraki commit'ler yalnızca belge değişikliğidir. |
 | Çalışma öncesi canlı | `a576171` → `dpl_BRE4P4mCxpFt7xv8m42F8qjxFToJ` (Next.js 16.2.12) |
 
 ### Bu çalışmada yapılan canlı dağıtımlar (2026-10-26)
@@ -23,6 +23,7 @@ Durum tarihi: **2026-10-26**.
 | `70b482b` | `dpl_DE7fLC3Vo1HdL5p8wJv78Q9697aY` | Hızlı yazımda karakter kaybı giderildi; mobil alt çubuk, tek dokunuşla logo, onaylı yayın |
 | `8da1c51` | `dpl_GyzSMAVwkNaYK4Hmh8dMfPrh6sE1` | Görsel planında yedek servise süre ayrılır |
 | `18bbab7` | `dpl_56NFmG1Afsoye79g8PM9AoJ63wQg` | Erişilebilirlik düzeltmesi ve axe testi |
+| `31a1dc6` | `dpl_38XKSBdiotWabMpHmfUiJsvAi2AJ` | Stüdyo: genişletme hatasında taslak korunur; yedek betikleri; belgeler |
 
 ## Ortam değişkenleri
 

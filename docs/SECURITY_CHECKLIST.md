@@ -1,6 +1,6 @@
 # Güvenlik kontrol listesi
 
-Son kontrol: **2026-10-26** (canlı: `18bbab7`).
+Son kontrol: **2026-10-26** (canlı: `31a1dc6`).
 
 Depo herkese açık olduğu için giriş güvenliği ayarlarının ayrıntısı ve açık risklerin listesi yerel `docs/private/SECURITY_NOTES.md` dosyasındadır. O dosya git'e girmez.
 
