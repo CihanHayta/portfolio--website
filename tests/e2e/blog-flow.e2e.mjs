@@ -29,7 +29,13 @@ const check = (ok, label) => {
   if (!ok) failures++;
   console.log(`${ok ? "  ok  " : "  FAIL"} ${label}`);
 };
-const step = (label) => console.log(`\n— ${label}`);
+let currentStep = "başlangıç";
+const step = (label) => {
+  currentStep = label;
+  console.log(`\n— ${label}`);
+};
+// Yavaş mobil bağlantı taklidi: sunucuya giden POST istekleri geciktirilir (ms).
+const LATENCY_MS = Number(process.env.E2E_LATENCY_MS ?? 0);
 
 const keys = await projectKeys(ref);
 const service = createClient(keys.url, keys.serviceRole, { auth: { persistSession: false } });
@@ -51,9 +57,27 @@ const where = (page) => {
     return "?";
   }
 };
+const shot = (page) => page.screenshot({ path: join(out, `jshata-${Date.now()}.png`) }).catch(() => {});
 const watch = (page) => {
-  page.on("pageerror", (error) => errors.push(`${where(page)}: ${error.message}`));
-  page.on("console", (message) => message.type() === "error" && !/Failed to load resource|401|status of 4\d\d/.test(message.text()) && errors.push(`${where(page)}: ${message.text()}`));
+  page.on("pageerror", (error) => {
+    errors.push(`[${currentStep}] ${where(page)}: ${error.message}`);
+    shot(page);
+  });
+  page.on("console", async (message) => {
+    if (message.type() !== "error" || /Failed to load resource|401|status of 4\d\d/.test(message.text())) return;
+    errors.push(`[${currentStep}] ${where(page)}: ${message.text().slice(0, 1500)}`);
+    shot(page);
+    if (process.env.E2E_STACKS) {
+      const stacks = await Promise.all(message.args().map((arg) => arg.evaluate((value) => value?.stack ?? null).catch(() => null)));
+      console.log(`\n[yığın] ${stacks.filter(Boolean).join("\n").slice(0, 4000)}`);
+    }
+  });
+  if (LATENCY_MS > 0) {
+    page.route("**/*", async (route) => {
+      if (route.request().method() === "POST") await new Promise((resolve) => setTimeout(resolve, LATENCY_MS));
+      await route.continue();
+    });
+  }
 };
 const toast = (page, text, timeout = 20_000) => page.getByText(text).first().waitFor({ timeout }).then(() => true, () => false);
 const field = async (locator) => (await locator.count()) ? locator.inputValue() : null;

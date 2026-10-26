@@ -22,6 +22,8 @@ const nextConfig = {
   // İsteğe bağlı tarayıcı okuyucusu (yalnızca yerelde, PLAYWRIGHT_READER=1)
   // paketlenmez; çalışma anında dinamik olarak yüklenir.
   serverExternalPackages: ["playwright-core"],
+  // Yalnızca yerel hata ayıklama derlemesinde (E2E_SOURCEMAPS=1): tarayıcı kaynak haritaları.
+  productionBrowserSourceMaps: process.env.E2E_SOURCEMAPS === "1",
   // Temel güvenlik başlıkları. Çerçeve yalnızca aynı kaynakta izinli: yönetimdeki
   // AI önizlemesi (/admin/ai-preview) kendi sitesinde iframe içinde açılır.
   async headers() {
