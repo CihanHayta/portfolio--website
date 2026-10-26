@@ -249,3 +249,13 @@ test("kapalı servisler yedek sayılmaz: tek kullanılabilir servis bütçenin t
   assert.equal(result.provider, "ovh");
 });
 
+test("yedek için süre ayrılır: Gemini yanıt vermese de OVH yedeği yetişir", async () => {
+  // Gemini hiç yanıt vermez (iptal edilene kadar bekler); OVH 4,5 sn'de yanıt verir.
+  // Ayrılmış süre olmasa Gemini bütçenin %70'ini harcar ve OVH'ye deneme süresi kalmazdı.
+  const hang = ({ init }) => new Promise((resolve, reject) => init.signal.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))));
+  const slowOvh = () => new Promise((resolve) => setTimeout(() => resolve(chat({ ok: true }, "Meta-Llama-3_3-70B-Instruct")), 4_500));
+  const { fetchImpl } = makeFetch({ gemini: hang, other: slowOvh });
+  const result = await generateJsonRouted({ task: "visual-plan", system: "s", prompt: "p", schema: SCHEMA, budgetMs: 10_000, backupReserveMs: 5_000, env: baseEnv, fetchImpl, order: ["gemini", "ovh"], store: createTestStore(), log: () => {} });
+  assert.equal(result.provider, "ovh");
+});
+

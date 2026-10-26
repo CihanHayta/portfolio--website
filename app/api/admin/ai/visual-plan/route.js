@@ -8,7 +8,8 @@ import { sourceSnapshot } from "@/lib/blog/sourceContext";
 import { getAdmin } from "@/lib/blog/admin";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// Gemini yoğunken yedek servise (OVH) yetecek süre kalsın: toplam bütçe 80 sn.
+export const maxDuration = 90;
 
 const clip = (value, max) => String(value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
 
@@ -60,7 +61,8 @@ export async function POST(request) {
         schema: VISUAL_PLAN_SCHEMA,
         temperature: 0.5,
         maxOutputTokens: 8_192,
-        budgetMs: 48_000,
+        budgetMs: 80_000,
+        backupReserveMs: 30_000,
       });
       const plan = normalizeVisualPlan(result.data, { sections, sourceImages: source?.images ?? [], budget });
       return {
