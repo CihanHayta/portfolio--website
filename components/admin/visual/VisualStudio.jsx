@@ -9,6 +9,7 @@ import { uploadMedia } from "../upload";
 import { dataUrlToFile, deleteCandidate, getCandidate, newOpId, putCandidate, randomSeed } from "./candidateCache";
 import VisualCard, { isRiskyCandidate } from "./VisualCard";
 import styles from "./visual.module.css";
+import { useModalDialog } from "../useModalDialog";
 
 const readJson = async (response) => response.json().catch(() => ({}));
 const offline = (error) => (error instanceof TypeError ? "Sunucuya ulaşılamadı. Bağlantını kontrol edip yeniden dene." : error.message);
@@ -71,10 +72,7 @@ export default function VisualStudio({ postId, title, getBlocks, onInsert, onClo
     cardsRef.current = cards;
   }, [cards]);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog.open) dialog.showModal();
-  }, []);
+  useModalDialog(dialogRef, true, { fitViewport: true });
 
   // Durum bu tarayıcıda saklanır: sayfa yenilenince plan ve seçimler kaybolmaz.
   useEffect(() => {

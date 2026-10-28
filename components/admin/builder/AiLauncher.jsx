@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Sparkles, Wand2, X } from "lucide-react";
 import styles from "./AiLauncher.module.css";
+import { useModalDialog } from "../useModalDialog";
 
 // Sihirbaz yalnızca kullanıldığında indirilir; editörün açılışını ağırlaştırmaz.
 const AiBlogWizard = dynamic(() => import("../AiBlogWizard"), { ssr: false });
@@ -24,28 +25,27 @@ export default function AiLauncher({
   templateKey = null,
   getBlocks = () => [],
   onApplyTemplateFill,
-  autoOpen = false,
   canReplaceSilently = () => false,
   openSignal = 0,
+  onOpenHandled = () => {},
 }) {
   const dialogRef = useRef(null);
   const [asking, setAsking] = useState(false);
   const [url, setUrl] = useState("");
   const [session, setSession] = useState(null); // { url, replacesContent }
-  const [studio, setStudio] = useState(autoOpen && !disabled);
+  const [studio, setStudio] = useState(false);
 
-  // Editörün mobil çubuğundaki "AI ile yaz" düğmesi stüdyoyu buradan açar.
+  // Dışarıdan gelen açma isteği (mobil "AI ile Yaz" ya da ?studio ile açılış) TEK
+  // SEFER işlenir ve hemen sıfırlanır. Eskiden sayaç olarak kaldığı için panel
+  // önizlemeden dönünce ya da kayıt bitince stüdyo istenmeden yeniden açılıyordu.
   useEffect(() => {
-    // Dışarıdan gelen açma isteği (sayaç) bir kez işlenir.
+    if (!openSignal || disabled) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (openSignal && !disabled) setStudio(true);
-  }, [openSignal, disabled]);
+    setStudio(true);
+    onOpenHandled();
+  }, [openSignal, disabled, onOpenHandled]);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (asking && !dialog.open) dialog.showModal();
-    if (!asking && dialog.open) dialog.close();
-  }, [asking]);
+  useModalDialog(dialogRef, asking);
 
   const start = (event) => {
     event.preventDefault();

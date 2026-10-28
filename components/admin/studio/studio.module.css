@@ -1024,8 +1024,8 @@ div.imageThumb {
 
 @media (max-width: 760px) {
   .twoCol,
-.sourceGrid,
-.row {
+  .sourceGrid,
+  .row {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -1638,11 +1638,13 @@ div.imageThumb {
 /* --- Telefon: tam ekran sayfa, büyük dokunma hedefleri ----------------------------- */
 
 @media (max-width: 760px) {
+  /* Yükseklik görünür alana göre (klavye açıkken de düğmeler görünür kalır). */
   .dialog {
     width: 100vw;
-    height: 100dvh;
+    height: var(--vvh, 100dvh);
     max-width: 100vw;
-    max-height: 100dvh;
+    max-height: var(--vvh, 100dvh);
+    margin: var(--vvtop, 0px) 0 auto;
     border: 0;
     border-radius: 0;
   }

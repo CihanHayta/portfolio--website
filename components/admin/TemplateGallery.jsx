@@ -9,6 +9,7 @@ import { BLOCKS } from "@/lib/blog/blocks/registry";
 import { TEMPLATES, TEMPLATE_CATEGORIES, instantiateTemplate } from "@/lib/blog/blocks/templates";
 import { slugify } from "@/lib/blog/slug";
 import styles from "./TemplateGallery.module.css";
+import { useModalDialog } from "./useModalDialog";
 
 const CATEGORY_LABEL = Object.fromEntries(TEMPLATE_CATEGORIES);
 const normalize = (value) => slugify(value).replace(/-/g, " ");
@@ -51,11 +52,7 @@ export default function TemplateGallery() {
   const visible = items.filter((item) => (!category || item.category === category) && (!term || item.search.includes(term)));
   const preview = items.find((item) => item.key === previewKey) ?? null;
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (preview && !dialog.open) dialog.showModal();
-    if (!preview && dialog.open) dialog.close();
-  }, [preview]);
+  useModalDialog(dialogRef, Boolean(preview));
 
   const counts = useMemo(() => {
     const map = new Map();

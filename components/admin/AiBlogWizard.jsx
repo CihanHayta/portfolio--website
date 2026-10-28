@@ -30,6 +30,7 @@ import { PREVIEW_DATA, PREVIEW_READY } from "./AiPreviewClient";
 import ConfirmDialog from "./ConfirmDialog";
 import { uploadMedia } from "./upload";
 import styles from "./AiBlogWizard.module.css";
+import { useModalDialog } from "./useModalDialog";
 
 const STEPS = ["Kaynak analizi", "Görsel planı", "Görseller", "Makale", "Önizleme ve yayın"];
 const PHASE_STEP = { analyzing: 0, plan: 1, images: 2, writing: 3, review: 4, publishing: 4, done: 4 };
@@ -102,10 +103,7 @@ export default function AiBlogWizard({
   const [confirmClose, setConfirmClose] = useState(false);
   const [closing, setClosing] = useState(false);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog.open) dialog.showModal();
-  }, []);
+  useModalDialog(dialogRef);
 
   const request = useCallback((path, body) => {
     const controller = new AbortController();

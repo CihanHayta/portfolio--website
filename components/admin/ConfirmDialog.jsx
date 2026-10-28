@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef } from "react";
 import styles from "./ConfirmDialog.module.css";
+import { useModalDialog } from "./useModalDialog";
 
 // Yerel <dialog>: odak tuzağı, Esc ile kapanma ve arka plan perdesi tarayıcıdan gelir.
 export default function ConfirmDialog({
@@ -19,11 +20,7 @@ export default function ConfirmDialog({
   const titleId = useId();
   const bodyId = useId();
 
-  useEffect(() => {
-    const dialog = ref.current;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
+  useModalDialog(ref, open);
 
   return (
     <dialog

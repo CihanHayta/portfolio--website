@@ -604,7 +604,9 @@
 @media (max-width: 760px) {
   .dialog {
     width: 100vw;
-    height: 100dvh;
+    height: var(--vvh, 100dvh);
+    max-height: var(--vvh, 100dvh);
+    margin: var(--vvtop, 0px) 0 auto;
     border: 0;
     border-radius: 0;
   }

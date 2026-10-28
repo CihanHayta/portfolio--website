@@ -59,6 +59,7 @@ import { usePointerDrag } from "./usePointerDrag";
 import Inspector from "./Inspector";
 import { useBlocks } from "./useBlocks";
 import styles from "./builder.module.css";
+import { useModalDialog } from "../useModalDialog";
 
 // Taslak aktarıldıktan sonra "Görsel ekle" ile açılan stüdyo (yalnızca gerektiğinde yüklenir).
 const StudioDialog = dynamic(() => import("../studio/StudioDialog"), { ssr: false });
@@ -450,7 +451,9 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
     const restore = actions.redo();
     if (restore) updateForm(restore);
   }, [actions, updateForm]);
-  const [studioSignal, setStudioSignal] = useState(0);
+  // Stüdyoyu açma isteği: AiLauncher işleyince sıfırlanır (tek seferlik).
+  const [studioRequest, setStudioRequest] = useState(openStudio ? 1 : 0);
+  const studioHandled = useCallback(() => setStudioRequest(0), []);
 
   // Görsel adımında "Bloga ekle" / "Kapak görseli yap": her görsel kullanıcının
   // seçtiği hedefe (başlığın altı, boş görsel alanı, giriş, galeri, son) tek geri
@@ -713,11 +716,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
     return () => (window.cancelIdleCallback ? window.cancelIdleCallback(handle) : clearTimeout(handle));
   }, []);
 
-  useEffect(() => {
-    const dialog = templateDialog.current;
-    if (pendingTemplate && !dialog.open) dialog.showModal();
-    if (!pendingTemplate && dialog.open) dialog.close();
-  }, [pendingTemplate]);
+  useModalDialog(templateDialog, Boolean(pendingTemplate));
 
   // Telefon klavyesi açıkken alt işlem çubuğu gizlenir: yazı alanı daralmaz;
   // kayıt durumu üst çubukta görünür kalır. Yakınlaştırma klavye sayılmaz.
@@ -892,7 +891,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
             Ayarlar
           </button>
           {meta.status === "draft" ? (
-            <button type="button" className={styles.topButton} data-kind="ai" disabled={isBusy} onClick={() => { setDrawer(null); setStudioSignal((value) => value + 1); }}>
+            <button type="button" className={styles.topButton} data-kind="ai" disabled={isBusy} onClick={() => { setDrawer(null); setStudioRequest((value) => value + 1); }}>
               <Wand2 size={16} aria-hidden="true" />
               AI ile Yaz
             </button>
@@ -940,9 +939,9 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
               templateKey={activeTemplate}
               getBlocks={() => blocksRef.current}
               onApplyTemplateFill={applyTemplateFill}
-              autoOpen={openStudio}
               canReplaceSilently={canReplaceSilently}
-              openSignal={studioSignal}
+              openSignal={studioRequest}
+              onOpenHandled={studioHandled}
             />
           </div>
         </aside>

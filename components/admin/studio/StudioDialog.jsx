@@ -14,6 +14,7 @@ import { resizeForAnalysis } from "./resizeImage";
 import styles from "./studio.module.css";
 import { autoTarget, normalizeUrl } from "./studioInput";
 import { saveSourceContext } from "@/lib/blog/sourceContext";
+import { useModalDialog } from "../useModalDialog";
 
 const CURRENT = "__current";
 const TIMEOUT_MS = 80_000;
@@ -261,9 +262,8 @@ export default function StudioDialog({
   const decisionRef = useRef({ decision: null, selectedId: null, skipArchive: false });
   const inputRef = useRef({ url: "", notes: "", brief: DEFAULT_BRIEF, templateChoice: "auto" });
 
+  useModalDialog(dialogRef, true, { fitViewport: true });
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog.open) dialog.showModal();
     return () => {
       runRef.current?.abort();
       // Geçici önizleme adresleri serbest bırakılır; kalıcı (imzalı) adresler etkilenmez.
