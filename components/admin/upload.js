@@ -17,6 +17,7 @@ export function uploadMedia(file, onProgress, meta = {}) {
     body.append("file", file);
     if (meta.alt) body.append("alt", meta.alt);
     if (meta.caption) body.append("caption", meta.caption);
+    for (const name of ["origin", "sourceUrl", "provider", "model", "draftPostId"]) if (meta[name]) body.append(name, String(meta[name]));
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/admin/media");

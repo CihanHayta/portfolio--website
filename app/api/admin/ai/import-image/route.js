@@ -27,7 +27,10 @@ export async function POST(request) {
     if (encoded.error === "format") return json({ error: "Bu görsel biçimi desteklenmiyor (yalnızca JPG, PNG ve WebP)." }, 415);
     if (encoded.error) return json({ error: "Dosya geçerli bir görsel değil." }, 415);
     const host = new URL(image.finalUrl).hostname.replace(/^www\./, "");
-    const stored = await storeMedia(admin, encoded.output, alt, { caption: `Kaynak: ${host}` });
+    const stored = await storeMedia(admin, encoded.output, alt, {
+      caption: `Kaynak: ${host}`,
+      provenance: { origin: "source", sourceUrl: image.finalUrl, draftPostId: body.postId },
+    });
     if (stored.error) return json({ error: stored.error }, stored.status);
     return json({ media: stored.media, source: image.finalUrl }, 201);
   } catch (error) {

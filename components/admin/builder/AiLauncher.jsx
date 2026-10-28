@@ -14,6 +14,7 @@ const StudioDialog = dynamic(() => import("../studio/StudioDialog"), { ssr: fals
 // sihirbazı "Klasik sihirbaz" olarak kalır. Hiçbir yol kendiliğinden yayımlamaz.
 export default function AiLauncher({
   postId,
+  ensureDraft = async () => postId,
   categories,
   siteHost,
   disabled,
@@ -87,6 +88,7 @@ export default function AiLauncher({
       {studio ? (
         <StudioDialog
           postId={postId}
+          ensureDraft={ensureDraft}
           templateKey={templateKey}
           getBlocks={getBlocks}
           canReplaceSilently={canReplaceSilently}

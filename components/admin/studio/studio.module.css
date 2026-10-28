@@ -464,14 +464,12 @@
   text-align: center;
 }
 
-.thumbActions,
-.poolActions {
+.thumbActions {
   display: flex;
   gap: 4px;
 }
 
-.thumbActions button,
-.poolActions button {
+.thumbActions button {
   display: inline-grid;
   place-items: center;
   min-width: 30px;
@@ -483,16 +481,9 @@
   cursor: pointer;
 }
 
-.thumbActions button:disabled,
-.poolActions button:disabled {
+.thumbActions button:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-}
-
-.poolActions button[aria-pressed="true"] {
-  border-color: var(--blog-gold);
-  background: var(--blog-gold);
-  color: #2b2210;
 }
 
 /* --- Şablon / taslak ---------------------------------------------------------- */
@@ -585,20 +576,6 @@
 
 /* --- Görsel adımı ------------------------------------------------------------- */
 
-.imageLayout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 14px;
-  align-items: start;
-}
-
-.modes {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
 .mode {
   display: grid;
   justify-items: start;
@@ -637,21 +614,6 @@
   cursor: not-allowed;
 }
 
-.license {
-  display: flex;
-  gap: 10px;
-  padding: 12px;
-  border-radius: var(--blog-radius-control);
-  background: var(--blog-warning-soft);
-  color: var(--blog-warning);
-  font-size: 13px;
-}
-
-.license svg {
-  flex: none;
-  margin-top: 2px;
-}
-
 .check {
   display: flex;
   align-items: center;
@@ -661,46 +623,6 @@
   color: var(--blog-ink);
 }
 
-.sourceImages {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.sourceImages li {
-  display: grid;
-  align-content: start;
-  gap: 4px;
-  padding: 6px;
-  border: 1px solid var(--blog-line);
-  border-radius: 10px;
-  background: var(--blog-bg);
-  font-size: 12px;
-}
-
-.sourceImages li[data-picked] {
-  border-color: var(--blog-accent);
-  box-shadow: inset 0 0 0 1px var(--blog-accent);
-}
-
-.sourceImages label {
-  position: relative;
-  display: block;
-  cursor: pointer;
-}
-
-.sourceImages label input {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  width: 18px;
-  height: 18px;
-}
-
-.sourceImages img,
 .broken {
   display: grid;
   place-items: center;
@@ -714,18 +636,6 @@
 .broken {
   font-size: 12px;
   color: var(--blog-ink-soft);
-}
-
-.imageAlt {
-  color: var(--blog-ink-soft);
-  overflow-wrap: anywhere;
-}
-
-.imageLink {
-  overflow: hidden;
-  color: var(--blog-link);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .uploads {
@@ -743,23 +653,254 @@
   gap: 10px;
 }
 
-.ideaRow {
-  display: grid;
-  gap: 4px;
+.saveLine {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--blog-ink-soft);
 }
 
-.poolPanel {
-  position: sticky;
-  top: 0;
+.saveLine[data-state="error"] {
+  color: var(--blog-danger);
+}
+
+.shotStatus {
+  font-size: 11px;
+  color: var(--blog-ink-soft);
+}
+
+.shotStatus[data-state="local"] {
+  color: var(--blog-danger);
+}
+
+/* Görsel adımı: tek liste, seçim + hedef, sabit işlem çubuğu. */
+.imageStep {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.imageTabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--blog-line);
+  border-radius: 10px;
+  background: var(--blog-bg);
+  overflow-x: auto;
+}
+
+.imageTab {
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--blog-ink-soft);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.imageTab[aria-selected="true"] {
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+}
+
+.imageTab:focus-visible,
+.iconButton:focus-visible,
+.imageThumb:focus-within {
+  outline: 2px solid var(--blog-gold);
+  outline-offset: 2px;
+}
+
+.imageSection {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.imageHeading {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.imageCard {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--blog-line);
+  border-radius: 12px;
+  background: var(--blog-bg);
+  font-size: 12.5px;
+}
+
+.imageCard[data-selected] {
+  border-color: var(--blog-gold);
+  box-shadow: inset 0 0 0 1px var(--blog-gold);
+}
+
+.imageCard[data-state="candidate"] {
+  border-style: dashed;
+  border-color: var(--blog-line-strong);
+}
+
+.imageThumb {
+  position: relative;
+  display: block;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+div.imageThumb {
+  cursor: default;
+}
+
+.imageThumb img,
+.imageThumb .broken {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--blog-bg-muted);
+}
+
+.imageThumb input {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--blog-accent);
+  cursor: pointer;
+}
+
+.stateChip {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.78);
+  color: var(--p-cream);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stateChip[data-state="placed"],
+.stateChip[data-state="cover"] {
+  background: var(--blog-gold);
+  color: var(--p-night);
+}
+
+.stateChip[data-state="failed"] {
+  background: var(--blog-danger);
+  color: #fff;
+}
+
+.imageMeta {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.imageNote {
+  overflow: hidden;
+  color: var(--blog-ink-soft);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.imageFields,
+.createGrid {
   display: grid;
   gap: 8px;
-  padding: 14px;
-  border: 1px solid var(--blog-line);
-  border-radius: var(--blog-radius-card);
-  background: var(--blog-bg);
 }
 
-.pool {
+.createGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.imageField {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blog-ink-soft);
+}
+
+.imageField .input {
+  min-height: 40px;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cardActions .primary,
+.cardActions .secondary {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+.inlineWrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconButton {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--blog-line);
+  border-radius: 8px;
+  background: var(--blog-bg);
+  color: var(--blog-ink);
+  cursor: pointer;
+}
+
+.emptyState {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px dashed var(--blog-line-strong);
+  border-radius: 12px;
+  background: var(--blog-bg);
+  font-size: 14px;
+}
+
+.jobs {
   display: grid;
   gap: 8px;
   margin: 0;
@@ -767,54 +908,124 @@
   list-style: none;
 }
 
-.pool li {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 8px;
-  padding: 8px;
+.jobs li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 12px;
   border: 1px solid var(--blog-line);
   border-radius: 10px;
+  background: var(--blog-bg);
+  font-size: 13px;
 }
 
-.pool li[data-cover] {
-  border-color: var(--blog-gold);
+.jobs li[data-status="error"] {
+  border-color: var(--blog-danger-soft);
+  background: var(--blog-danger-soft);
+  color: var(--blog-danger);
 }
 
-.pool img {
-  width: 64px;
-  height: 48px;
-  object-fit: cover;
-  border-radius: 6px;
-}
-
-.poolBody {
+.jobText {
   display: grid;
-  gap: 4px;
+  flex: 1 1 200px;
+  gap: 2px;
   min-width: 0;
 }
 
-.poolActions {
-  grid-column: 1 / -1;
-  justify-content: flex-end;
+.jobText span {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.handoff {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--blog-accent-line);
+  border-radius: 12px;
+  background: var(--blog-accent-soft);
+}
+
+.handoffHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.handoffSteps {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 22px;
+  font-size: 13.5px;
+}
+
+.handoffSteps li {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+
+.handoffSteps textarea {
+  min-height: 96px;
+  font-size: 13px;
+}
+
+/* Seçim varken alttaki işlem çubuğu kaydırmada görünür kalır. */
+.imageBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: 12px;
+  background: var(--blog-bg);
+  box-shadow: var(--blog-shadow-pop);
+}
+
+.imageBarHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  font-size: 14px;
+}
+
+.imageBarHead .linkButton {
+  margin-left: auto;
+  font-size: 13px;
+}
+
+.imageBarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.check[data-error] {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--blog-danger-soft);
+  color: var(--blog-danger);
+}
+
+.check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--blog-accent);
 }
 
 /* --- Duyarlı yerleşim ---------------------------------------------------------- */
 
-@media (max-width: 900px) {
-  .imageLayout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .poolPanel {
-    position: static;
-  }
-}
-
 @media (max-width: 760px) {
   .twoCol,
-  .sourceGrid,
-  .row,
-  .modes {
+.sourceGrid,
+.row {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -857,6 +1068,70 @@
 
   .inline {
     flex-direction: column;
+  }
+
+  /* Telefonda iki sütunlu görsel ızgarası; işlem düğmeleri tam genişlik. */
+  .imageGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .imageCard {
+    padding: 6px;
+  }
+
+  .createGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* İşlem çubuğu kısa kalır: birincil düğme tam genişlik, diğerleri iki sütun. */
+  .imageBar {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .imageBarActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .imageBarActions .primary {
+    grid-column: 1 / -1;
+  }
+
+  .imageBarActions .secondary {
+    justify-self: stretch;
+    min-height: 40px;
+    padding: 4px 8px;
+    font-size: 12.5px;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .imageBarActions .secondary svg {
+    flex: none;
+  }
+
+  .imageBar > .hint {
+    display: none;
+  }
+
+  .imageTab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 12.5px;
+  }
+
+  .imageTab svg {
+    display: none;
+  }
+
+  .cardActions .primary,
+  .cardActions .secondary {
+    flex: 1 1 calc(50% - 6px);
   }
 }
 

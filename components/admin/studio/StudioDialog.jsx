@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, CircleAlert, ClipboardPaste, ImagePlus, LoaderCircle, MinusCircle, RefreshCw, Wand2, X } from "lucide-react";
 import { contentHeadings } from "@/lib/blog/blocks/model";
-import { placeImages } from "@/lib/blog/blocks/placeImages";
+import { placeAtTargets } from "@/lib/blog/blocks/imageTargets";
 import { TEMPLATES, templateByKey } from "@/lib/blog/blocks/templates";
 import { titleSimilarity } from "@/lib/ai/similarity";
 import { pickTemplate } from "@/lib/ai/templatePick";
 import ImageStep from "./ImageStep";
 import SimilarityStep from "./SimilarityStep";
 import { STAGE_STATUS_TEXT, ShotsPanel, analyzeScreenshots, streamSource } from "./SourceStep";
+import { resizeForAnalysis } from "./resizeImage";
 import styles from "./studio.module.css";
 import { autoTarget, normalizeUrl } from "./studioInput";
 import { saveSourceContext } from "@/lib/blog/sourceContext";
@@ -66,6 +67,9 @@ const LENGTH_OPTIONS = [
 const DEFAULT_BRIEF = { topic: "", keyword: "", audience: "", goal: "inform", tone: "friendly", cta: "", length: "auto" };
 
 const countWords = (text) => (String(text ?? "").match(/[\p{L}\p{N}]+/gu) ?? []).length;
+// Yazıdaki dolu görsel sayısı (görsel blokları ve galeri öğeleri).
+const countImages = (blocks = []) =>
+  blocks.reduce((sum, block) => sum + (block.type === "gallery" ? (block.props.items ?? []).filter((item) => item.image?.url).length : block.props?.image?.url ? 1 : 0), 0);
 const outlineOf = (text) => (String(text ?? "").match(/^#{2,3}\s+.+$/gm) ?? []).map((line) => line.replace(/^#+\s+/, "").trim());
 const hrefsIn = (blocks) => [...new Set((JSON.stringify(blocks).match(/"href":"([^"]+)"/g) ?? []).map((match) => match.slice(8, -1)))];
 
@@ -101,15 +105,56 @@ function clearSession(key) {
   }
 }
 
+// --- Taslağa bağlı kalıcı oturum (Supabase: blog_studio_sessions) ---------------
+// Link, metin, ekran görüntüleri, kaynak görselleri, seçimler, AI görselleri ve
+// taslak burada durur; sayfa yenilense ya da başka cihazdan açılsa da geri gelir.
+async function fetchServerSession(postId) {
+  try {
+    const response = await fetch(`/api/admin/studio/session?postId=${encodeURIComponent(postId)}`, { cache: "no-store" });
+    if (!response.ok) return null;
+    return (await response.json()).data ?? null;
+  } catch {
+    return null;
+  }
+}
+async function putServerSession(postId, data) {
+  try {
+    const response = await fetch("/api/admin/studio/session", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ postId, data }) });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+const hasWork = (data) => Boolean(data && (data.url || data.notes || data.shots?.length || data.draft || data.images?.length || data.source?.text));
+// Sunucudaki biçimi stüdyonun "yarım kalan çalışma" biçimine çevirir.
+function fromServer(data) {
+  return {
+    url: data.url ?? "",
+    notes: data.notes ?? "",
+    brief: data.brief ?? {},
+    templateChoice: data.templateChoice ?? "auto",
+    method: data.method ?? "auto",
+    source: data.source?.text ? { url: data.source.url, source: { kind: "url", ...data.source } } : null,
+    shots: data.shotSource?.text ? { kind: "screenshots", ...data.shotSource } : null,
+    shotItems: data.shots ?? [],
+    compare: null,
+    decision: { decision: data.similar?.decision || null, selectedId: data.similar?.selectedIds?.[0] ?? null, skipArchive: Boolean(data.similar?.skipArchive) },
+    plan: data.plan ?? null,
+    draft: data.draft?.blocks ? data.draft : null,
+    images: data.images ?? [],
+    phase: data.phase ?? "",
+    server: true,
+  };
+}
+
 // Taslağa ilişkin uyarılar: stüdyonun inceleme ekranı ve editördeki not paneli ortak kullanır.
-export function draftNotes(result, placed, archiveMatches = []) {
+export function draftNotes(result, archiveMatches = []) {
   const { fields, stats, warnings = [], sources = [] } = result;
   const unreadable = sources.flatMap((source) => source.unreadable ?? []);
   return [
     ...warnings,
     ...(stats.unfilled ? [`${stats.unfilled} bölüm şablondaki haliyle kaldı; yayınlamadan önce doldurulmalı.`] : []),
     ...(stats.dropped ? [`Kaynakta dayanağı olmayan ${stats.dropped} alıntı/istatistik bloğu çıkarıldı.`] : []),
-    ...(placed?.leftover ? [`${placed.leftover} görsel için uygun bölüm bulunamadı; editörde elle ekleyebilirsiniz.`] : []),
     ...sources
       .filter((source) => source.truncated)
       .map((source) => `“${source.title || source.url || "Kaynak"}” uzun olduğu için tamamı işlenmedi${source.missingFrom ? `; “${source.missingFrom}” bölümünden sonrası taslağa yansımadı` : ""}.`),
@@ -138,14 +183,19 @@ export default function StudioDialog({
   getBlocks,
   canReplaceSilently = () => false,
   onApply,
-  onApplyImages,
+  onPlaceImages,
   onClose,
   initialPhase = "start",
   imageSource = null,
+  ensureDraft = async () => postId ?? null,
+  coverTaken = false,
+  onOpenVisualPlan = null,
+  title = "",
 }) {
   const dialogRef = useRef(null);
   const shotsRef = useRef(null);
   const notesRef = useRef(null);
+  const shotItemsRef = useRef([]);
   const runRef = useRef(null);
   // Açılış anının görüntüsü: akış sürerken editör değişse de karar değişmez.
   const [editorBlocks] = useState(() => getBlocks());
@@ -166,8 +216,13 @@ export default function StudioDialog({
   const [similar, setSimilar] = useState({ status: "idle", key: "", result: null, error: "", decision: null, selectedId: null, update: null });
   const [plan, setPlan] = useState(null);
   const [draft, setDraft] = useState({ status: "idle", result: null, error: "" });
-  const [pool, setPool] = useState([]);
-  const [coverId, setCoverId] = useState(null);
+  // Görseller (kaynak, yüklenen, AI, ChatGPT): seçim, hedef bölüm ve durum. Taslağa bağlı saklanır.
+  const [images, setImages] = useState([]);
+  // Sunucu oturumu yüklenene kadar kayıt yapılmaz (boş durum kayıtlı çalışmanın üzerine yazılmasın).
+  const [hydrated, setHydrated] = useState(!postId);
+  const [restoredSource, setRestoredSource] = useState(null);
+  const [saveTick, setSaveTick] = useState(0);
+  const [saveState, setSaveState] = useState("idle"); // idle | saving | saved | error
   const [pasteHint, setPasteHint] = useState("");
   const [inputError, setInputError] = useState("");
   // Ekranda gösterilen girdi ve okunan kaynaklar (önbelleğin render'a yansıyan kopyası).
@@ -209,19 +264,161 @@ export default function StudioDialog({
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog.open) dialog.showModal();
-    const items = shots.items;
     return () => {
       runRef.current?.abort();
-      for (const item of items) URL.revokeObjectURL(item.preview);
+      // Geçici önizleme adresleri serbest bırakılır; kalıcı (imzalı) adresler etkilenmez.
+      for (const item of shotItemsRef.current) if (item.preview?.startsWith("blob:")) URL.revokeObjectURL(item.preview);
     };
-    // Önizleme adresleri yalnızca kapanışta serbest bırakılır.
+  }, []);
+  useEffect(() => {
+    shotItemsRef.current = shots.items;
+  }, [shots.items]);
+
+  // --- Kalıcı oturum ------------------------------------------------------------------
+  const draftIdRef = useRef(postId ?? null);
+  const baseRef = useRef(null); // sunucudaki oturum: bu pencerenin değiştirmediği alanlar korunur
+  const lastSavedRef = useRef("");
+  const pendingRef = useRef(null);
+  const draftRef = useRef(draft);
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+  const [draftReady, setDraftReady] = useState(Boolean(postId));
+  const getDraftId = useCallback(async () => {
+    if (draftIdRef.current) return draftIdRef.current;
+    const id = await ensureDraft().catch(() => null);
+    if (id) {
+      draftIdRef.current = id;
+      setDraftReady(true);
+    }
+    return id ?? null;
+  }, [ensureDraft]);
+
+  const restoreShots = async (items) => {
+    if (!items?.length) return;
+    setShots((value) => ({ ...value, items: items.map((item) => ({ id: item.id || item.path, path: item.path, name: item.name, preview: "", status: "saved" })) }));
+    try {
+      const response = await fetch(`/api/admin/studio/files?paths=${encodeURIComponent(items.map((item) => item.path).join(","))}`, { cache: "no-store" });
+      const urls = response.ok ? (await response.json()).urls ?? {} : {};
+      setShots((value) => ({ ...value, items: value.items.map((item) => (item.path && urls[item.path] ? { ...item, preview: urls[item.path] } : item)) }));
+    } catch {
+      // Önizleme gelmezse görüntüler yine kayıtlıdır; analiz sunucudan okur.
+    }
+  };
+
+  // Ekran görüntüsü taslağa bağlı özel kovaya kaydedilir (küçültülmüş kopya).
+  // Taslak oluşturulamazsa görüntü yalnızca bu sayfa açıkken kullanılabilir.
+  const uploadShot = async (file) => {
+    const draftId = await getDraftId();
+    if (!draftId) return null;
+    const body = new FormData();
+    body.append("postId", draftId);
+    body.append("file", await resizeForAnalysis(file));
+    const response = await fetch("/api/admin/studio/files", { method: "POST", body });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.shot) throw new Error(data.error || "Ekran görüntüsü kaydedilemedi.");
+    setSaveTick((value) => value + 1);
+    return data.shot;
+  };
+  const removeShot = (item) => {
+    if (!item?.path) return;
+    fetch(`/api/admin/studio/files?path=${encodeURIComponent(item.path)}`, { method: "DELETE" }).catch(() => {});
+    setSaveTick((value) => value + 1);
+  };
+
+  // Açılışta taslağın sunucudaki oturumu okunur (tarayıcıdaki kopyadan önceliklidir).
+  useEffect(() => {
+    if (!postId) return;
+    let active = true;
+    fetchServerSession(postId).then((data) => {
+      if (!active) return;
+      baseRef.current = data;
+      if (hasWork(data)) {
+        const value = fromServer(data);
+        if (initialPhase === "start" && value.phase !== "applied") {
+          setSaved(value);
+        } else {
+          // Görsel adımı ya da editöre aktarılmış çalışma: seçimler ve girdiler sessizce geri gelir.
+          setImages(value.images);
+          if (value.source?.source?.images?.length) setRestoredSource(value.source.source);
+          if (initialPhase === "start") {
+            setUrl(value.url);
+            setNotes(value.notes);
+            if (value.notes) setShowAlt(true);
+          }
+        }
+      }
+      setHydrated(true);
+    });
+    return () => {
+      active = false;
+    };
+    // Yalnızca açılışta.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const urlSource = view.read ?? imageSource ?? restoredSource ?? null;
+
+  // Oturumun kaydedilecek hâli. Görsel adımı penceresi yalnızca görselleri (ve
+  // yoksa kaynak görsellerini) değiştirir; link, metin ve taslak korunur.
+  const buildSession = () => {
+    const base = baseRef.current ?? {};
+    if (initialPhase === "images") {
+      return { ...base, images, source: base.source ?? (urlSource ? { ...urlSource, text: urlSource.text ?? "" } : null) };
+    }
+    return {
+      ...base,
+      url,
+      notes,
+      method,
+      brief,
+      templateChoice,
+      source: cache.current.source ? { ...cache.current.source.source, url: cache.current.source.url } : base.source ?? null,
+      shots: shots.items.filter((item) => item.path).map(({ id, path, name, width, height }) => ({ id, path, name, width, height })),
+      shotSource: cache.current.shots ? { text: cache.current.shots.text, title: cache.current.shots.title, wordCount: cache.current.shots.wordCount } : null,
+      images,
+      phase,
+      plan,
+      draft: draft.result,
+      similar: { decision: decisionRef.current.decision, selectedIds: decisionRef.current.selectedId ? [decisionRef.current.selectedId] : [], skipArchive: Boolean(decisionRef.current.skipArchive) },
+    };
+  };
+
+  // Değişiklikler kısa bir gecikmeyle taslağa kaydedilir. "Yarım kalan çalışma"
+  // önerisi yanıtlanmadan kayıt yapılmaz (önceki çalışma ezilmesin).
+  useEffect(() => {
+    if (!hydrated || saved || !draftIdRef.current) return;
+    const data = buildSession();
+    const text = JSON.stringify(data);
+    if (text === lastSavedRef.current) return;
+    pendingRef.current = { postId: draftIdRef.current, data, text };
+    const timer = setTimeout(async () => {
+      const pending = pendingRef.current;
+      if (!pending) return;
+      pendingRef.current = null;
+      setSaveState("saving");
+      const ok = await putServerSession(pending.postId, pending.data);
+      if (ok) lastSavedRef.current = pending.text;
+      setSaveState(ok ? "saved" : "error");
+    }, 700);
+    return () => clearTimeout(timer);
+    // buildSession bu değerlerden ve ref'lerden okur.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, saved, url, notes, method, brief, templateChoice, images, shots.items, phase, plan, draft.result, saveTick]);
+
+  // Pencere kapanırken bekleyen kayıt gönderilir (istek bileşen kapansa da sürer).
+  useEffect(
+    () => () => {
+      const pending = pendingRef.current;
+      if (pending) putServerSession(pending.postId, pending.data);
+    },
+    []
+  );
 
   const setStage = (name, status, detail) =>
     setStages((current) => ({ ...current, [name]: { status, detail: detail ?? current[name].detail } }));
 
-  const persist = (extra = {}) =>
+  const persist = (extra = {}) => {
     saveSession(key, {
       ...inputRef.current,
       source: cache.current.source,
@@ -230,13 +427,13 @@ export default function StudioDialog({
       decision: decisionRef.current,
       ...extra,
     });
+    setSaveTick((value) => value + 1);
+  };
 
-  const chosenTemplate = plan?.key ? templateByKey(plan.key) : null;
-  const urlSource = view.read ?? imageSource ?? null;
   const archiveMatches = similar.result?.matches ?? [];
 
   const close = () => {
-    if (running && !window.confirm("İşlem durdurulsun mu? Linkin, notların ve tamamlanan aşamalar bu tarayıcıda saklanır; sonra kaldığın yerden devam edebilirsin.")) return;
+    if (running && !window.confirm("İşlem durdurulsun mu? Linkin, notların ve tamamlanan aşamalar taslağa kaydedilir; sonra kaldığın yerden devam edebilirsin.")) return;
     runRef.current?.abort();
     onClose();
   };
@@ -263,7 +460,7 @@ export default function StudioDialog({
     const base = { ...input.brief, topic, templateKey: chosen.current ? templateKey ?? null : chosen.key, sources, related, angle: decision === "angle" };
     setStage("draft", "active", "Bölümler yazılıyor… (genellikle 20–45 saniye)");
     let result = await postTemplate(
-      { ...base, postId, blocks: chosen.current ? editorBlocks : [], images: pool.map((item) => ({ id: item.media.id, alt: item.alt, section: item.section ?? "" })) },
+      { ...base, postId: draftIdRef.current ?? postId, blocks: chosen.current ? editorBlocks : [], images: [] },
       signal
     );
     const rounds = [{ words: result.stats.words }];
@@ -475,7 +672,7 @@ export default function StudioDialog({
       persist({ plan: chosen, draft: result });
 
       // Editör boşsa doğrudan editöre; değilse inceleme ve açık onay.
-      if (silent && pool.length === 0) {
+      if (silent) {
         finish(result, chosen);
       } else {
         setPhase("review");
@@ -499,19 +696,33 @@ export default function StudioDialog({
     }
   };
 
-  const placed = useMemo(
-    () => (draft.result ? placeImages(draft.result.blocks, pool, { coverId, placements: draft.result.imagePlacements }) : null),
-    [draft.result, pool, coverId]
-  );
-  const missingAlt = pool.filter((item) => !item.alt.trim()).length;
+  // Kapak: görsel adımında "Kapak görseli yap" ile seçilen (en son) görsel.
+  const coverItem = images.find((item) => item.state === "cover" && item.url) ?? null;
+
+  // Görsel adımındaki "Bloga ekle": taslak varsa taslağın bloklarına, yoksa
+  // doğrudan editördeki yazıya (tek geri alınabilir adım) yerleşir.
+  const [liveBlocks, setLiveBlocks] = useState(editorBlocks);
+  const placeImagesNow = (items) => {
+    const current = draftRef.current.result;
+    if (current) {
+      const out = placeAtTargets(current.blocks, items);
+      const next = { ...current, blocks: out.blocks };
+      draftRef.current = { ...draftRef.current, result: next };
+      setDraft((value) => ({ ...value, result: next }));
+      return out;
+    }
+    const out = onPlaceImages ? onPlaceImages(items) : { placed: 0, cover: null, unplaced: items, blocks: liveBlocks };
+    if (out?.blocks) setLiveBlocks(out.blocks);
+    return out;
+  };
 
   const finish = (result = draft.result, chosen = plan) => {
-    const placement = placeImages(result.blocks, pool, { coverId, placements: result.imagePlacements });
     const read = cache.current.source?.source ?? null;
+    const cover = coverItem ? { media: { id: coverItem.mediaId ?? null, url: coverItem.url, width: coverItem.width ?? null, height: coverItem.height ?? null }, alt: coverItem.alt.trim() } : null;
     onApply({
-      blocks: placement.blocks,
+      blocks: result.blocks,
       fields: result.fields,
-      cover: placement.cover,
+      cover,
       templateKey: chosen?.key ?? null,
       notes: {
         words: result.stats.words,
@@ -520,16 +731,19 @@ export default function StudioDialog({
         expansions: (result.rounds?.length ?? 1) - 1,
         template: chosen?.label ?? "",
         templateReason: chosen?.reason ?? "",
-        warnings: draftNotes(result, placement, cache.current.compare?.result?.matches ?? []),
+        warnings: draftNotes(result, cache.current.compare?.result?.matches ?? []),
         coverage: result.coverage ? { covered: result.coverage.covered, total: result.coverage.total, missing: result.coverage.items.filter((item) => !item.covered).map((item) => item.topic) } : null,
         imageSource: read?.images?.length ? { title: read.title, url: read.url, images: read.images } : null,
-        placedImages: placement.placed,
+        placedImages: countImages(result.blocks),
       },
     });
     // Kaynak bağlamı taslağa bağlı saklanır: AI Görselleri aşamasında URL
     // yeniden sorulmaz, makale yeniden indirilmez.
     if (read) saveSourceContext(postId, { ...read, url: read.url ?? cache.current.source?.url });
     clearSession(key);
+    // Sunucudaki oturum korunur (kaynak, ekran görüntüleri, görseller); taslak artık editörde.
+    pendingRef.current = null;
+    if (draftIdRef.current) putServerSession(draftIdRef.current, { ...buildSession(), draft: null, phase: "applied" });
     onClose();
   };
 
@@ -545,6 +759,8 @@ export default function StudioDialog({
     decisionRef.current = { decision: null, selectedId: null, skipArchive: false };
     setSaved(null);
     run({ url, notes, brief, templateChoice, method });
+    // Çalışma taslağa bağlanır: yeni yazı başlıksız taslak olarak kaydedilir.
+    getDraftId().then((id) => id && setSaveTick((value) => value + 1));
   };
   const ready =
     method === "screenshots"
@@ -583,6 +799,9 @@ export default function StudioDialog({
     setTemplateChoice(value.templateChoice ?? "auto");
     setMethod(value.method ?? "auto");
     cache.current = { source: value.source ?? null, shots: value.shots ?? null, compare: value.compare ?? null };
+    setImages(value.images ?? []);
+    if (value.shotItems?.length) restoreShots(value.shotItems);
+    if (value.shots) setShots((current) => ({ ...current, status: "ready", source: value.shots }));
     decisionRef.current = value.decision ?? { decision: null, selectedId: null, skipArchive: false };
     if (value.compare?.result) {
       setSimilar((current) => ({ ...current, status: "ready", key: value.compare.key, result: value.compare.result, decision: decisionRef.current.decision, selectedId: decisionRef.current.selectedId ?? value.compare.result.matches[0]?.id ?? null }));
@@ -594,15 +813,20 @@ export default function StudioDialog({
       setPlan(value.plan ?? value.draft.template ?? null);
       setDraft({ status: "ready", result: value.draft, error: "" });
       setStages(Object.fromEntries(STAGES.map(([stage]) => [stage, { status: "done", detail: stage === "draft" ? `${value.draft.stats.words} sözcük hazır` : "" }])));
-      setPhase("review");
+      setPhase(value.phase === "images" ? "images" : "review");
     } else {
-      run(input);
+      // Taslak henüz yoksa girdiler forma geri gelir; analiz kullanıcı onayıyla
+      // başlar (tamamlanan okuma ve karşılaştırma önbellekten kullanılır).
+      if (value.notes || value.shotItems?.length) setShowAlt(true);
+      setPhase("start");
     }
   };
 
   const discard = () => {
     clearSession(key);
     setSaved(null);
+    // Yeni başlangıç: kayıtlı oturum bir sonraki değişiklikte yenisiyle değiştirilir.
+    baseRef.current = null;
   };
 
   const act = (action) => {
@@ -638,7 +862,8 @@ export default function StudioDialog({
       <div className={styles.shell}>
         <header className={styles.head}>
           <h2 id="studio-title" className={styles.title}>
-            <Wand2 size={19} aria-hidden="true" /> AI Blog Stüdyosu
+            {initialPhase === "images" ? <ImagePlus size={19} aria-hidden="true" /> : <Wand2 size={19} aria-hidden="true" />}
+            {initialPhase === "images" ? "Görseller" : "AI Blog Stüdyosu"}
           </h2>
           <button type="button" className={styles.close} aria-label="Stüdyoyu kapat" onClick={close}>
             <X size={20} />
@@ -651,11 +876,15 @@ export default function StudioDialog({
               <h3 className={styles.startTitle}>Yeni blog yazısı oluştur</h3>
               <p className={styles.startLead}>Kaynak linkini ekle; içeriği analiz edip sana uygun bir taslak hazırlayalım.</p>
 
-              {saved && (saved.url || saved.notes) ? (
+              {saved && (saved.url || saved.notes || saved.shotItems?.length || saved.draft) ? (
                 <div className={styles.resume} role="status">
                   <p>
-                    <strong>Yarım kalan çalışma</strong>
-                    <span>{saved.url || "Not / metin"}{saved.draft ? " · taslak hazır" : ""}</span>
+                    <strong>Yarım kalan çalışma{saved.server ? " (taslağa kayıtlı)" : ""}</strong>
+                    <span>
+                      {saved.url || (saved.notes ? "Not / metin" : saved.shotItems?.length ? `${saved.shotItems.length} ekran görüntüsü` : "Taslak")}
+                      {saved.draft ? " · taslak hazır" : ""}
+                      {saved.images?.length ? ` · ${saved.images.length} görsel` : ""}
+                    </span>
                   </p>
                   <div className={styles.resumeActions}>
                     <button type="button" className={styles.primary} onClick={resume}>Kaldığın yerden devam et</button>
@@ -753,7 +982,7 @@ export default function StudioDialog({
                   </p>
                   <details className={styles.more} open={method === "screenshots" || undefined}>
                     <summary>Ekran görüntüsünden ekle</summary>
-                    <ShotsPanel shots={shots} setShots={setShots} inputRef={shotsRef} />
+                    <ShotsPanel shots={shots} setShots={setShots} inputRef={shotsRef} onUpload={uploadShot} onRemove={removeShot} />
                   </details>
                 </div>
               ) : null}
@@ -864,51 +1093,51 @@ export default function StudioDialog({
           {phase === "review" && draft.result ? (
             <div className={styles.draft}>
               <TemplateLine plan={plan} onChange={regenerateWith} disabled={running} />
-              <DraftReview result={draft.result} placed={placed} archiveMatches={archiveMatches} />
+              <DraftReview result={draft.result} cover={coverItem} archiveMatches={archiveMatches} />
               <button type="button" className={styles.secondary} onClick={() => setPhase("images")}>
-                <ImagePlus size={16} aria-hidden="true" /> {pool.length ? `Görseller (${pool.length})` : "Görsel ekle (isteğe bağlı)"}
+                <ImagePlus size={16} aria-hidden="true" />{" "}
+                {countImages(draft.result.blocks) || coverItem ? `Görseller (${countImages(draft.result.blocks)} yazıda${coverItem ? " · kapak" : ""})` : "Görsel ekle (isteğe bağlı)"}
               </button>
             </div>
           ) : null}
 
           {phase === "images" ? (
-            <ImageStep
-              urlSource={urlSource}
-              shotSource={view.shots}
-              concepts={[draft.result?.fields?.title || shown.brief.topic || urlSource?.title || "Blog yazısı"].map((value) => value.slice(0, 90))}
-              pool={pool}
-              setPool={setPool}
-              coverId={coverId}
-              setCoverId={setCoverId}
-            />
+            !hydrated ? (
+              <p className={styles.hint}><LoaderCircle size={15} className={styles.spin} aria-hidden="true" /> Kayıtlı görseller yükleniyor…</p>
+            ) : (
+              <ImageStep
+                source={urlSource}
+                shotCount={view.shots?.images?.length ?? 0}
+                blocks={draft.result?.blocks ?? liveBlocks}
+                topic={draft.result?.fields?.title || title || shown.brief.topic || urlSource?.title || ""}
+                images={images}
+                setImages={setImages}
+                onPlace={placeImagesNow}
+                ensureDraft={getDraftId}
+                coverTaken={coverTaken && !draft.result}
+                onOpenVisualPlan={draft.result ? null : onOpenVisualPlan}
+              />
+            )
           ) : null}
         </div>
 
         {phase === "review" ? (
           <footer className={styles.foot}>
             <button type="button" className={styles.secondary} onClick={() => run(inputRef.current)}>Yeniden oluştur</button>
-            <button type="button" className={styles.primary} disabled={missingAlt > 0} onClick={() => finish()} title={missingAlt ? "Tüm görsellerin alt metni olmalı" : undefined}>
+            <button type="button" className={styles.primary} onClick={() => finish()}>
               Editöre aktar
             </button>
           </footer>
         ) : null}
         {phase === "images" ? (
           <footer className={styles.foot}>
-            <button type="button" className={styles.secondary} onClick={() => (draft.result ? setPhase("review") : close())}>
-              {draft.result ? "Geri" : "Vazgeç"}
-            </button>
-            <button
-              type="button"
-              className={styles.primary}
-              disabled={missingAlt > 0 || (!draft.result && pool.length === 0)}
-              title={missingAlt ? "Tüm görsellerin alt metni olmalı" : undefined}
-              onClick={() => {
-                if (draft.result) return setPhase("review");
-                onApplyImages?.({ pool, coverId });
-                onClose();
-              }}
-            >
-              {draft.result ? "Tamam" : "Görselleri yazıya ekle"}
+            <span className={styles.saveLine} data-state={saveState} role="status">
+              {draftReady
+                ? { saving: "Seçimler kaydediliyor…", saved: "Seçimler taslağa kaydedildi", error: "Seçimler kaydedilemedi; bağlantını kontrol et" }[saveState] ?? "Seçimler taslağa kaydedilir"
+                : "Seçimler ilk işlemde taslağa kaydedilir"}
+            </span>
+            <button type="button" className={styles.primary} onClick={() => (draft.result ? setPhase("review") : close())}>
+              {draft.result ? "Taslağa dön" : "Bitti"}
             </button>
           </footer>
         ) : null}
@@ -967,12 +1196,12 @@ function TemplateLine({ plan, onChange, disabled }) {
   );
 }
 
-function DraftReview({ result, placed, archiveMatches = [] }) {
+function DraftReview({ result, cover = null, archiveMatches = [] }) {
   const { fields, stats, coverage = null, rounds = [] } = result;
   const titleHint = lengthHint(fields.seoTitle.length, 30, 60);
   const descriptionHint = lengthHint(fields.seoDescription.length, 120, 155);
-  const headings = contentHeadings({ type: "blocks", version: 1, blocks: placed.blocks });
-  const notes = draftNotes(result, placed, archiveMatches);
+  const headings = contentHeadings({ type: "blocks", version: 1, blocks: result.blocks });
+  const notes = draftNotes(result, archiveMatches);
 
   return (
     <div className={styles.twoCol}>
@@ -1003,7 +1232,7 @@ function DraftReview({ result, placed, archiveMatches = [] }) {
           <dd><code>/blog/{fields.slug}</code></dd>
           <dt>Görseller</dt>
           <dd>
-            {placed.placed} görsel yerleşti{placed.cover ? ` · kapak seçildi` : ""}
+            {countImages(result.blocks)} görsel yazıda{cover ? " · kapak seçildi" : ""}
           </dd>
         </dl>
         <p className={styles.hint}>Tüm alanlar editörün “Ayarlar” bölümünde düzenlenebilir. Taslak yayımlanmaz.</p>

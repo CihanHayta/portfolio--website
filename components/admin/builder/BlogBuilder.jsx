@@ -14,6 +14,7 @@ import {
   Eye,
   EyeOff,
   ImagePlus,
+  Images,
   LoaderCircle,
   Monitor,
   PanelLeftClose,
@@ -39,7 +40,7 @@ import {
 } from "@/app/admin/blog/actions";
 import { contentHeadings, createBlock, toBlocks } from "@/lib/blog/blocks/model";
 import { instantiateTemplate } from "@/lib/blog/blocks/templates";
-import { placeImages } from "@/lib/blog/blocks/placeImages";
+import { placeAtTargets } from "@/lib/blog/blocks/imageTargets";
 import { insertVisuals } from "@/lib/blog/blocks/insertVisuals";
 import { adoptNewContext, loadVisualState } from "@/lib/blog/sourceContext";
 import { PALETTE_ITEMS } from "@/lib/blog/blocks/palette";
@@ -328,6 +329,31 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
     else if (result.error) toast(result.error, "error");
   };
 
+  // "Taslak Kaydet": kayıt GERÇEKTEN tamamlanınca yazı listesine dönülür. Kayıt
+  // başarısızsa editörde kalınır ve hata gösterilir (içerik kaybolmaz).
+  // Otomatik kayıt ve ⌘S editörde kalır.
+  const saveAndReturn = async () => {
+    setBusy("manual");
+    dirtyRef.current = true;
+    const result = await flush();
+    if (!result.ok || !idRef.current) {
+      setBusy(null);
+      if (result.error) toast(result.error, "error");
+      return;
+    }
+    dirtyRef.current = false;
+    router.push(`/admin/blog?kaydedildi=${idRef.current}`);
+  };
+
+  // Stüdyo kalıcı bir şey kaydetmeden önce (görsel, ekran görüntüsü, kaynak metni)
+  // yazının Supabase'de bir kimliği olur: yeni yazı başlıksız taslak olarak açılır.
+  const ensureDraft = useCallback(async () => {
+    if (idRef.current) return idRef.current;
+    dirtyRef.current = true;
+    const result = await flush();
+    return result.ok ? idRef.current : null;
+  }, [flush]);
+
   // Yayın onay penceresinden çağrılır. Çift dokunma koruması: istek sürerken
   // ikinci bir yayın isteği gönderilmez (düğme durumu güncellenmeden önce de).
   const publish = async () => {
@@ -424,13 +450,19 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
   }, [actions, updateForm]);
   const [studioSignal, setStudioSignal] = useState(0);
 
-  // Taslaktan sonra eklenen görseller mevcut (düzenlenmiş olabilecek) bloklara
-  // yerleşir: boş görsel alanları, sonra görseli olmayan H2 bölümleri.
-  const applyStudioImages = ({ pool, coverId }) => {
-    const placed = placeImages(blocksRef.current, pool, { coverId });
-    actions.replaceAll(placed.blocks);
-    if (placed.cover) updateForm({ cover: placed.cover.media, coverAlt: placed.cover.alt });
-    toast(`${placed.placed} görsel yazıya eklendi${placed.cover ? ", kapak ayarlandı" : ""}. “Geri al” ile kaldırabilirsiniz.`);
+  // Görsel adımında "Bloga ekle" / "Kapak görseli yap": her görsel kullanıcının
+  // seçtiği hedefe (başlığın altı, boş görsel alanı, giriş, galeri, son) tek geri
+  // alınabilir adımda yerleşir. Bildirilen sayı gerçek yerleşimdir; 0 ise başarı denmez.
+  const placeStudioImages = (items) => {
+    const out = placeAtTargets(blocksRef.current, items);
+    const coverChange = out.cover
+      ? { before: { cover: formRef.current.cover, coverAlt: formRef.current.coverAlt }, after: { cover: out.cover.media, coverAlt: out.cover.alt } }
+      : null;
+    if (out.placed > 0 || coverChange) actions.replaceAll(out.placed > 0 ? out.blocks : [...blocksRef.current], coverChange);
+    if (coverChange) updateForm(coverChange.after);
+    const parts = [out.placed ? `${out.placed} görsel bloga eklendi` : "", coverChange ? "kapak görseli ayarlandı" : ""].filter(Boolean);
+    if (parts.length) toast(`${parts.join(", ").replace(/^./, (char) => char.toLocaleUpperCase("tr-TR"))}. “Geri al” ile kaldırabilirsin.`);
+    return out;
   };
 
   const aiFormFields = ({ fields }) => ({
@@ -779,6 +811,12 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
         </div>
 
         {!preview ? (
+          <button type="button" className={`${styles.topButton} ${styles.desktopOnly}`} aria-label="Görseller" onClick={() => setImagesOpen(true)}>
+            <Images size={16} aria-hidden="true" />
+            <span>Görseller</span>
+          </button>
+        ) : null}
+        {!preview ? (
           <button type="button" className={`${styles.topButton} ${styles.desktopOnly}`} aria-label="AI Görselleri" onClick={() => setVisualOpen(true)}>
             <ImagePlus size={16} aria-hidden="true" />
             <span>AI Görselleri</span>
@@ -791,7 +829,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
         </button>
 
         {meta.status === "draft" ? (
-          <button type="button" className={styles.topButton} data-kind="outline" aria-label="Taslak Kaydet" disabled={isBusy} onClick={() => saveManually("Taslak kaydedildi.")}>
+          <button type="button" className={styles.topButton} data-kind="outline" aria-label="Taslak Kaydet" disabled={isBusy} onClick={saveAndReturn}>
             {busy === "manual" ? <LoaderCircle size={16} className={styles.spin} aria-hidden="true" /> : <Save size={16} aria-hidden="true" />}
             <span>Taslak Kaydet</span>
           </button>
@@ -832,9 +870,10 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
               AI ile Yaz
             </button>
           ) : null}
-          <button type="button" className={styles.topButton} data-kind="outline" onClick={() => { setDrawer(null); setVisualOpen(true); }}>
-            <ImagePlus size={16} aria-hidden="true" />
-            AI Görselleri
+          {/* Telefonda tek görsel girişi: kaynak, yükleme, AI ve ChatGPT; bölüm planı (AI Görselleri) oradan açılır. */}
+          <button type="button" className={styles.topButton} data-kind="outline" onClick={() => { setDrawer(null); setImagesOpen(true); }}>
+            <Images size={16} aria-hidden="true" />
+            Görseller
           </button>
           {saveState.kind === "error" || saveState.kind === "conflict" ? (
             <p className={styles.mobileSave} role="alert">
@@ -864,6 +903,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
             <BlockLibrary onAdd={addFromPalette} onDragStart={startDrag} onDragEnd={endDrag} onTemplate={chooseTemplate} insertHint={insertHint} />
             <AiLauncher
               postId={postId}
+              ensureDraft={ensureDraft}
               categories={categories}
               siteHost={siteHost}
               disabled={meta.status !== "draft" || isBusy}
@@ -920,7 +960,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           <span>{preview ? "Düzenle" : "Önizle"}</span>
         </button>
         {meta.status === "draft" ? (
-          <button type="button" className={styles.actionButton} aria-label="Taslak Kaydet" disabled={isBusy} onClick={() => saveManually("Taslak kaydedildi.")}>
+          <button type="button" className={styles.actionButton} aria-label="Taslak Kaydet" disabled={isBusy} onClick={saveAndReturn}>
             {busy === "manual" ? <LoaderCircle size={18} className={styles.spin} aria-hidden="true" /> : <Save size={18} aria-hidden="true" />}
             <span>Kaydet</span>
           </button>
@@ -981,6 +1021,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
       {visualOpen ? (
         <VisualStudio
           postId={postId}
+          ensureDraft={ensureDraft}
           title={form.title}
           getBlocks={() => blocksRef.current}
           onInsert={insertVisualPicks}
@@ -993,12 +1034,19 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
       {imagesOpen ? (
         <StudioDialog
           initialPhase="images"
+          title={form.title}
           imageSource={draftNotes?.imageSource ?? null}
           postId={postId}
+          ensureDraft={ensureDraft}
           templateKey={activeTemplate}
           getBlocks={() => blocksRef.current}
           onApply={() => {}}
-          onApplyImages={applyStudioImages}
+          onPlaceImages={placeStudioImages}
+          coverTaken={Boolean(form.cover)}
+          onOpenVisualPlan={() => {
+            setImagesOpen(false);
+            setVisualOpen(true);
+          }}
           onClose={() => setImagesOpen(false)}
         />
       ) : null}

@@ -1,5 +1,6 @@
 import { getAdmin } from "@/lib/blog/admin";
 import { encodeImage, isSameOrigin } from "@/lib/blog/media";
+import { isShotPath } from "@/lib/blog/studioSession";
 import { AiError } from "@/lib/ai/gemini";
 import { generateJsonRouted as generateJson } from "@/lib/ai/textRouter";
 import { errorResponse, json } from "@/lib/ai/http";
@@ -22,7 +23,19 @@ export async function POST(request) {
 
   let files;
   try {
-    files = (await request.formData()).getAll("images");
+    if ((request.headers.get("content-type") ?? "").includes("application/json")) {
+      // Taslağa kaydedilmiş ekran görüntüleri (özel kova): tarayıcıdan yeniden yükleme gerekmez.
+      const body = await request.json();
+      const paths = (Array.isArray(body?.paths) ? body.paths : []).filter(isShotPath).slice(0, MAX_SCREENSHOTS + 1);
+      files = [];
+      for (const path of paths) {
+        const { data, error } = await admin.supabase.storage.from("studio-sources").download(path);
+        if (error || !data) return json({ error: "Kayıtlı ekran görüntülerinden biri okunamadı. Yeniden yükle." }, 404);
+        files.push(new File([await data.arrayBuffer()], path.split("/").pop(), { type: "image/webp" }));
+      }
+    } else {
+      files = (await request.formData()).getAll("images");
+    }
   } catch {
     return json({ error: "Yükleme okunamadı." }, 400);
   }

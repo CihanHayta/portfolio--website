@@ -17,6 +17,9 @@ export default async function AdminPostsPage({ searchParams }) {
   const q = first(params.q).trim().slice(0, 80);
   const categoryId = first(params.kategori);
   const status = first(params.durum);
+  // Editörde "Taslak Kaydet" sonrası dönüş: kaydedilen yazı vurgulanır.
+  const saved = first(params.kaydedildi);
+  const savedId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(saved) ? saved : null;
 
   const { data: categories } = await supabase
     .from("blog_categories")
@@ -54,6 +57,11 @@ export default async function AdminPostsPage({ searchParams }) {
   return (
     <div className={styles.card}>
       <PostsHead title={VIEW_TITLES[view]} />
+      {savedId ? (
+        <p className={styles.savedNotice} role="status">
+          Taslak kaydedildi. Listeden açıp kaldığın yerden devam edebilirsin.
+        </p>
+      ) : null}
 
       <form method="get" className={styles.filters} role="search">
         {view ? <input type="hidden" name="view" value={view} /> : null}
@@ -115,7 +123,7 @@ export default async function AdminPostsPage({ searchParams }) {
             {posts.map((post) => {
               const state = postState(post);
               return (
-                <li key={post.id} className={styles.postRow}>
+                <li key={post.id} className={styles.postRow} data-saved={post.id === savedId || undefined}>
                   <div className={styles.postMain}>
                     {state === "trashed" ? (
                       <span className={styles.postTitle}>{post.title || "Başlıksız yazı"}</span>

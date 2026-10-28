@@ -394,6 +394,24 @@
   border-bottom: 1px solid var(--blog-line);
 }
 
+/* Editörde "Taslak Kaydet" sonrası dönüş: bildirim ve kaydedilen satır. */
+.savedNotice {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--blog-accent-line);
+  border-radius: var(--blog-radius-control);
+  background: var(--blog-accent-soft);
+  color: var(--blog-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.postRow[data-saved] {
+  border-radius: var(--blog-radius-control);
+  background: var(--blog-accent-soft);
+  box-shadow: inset 3px 0 0 var(--blog-accent);
+}
+
 .postMain {
   display: grid;
   gap: 2px;

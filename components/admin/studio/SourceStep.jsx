@@ -58,33 +58,54 @@ export async function streamSource(url, { signal, onStage = () => {}, provider =
   }
 }
 
-// Ekran görüntülerini (en fazla 8) küçültüp analiz için gönderir.
+// Ekran görüntülerini (en fazla 8) analiz için gönderir. Hepsi taslağa kayıtlıysa
+// yalnızca yolları gider (telefondan yeniden yükleme yok); değilse küçültülüp gönderilir.
 export async function analyzeScreenshots(items, { signal } = {}) {
-  const body = new FormData();
-  for (const item of items) body.append("images", await resizeForAnalysis(item.file));
-  const response = await fetch("/api/admin/ai/screenshots", { method: "POST", body, signal });
+  let response;
+  if (items.length && items.every((item) => item.path)) {
+    response = await fetch("/api/admin/ai/screenshots", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ paths: items.map((item) => item.path) }),
+      signal,
+    });
+  } else {
+    if (items.some((item) => !item.file)) throw new Error("Bazı ekran görüntüleri bu cihazda yok ve kaydedilemedi. Onları kaldırıp yeniden ekle.");
+    const body = new FormData();
+    for (const item of items) body.append("images", await resizeForAnalysis(item.file));
+    response = await fetch("/api/admin/ai/screenshots", { method: "POST", body, signal });
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "Ekran görüntüleri analiz edilemedi.");
   return data.source;
 }
 
 // Ekran görüntüsü yükleme: sürükle-bırak ya da seçim, sıralama, kaldırma.
-// state: { items: [{ id, file, preview }], status, source, error }
-export function ShotsPanel({ shots, setShots, inputRef }) {
+// state: { items: [{ id, file?, path?, name, preview, status }], status, source, error }
+// `onUpload(file)` görüntüyü taslağa bağlı özel kovaya kaydeder; kayıtlı görüntü
+// sayfa yenilense ya da başka cihazdan açılsa da geri gelir.
+const SHOT_STATUS = { uploading: "Kaydediliyor…", saved: "Taslağa kaydedildi", local: "Yalnızca bu sayfada" };
+export function ShotsPanel({ shots, setShots, inputRef, onUpload = null, onRemove = null }) {
   const [dragging, setDragging] = useState(false);
   const patch = (value) => setShots((current) => ({ ...current, ...value }));
+  const patchItem = (id, value) => setShots((current) => ({ ...current, items: current.items.map((item) => (item.id === id ? { ...item, ...value } : item)) }));
 
   const addShots = (files) => {
     const accepted = [...files].filter((file) => SCREENSHOT_TYPES.includes(file.type));
     const rejected = files.length - accepted.length;
-    setShots((current) => {
-      const room = MAX_SHOTS - current.items.length;
-      const items = accepted.slice(0, room).map((file) => ({ id: crypto.randomUUID(), file, preview: URL.createObjectURL(file) }));
-      const notes = [];
-      if (rejected) notes.push(`${rejected} dosya JPG, PNG ya da WebP olmadığı için eklenmedi.`);
-      if (accepted.length > room) notes.push(`En fazla ${MAX_SHOTS} ekran görüntüsü eklenebilir.`);
-      return { ...current, items: [...current.items, ...items], status: "idle", source: null, error: notes.join(" ") };
-    });
+    const room = MAX_SHOTS - shots.items.length;
+    const fresh = accepted.slice(0, Math.max(0, room)).map((file) => ({ id: crypto.randomUUID(), file, name: file.name, preview: URL.createObjectURL(file), status: onUpload ? "uploading" : "local" }));
+    const notes = [];
+    if (rejected) notes.push(`${rejected} dosya JPG, PNG ya da WebP olmadığı için eklenmedi.`);
+    if (accepted.length > room) notes.push(`En fazla ${MAX_SHOTS} ekran görüntüsü eklenebilir.`);
+    setShots((current) => ({ ...current, items: [...current.items, ...fresh], status: "idle", source: null, error: notes.join(" ") }));
+    if (!onUpload) return;
+    for (const item of fresh) {
+      onUpload(item.file).then(
+        (shot) => patchItem(item.id, shot ? { path: shot.path, width: shot.width, height: shot.height, status: "saved" } : { status: "local" }),
+        (failure) => patchItem(item.id, { status: "local", error: offline(failure) })
+      );
+    }
   };
   const move = (index, delta) =>
     setShots((current) => {
@@ -94,12 +115,13 @@ export function ShotsPanel({ shots, setShots, inputRef }) {
       [items[index], items[target]] = [items[target], items[index]];
       return { ...current, items, status: "idle", source: null };
     });
-  const remove = (id) =>
-    setShots((current) => {
-      const removed = current.items.find((item) => item.id === id);
-      if (removed) URL.revokeObjectURL(removed.preview);
-      return { ...current, items: current.items.filter((item) => item.id !== id), status: "idle", source: null };
-    });
+  const remove = (id) => {
+    const removed = shots.items.find((item) => item.id === id);
+    if (removed?.preview?.startsWith("blob:")) URL.revokeObjectURL(removed.preview);
+    if (removed) onRemove?.(removed);
+    setShots((current) => ({ ...current, items: current.items.filter((item) => item.id !== id), status: "idle", source: null }));
+  };
+  const uploading = shots.items.some((item) => item.status === "uploading");
 
   const analyze = async () => {
     patch({ status: "loading", error: "", source: null });
@@ -145,9 +167,18 @@ export function ShotsPanel({ shots, setShots, inputRef }) {
         <ol className={styles.thumbs}>
           {shots.items.map((item, index) => (
             <li key={item.id}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.preview} alt={`${index + 1}. ekran görüntüsü`} />
+              {item.preview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.preview} alt={`${index + 1}. ekran görüntüsü`} />
+              ) : (
+                <span className={styles.broken}>{item.name || `${index + 1}. görüntü`}</span>
+              )}
               <span className={styles.thumbIndex}>{index + 1}</span>
+              {item.status ? (
+                <span className={styles.shotStatus} data-state={item.status} title={item.error || undefined}>
+                  {item.status === "uploading" ? <LoaderCircle size={11} className={styles.spin} aria-hidden="true" /> : null} {SHOT_STATUS[item.status]}
+                </span>
+              ) : null}
               <div className={styles.thumbActions}>
                 <button type="button" aria-label={`${index + 1}. görüntüyü yukarı taşı`} disabled={index === 0} onClick={() => move(index, -1)}>
                   <ArrowUp size={16} />
@@ -165,9 +196,9 @@ export function ShotsPanel({ shots, setShots, inputRef }) {
       ) : null}
 
       {shots.items.length && shots.status !== "ready" ? (
-        <button type="button" className={styles.secondary} disabled={shots.status === "loading"} onClick={analyze}>
-          {shots.status === "loading" ? <LoaderCircle size={16} className={styles.spin} aria-hidden="true" /> : null}
-          {shots.status === "loading" ? "Görüntüler okunuyor…" : "Görüntüleri şimdi oku"}
+        <button type="button" className={styles.secondary} disabled={shots.status === "loading" || uploading} onClick={analyze}>
+          {shots.status === "loading" || uploading ? <LoaderCircle size={16} className={styles.spin} aria-hidden="true" /> : null}
+          {shots.status === "loading" ? "Görüntüler okunuyor…" : uploading ? "Görüntüler kaydediliyor…" : "Görüntüleri şimdi oku"}
         </button>
       ) : null}
       {shots.status === "ready" && shots.source ? (

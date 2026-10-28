@@ -36,6 +36,8 @@ create schema storage;
 create table storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
 create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text, owner uuid);
 alter table storage.objects enable row level security;
+create schema supabase_migrations;
+create table supabase_migrations.schema_migrations (version text primary key, name text, statements text[]);
 grant usage on schema public to anon, authenticated;
 SQL
 
@@ -82,8 +84,19 @@ check "$(printf '%s' "$DENIED" | grep -c 'yetkisiz')" "1" "yönetici olmayan rez
 check "$(as_user "$OTHER" "select count(*) from public.ai_usage_counters")" "0" "yönetici olmayan sayaçları göremez (RLS)"
 check "$(as_user "$OTHER" "select count(*) from public.blog_posts")" "0" "blog RLS bozulmadı (yönetici olmayan taslak göremez)"
 
-# 6) Mevcut blog yapısı değişmedi: AI migration yalnızca yeni nesne ekledi.
-check "$(psqlq -t -A -c "select count(*) from information_schema.tables where table_schema = 'public' and table_name like 'blog_%'")" "7" "blog tabloları: 7 (değişmedi)"
+# 6) Blog yapısı: 7 özgün tablo + stüdyo oturumu (20261027). Eski tablolar silinmedi.
+check "$(psqlq -t -A -c "select count(*) from information_schema.tables where table_schema = 'public' and table_name like 'blog_%'")" "8" "blog tabloları: 7 özgün + blog_studio_sessions"
+
+# 7) Stüdyo oturumu yalnızca yöneticinin: yönetici olmayan göremez ve yazamaz.
+psqlq -c "insert into public.blog_posts (id, title, slug) values ('00000000-0000-0000-0000-0000000000aa', 'QA', 'qa-studio'); insert into public.blog_studio_sessions (post_id, data) values ('00000000-0000-0000-0000-0000000000aa', '{\"notes\":\"gizli\"}');"
+check "$(as_user "$OTHER" "select count(*) from public.blog_studio_sessions")" "0" "yönetici olmayan stüdyo oturumunu göremez (RLS)"
+check "$(as_user "$ADMIN" "select count(*) from public.blog_studio_sessions")" "1" "yönetici stüdyo oturumunu görür"
+check "$(as_user "$OTHER" "insert into public.blog_studio_sessions (post_id, data) values ('00000000-0000-0000-0000-0000000000aa', '{}') on conflict do nothing returning 1" 2>&1 | grep -c 'row-level security')" "1" "yönetici olmayan stüdyo oturumu yazamaz"
+check "$(psqlq -t -A -c "select public::text from storage.buckets where id = 'studio-sources'")" "false" "studio-sources kovası herkese kapalı"
+check "$(psqlq -t -A -c "select count(*) from public.blog_media where origin is not null")" "0" "mevcut medya kayıtları değişmedi (yeni sütunlar boş)"
+# blog_posts ↔ blog_media arasında TEK ilişki olmalı (kapak). İkincisi PostgREST'teki
+# "cover:blog_media(...)" gömmesini belirsizleştirir ve canlı blog sorgularını bozar.
+check "$(psqlq -t -A -c "select count(*) from pg_constraint where contype = 'f' and ((conrelid = 'public.blog_posts'::regclass and confrelid = 'public.blog_media'::regclass) or (conrelid = 'public.blog_media'::regclass and confrelid = 'public.blog_posts'::regclass))")" "1" "yazı ↔ medya arasında tek yabancı anahtar (kapak gömmesi belirsizleşmez)"
 
 if [ "$FAIL" -ne 0 ]; then echo "YEREL POSTGRES DOĞRULAMASI BAŞARISIZ"; exit 1; fi
 echo "YEREL POSTGRES DOĞRULAMASI GEÇTİ (Postgres $(psqlq -t -A -c 'show server_version'))"
