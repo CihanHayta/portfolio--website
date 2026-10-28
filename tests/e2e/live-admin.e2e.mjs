@@ -94,16 +94,20 @@ try {
   await page.getByLabel("SEO başlığı").fill("E2E canlı SEO");
   await page.getByRole("button", { name: "Ayarları kapat" }).click();
   await page.getByRole("button", { name: "Taslak Kaydet" }).click();
-  check(await toast(page, "Taslak kaydedildi."), "taslak kaydedildi");
-  await page.waitForURL(/\/admin\/blog\/[0-9a-f-]{36}$/, { timeout: 20_000 });
-  const postId = page.url().split("/").pop();
-  await page.reload({ waitUntil: "networkidle" });
+  // Kayıt gerçekten bitince yazı listesine dönülür; kaydedilen taslak listede işaretlidir.
+  await page.waitForURL(/\/admin\/blog\?kaydedildi=[0-9a-f-]{36}$/, { timeout: 20_000 });
+  const postId = new URL(page.url()).searchParams.get("kaydedildi");
+  check(await toast(page, "Taslak kaydedildi."), "taslak kaydedildi; listeye dönüldü");
+  await page.goto(`${base}/admin/blog/${postId}`, { waitUntil: "networkidle" });
   const titleBox = page.getByRole("textbox", { name: "Yazı başlığı" });
   await titleBox.waitFor();
   check((await titleBox.inputValue()) === `E2E canlı test ${RUN}`, "yenilemeden sonra taslak canlı veritabanından yüklendi");
   await titleBox.fill(`E2E canlı test düzenlendi ${RUN}`);
   await page.getByRole("button", { name: /Taslak Kaydet|Kaydet/ }).first().click();
   check(await toast(page, /kaydedildi/), "düzenleme kaydedildi");
+  await page.waitForURL(/\/admin\/blog\?kaydedildi=/, { timeout: 20_000 }).catch(() => {});
+  await page.goto(`${base}/admin/blog/${postId}`, { waitUntil: "networkidle" });
+  await titleBox.waitFor();
   const [row] = await sql(ref, `select title, slug, seo_title, status from public.blog_posts where id = '${postId}'`);
   check(row?.title === `E2E canlı test düzenlendi ${RUN}` && row.slug === RUN && row.seo_title === "E2E canlı SEO" && row.status === "draft", "başlık, slug ve SEO canlı veritabanında doğrulandı (taslak)");
 
@@ -114,7 +118,11 @@ try {
   await actions.getByRole("button", { name: "Düzenle" }).click();
 
   step("Gerçek AI: tek görsel planı (görsel üretilmez)");
-  await bar.getByRole("button", { name: "AI Görselleri" }).click();
+  await bar.getByRole("button", { name: "Görseller" }).click();
+  const images = page.getByRole("dialog", { name: "Görseller" });
+  await images.waitFor();
+  await images.getByRole("tab", { name: "Yeni üret" }).click();
+  await images.getByRole("button", { name: /AI Görselleri/ }).click();
   const dialog = page.getByRole("dialog", { name: "AI Görselleri" });
   await dialog.waitFor();
   await dialog.getByRole("button", { name: "Görsel planını hazırla" }).click();

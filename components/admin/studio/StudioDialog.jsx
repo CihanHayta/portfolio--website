@@ -6,6 +6,8 @@ import { contentHeadings } from "@/lib/blog/blocks/model";
 import { placeAtTargets } from "@/lib/blog/blocks/imageTargets";
 import { TEMPLATES, templateByKey } from "@/lib/blog/blocks/templates";
 import { titleSimilarity } from "@/lib/ai/similarity";
+import { APPROACHES, MAX_APPROACHES, approachLabel, approachTemplate } from "@/lib/ai/approaches";
+import { describeFailure } from "@/lib/ai/userErrors";
 import { pickTemplate } from "@/lib/ai/templatePick";
 import ImageStep from "./ImageStep";
 import SimilarityStep from "./SimilarityStep";
@@ -139,7 +141,8 @@ function fromServer(data) {
     shots: data.shotSource?.text ? { kind: "screenshots", ...data.shotSource } : null,
     shotItems: data.shots ?? [],
     compare: null,
-    decision: { decision: data.similar?.decision || null, selectedId: data.similar?.selectedIds?.[0] ?? null, skipArchive: Boolean(data.similar?.skipArchive) },
+    decision: { decision: data.similar?.decision || null, selectedIds: data.similar?.selectedIds ?? [], skipArchive: Boolean(data.similar?.skipArchive) },
+    approaches: data.approaches ?? [],
     plan: data.plan ?? null,
     draft: data.draft?.blocks ? data.draft : null,
     images: data.images ?? [],
@@ -214,7 +217,10 @@ export default function StudioDialog({
   const [stages, setStages] = useState(idleStages);
   const [stageError, setStageError] = useState(null);
   const [running, setRunning] = useState(false);
-  const [similar, setSimilar] = useState({ status: "idle", key: "", result: null, error: "", decision: null, selectedId: null, update: null });
+  const [similar, setSimilar] = useState({ status: "idle", key: "", result: null, error: "", decision: null, selectedIds: [], update: null });
+  // İçerik yaklaşımları (en fazla 3), tek yazıda birlikte uygulanır.
+  const [approaches, setApproaches] = useState([]);
+  const [copied, setCopied] = useState(false);
   const [plan, setPlan] = useState(null);
   const [draft, setDraft] = useState({ status: "idle", result: null, error: "" });
   // Görseller (kaynak, yüklenen, AI, ChatGPT): seçim, hedef bölüm ve durum. Taslağa bağlı saklanır.
@@ -259,7 +265,7 @@ export default function StudioDialog({
 
   // Önbellek: tekrar denemede tamamlanmış aşamalar (okuma, karşılaştırma) yeniden çalışmaz.
   const cache = useRef({ source: null, shots: null, compare: null });
-  const decisionRef = useRef({ decision: null, selectedId: null, skipArchive: false });
+  const decisionRef = useRef({ decision: null, selectedIds: [], skipArchive: false });
   const inputRef = useRef({ url: "", notes: "", brief: DEFAULT_BRIEF, templateChoice: "auto" });
 
   useModalDialog(dialogRef, true, { fitViewport: true });
@@ -342,8 +348,9 @@ export default function StudioDialog({
           setImages(value.images);
           if (value.source?.source?.images?.length) setRestoredSource(value.source.source);
           if (initialPhase === "start") {
-            setUrl(value.url);
-            setNotes(value.notes);
+            // Kullanıcı bu arada yazmaya başladıysa onun girdisi korunur.
+            setUrl((current) => current || value.url);
+            setNotes((current) => current || value.notes);
             if (value.notes) setShowAlt(true);
           }
         }
@@ -358,6 +365,8 @@ export default function StudioDialog({
   }, []);
 
   const urlSource = view.read ?? imageSource ?? restoredSource ?? null;
+  // Kopyalanacak en iyi metin: okunan kaynak, ekran görüntüsünden okunan metin ya da not.
+  const copyableText = () => cache.current.source?.source?.text || cache.current.shots?.text || inputRef.current.notes || notes || "";
 
   // Oturumun kaydedilecek hâli. Görsel adımı penceresi yalnızca görselleri (ve
   // yoksa kaynak görsellerini) değiştirir; link, metin ve taslak korunur.
@@ -380,7 +389,8 @@ export default function StudioDialog({
       phase,
       plan,
       draft: draft.result,
-      similar: { decision: decisionRef.current.decision, selectedIds: decisionRef.current.selectedId ? [decisionRef.current.selectedId] : [], skipArchive: Boolean(decisionRef.current.skipArchive) },
+      approaches,
+      similar: { decision: decisionRef.current.decision, selectedIds: decisionRef.current.selectedIds ?? [], skipArchive: Boolean(decisionRef.current.skipArchive) },
     };
   };
 
@@ -404,7 +414,7 @@ export default function StudioDialog({
     return () => clearTimeout(timer);
     // buildSession bu değerlerden ve ref'lerden okur.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, saved, url, notes, method, brief, templateChoice, images, shots.items, phase, plan, draft.result, saveTick]);
+  }, [hydrated, saved, url, notes, method, brief, templateChoice, approaches, images, shots.items, phase, plan, draft.result, saveTick]);
 
   // Pencere kapanırken bekleyen kayıt gönderilir (istek bileşen kapansa da sürer).
   useEffect(
@@ -447,7 +457,7 @@ export default function StudioDialog({
       body: JSON.stringify(body),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "Taslak oluşturulamadı.");
+    if (!response.ok) throw Object.assign(new Error(data.error || "Taslak oluşturulamadı."), { kind: data.kind, status: response.status });
     return data;
   };
 
@@ -455,9 +465,9 @@ export default function StudioDialog({
   // kalan bölümler genişletilir. Her tur ayrı bir istektir; sonsuz deneme yok.
   const generate = async ({ sources, topic, compare, chosen, input, signal }) => {
     const matches = compare?.matches ?? [];
-    const { decision, selectedId } = decisionRef.current;
-    const related = matches.map((match) => ({ title: match.title, covered: match.overlapping, gaps: match.missing, focus: decision === "angle" && match.id === selectedId }));
-    const base = { ...input.brief, topic, templateKey: chosen.current ? templateKey ?? null : chosen.key, sources, related, angle: decision === "angle" };
+    const { decision, selectedIds = [] } = decisionRef.current;
+    const related = matches.map((match) => ({ title: match.title, covered: match.overlapping, gaps: match.missing, focus: decision === "angle" && selectedIds.includes(match.id) }));
+    const base = { ...input.brief, topic, templateKey: chosen.current ? templateKey ?? null : chosen.key, sources, related, angle: decision === "angle", approaches: input.approaches ?? [] };
     setStage("draft", "active", "Bölümler yazılıyor… (genellikle 20–45 saniye)");
     let result = await postTemplate(
       { ...base, postId: draftIdRef.current ?? postId, blocks: chosen.current ? editorBlocks : [], images: [] },
@@ -500,11 +510,14 @@ export default function StudioDialog({
     const { signal } = controller;
     let current = "read";
     const timer = { id: null };
-    const fail = (stage, message, actions) => {
+    // Hata türüne göre sade başlık + mesaj + eylemler; sunucunun teknik metni
+    // "Teknik ayrıntılar"da kalır. `info`: { kind, status, offline, details, extra, title, message }
+    const fail = (stage, info = {}) => {
       setRunning(false);
-      // Ayrıntılı mesaj aşağıdaki hata kutusundadır; satırda tekrarlanmaz.
       setStage(stage, "error", "Tamamlanamadı");
-      setStageError({ stage, message, actions });
+      const described = info.title ? { code: "I", title: info.title, message: info.message, actions: info.actions ?? [] } : describeFailure({ stage, ...info });
+      const actions = [...new Set([...(info.extra ?? []), ...described.actions])];
+      setStageError({ stage, code: described.code, title: described.title, message: described.message, actions, details: info.details ?? "", copyable: copyableText().trim().length >= 40 });
       persist();
     };
 
@@ -521,7 +534,7 @@ export default function StudioDialog({
       const readMethod = input.method ?? "auto";
       // Ekran görüntüsü ya da metin seçildiyse link okunmaz; seçilen girdi kullanılır.
       const link = READERS.has(readMethod) || readMethod === "auto" ? normalizeUrl(input.url) : "";
-      if (link === null) return fail("read", "Bu bir web adresi gibi görünmüyor. Linki kontrol edip yeniden dene.", ["edit"]);
+      if (link === null) return fail("read", { title: "Link geçersiz", message: "Bu bir web adresi gibi görünmüyor. Linki kontrol edip yeniden dene.", actions: ["edit"] });
       let read = null;
       if (link) {
         const provider = READERS.has(readMethod) ? readMethod : "auto";
@@ -545,7 +558,7 @@ export default function StudioDialog({
           if (!outcome.source) {
             const detail = (outcome.attempts ?? []).filter((item) => item.status !== "skipped").map((item) => `${item.label}: ${STAGE_STATUS_TEXT[item.status]}`).join(" · ");
             const message = `${outcome.fallback || outcome.error || "Kaynak okunamadı."}${detail ? ` (${detail})` : ""}`;
-            return fail("read", message, provider === "auto" ? ["alt", "retry"] : ["autoFallback", "alt"]);
+            return fail("read", { kind: outcome.kind ?? "reader", details: message, extra: provider === "auto" ? [] : ["autoFallback"] });
           }
           read = outcome.source;
           cache.current.source = { url: link, source: read };
@@ -564,7 +577,8 @@ export default function StudioDialog({
           setShots((value) => ({ ...value, status: "ready", source: shotSource }));
         } catch (failure) {
           if (signal.aborted) throw failure;
-          return fail("read", failure.message, ["alt", "retry"]);
+          // Ekran görüntüsü okuma bir yapay zekâ işidir (görsel girdi): AI hata türleri geçerli.
+          return fail("shots", { kind: failure.kind, status: failure.status, offline: failure instanceof TypeError, details: failure.message, extra: ["pasteText"] });
         }
       }
       cache.current.shots = shotSource ?? null;
@@ -573,7 +587,7 @@ export default function StudioDialog({
       const sources = [read, shotSource, textSource].filter(Boolean);
       const topic = input.brief.topic.trim() || read?.title || shotSource?.title || "";
       if (!sources.length && topic.length < 3) {
-        return fail("read", "Başlamak için bir link, birkaç cümlelik bir not ya da bir konu gerekli.", ["edit"]);
+        return fail("read", { title: "Kaynak eksik", message: "Başlamak için bir link, birkaç cümlelik bir not ya da bir konu gerekli.", actions: ["edit", "pasteText"] });
       }
       if (!link) {
         setStage(
@@ -625,13 +639,20 @@ export default function StudioDialog({
           });
           const data = response ? await response.json().catch(() => ({})) : {};
           if (!response || !response.ok) {
-            return fail("archive", response ? data.error || "Arşiv karşılaştırması yapılamadı." : "Sunucuya ulaşılamadı. Bağlantını kontrol et.", ["retry", "skipArchive"]);
+            return fail("archive", { kind: data.kind, status: response?.status ?? 0, offline: !response, details: data.error || "", extra: ["skipArchive"] });
           }
           compare = data;
           cache.current.compare = { key: compareKey, result: compare };
         }
-        if (compare.status === "insufficient") return fail("archive", compare.message, ["alt", "skipArchive"]);
-        setSimilar((value) => ({ ...value, status: "ready", key: cache.current.compare.key, result: compare, selectedId: value.selectedId ?? compare.matches[0]?.id ?? null }));
+        if (compare.status === "insufficient") return fail("read", { kind: "thin", details: compare.message, extra: ["skipArchive"] });
+        // Güçlü benzerlikteki yazılar önceden seçili gelir (en fazla 5).
+        setSimilar((value) => ({
+          ...value,
+          status: "ready",
+          key: cache.current.compare.key,
+          result: compare,
+          selectedIds: value.selectedIds?.length ? value.selectedIds : compare.matches.filter((match) => STRONG.has(match.category)).map((match) => match.id).slice(0, 5),
+        }));
         setStage("archive", "done", archiveDetail(compare));
         persist();
         const needsDecision = compare.matches.some((match) => STRONG.has(match.category));
@@ -651,6 +672,9 @@ export default function StudioDialog({
         chosen = { key: null, current: true, label: "Editördeki yapı", reason: "Editördeki mevcut yapı korunuyor.", by: "user" };
       } else if (input.templateChoice !== "auto" && templateByKey(input.templateChoice)) {
         chosen = { key: input.templateChoice, label: templateByKey(input.templateChoice).label, reason: "Senin seçimin.", by: "user" };
+      } else if (approachTemplate(input.approaches) && templateByKey(approachTemplate(input.approaches))) {
+        const key = approachTemplate(input.approaches);
+        chosen = { key, label: templateByKey(key).label, reason: `Seçtiğin yaklaşıma göre: ${input.approaches.map(approachLabel).join(", ")}.`, by: "approach" };
       } else {
         const pick = pickTemplate(
           { format: compare?.profile?.format, title: compare?.profile?.titleTr || main?.title || topic, headings: outlineOf(main?.text), text: main?.text },
@@ -684,13 +708,17 @@ export default function StudioDialog({
         setStage(current, "error", timeout ? "Yapay zekâ zamanında yanıt vermedi." : "Durduruldu");
         setStageError({
           stage: current,
-          message: timeout ? "Yapay zekâ zamanında yanıt vermedi. Tamamlanan aşamalar korunuyor; yeniden denediğinde kaldığı yerden sürer." : "İşlem durduruldu. Tamamlanan aşamalar korunuyor.",
-          actions: ["retry"],
+          code: timeout ? "B" : "X",
+          title: timeout ? "Yapay zekâ zamanında yanıt vermedi" : "İşlem durduruldu",
+          message: timeout ? "Tamamlanan aşamalar korunuyor; tekrar denediğinde kaldığı yerden sürer." : "Tamamlanan aşamalar korunuyor.",
+          actions: timeout ? ["retry", "pasteText", "copyText"] : ["retry"],
+          details: "",
+          copyable: copyableText().trim().length >= 40,
         });
         persist();
         return;
       }
-      fail(current, failure instanceof TypeError ? "Sunucuya ulaşılamadı. Bağlantını kontrol et." : failure.message, ["retry"]);
+      fail(current, { kind: failure.kind, status: failure.status, offline: failure instanceof TypeError, details: failure instanceof TypeError ? "" : failure.message });
     } finally {
       clearTimeout(timer.id);
     }
@@ -756,9 +784,10 @@ export default function StudioDialog({
       return;
     }
     setInputError("");
-    decisionRef.current = { decision: null, selectedId: null, skipArchive: false };
+    if (running) return; // çift dokunma: ikinci analiz başlamaz
+    decisionRef.current = { decision: null, selectedIds: [], skipArchive: false };
     setSaved(null);
-    run({ url, notes, brief, templateChoice, method });
+    run({ url, notes, brief, templateChoice, method, approaches });
     // Çalışma taslağa bağlanır: yeni yazı başlıksız taslak olarak kaydedilir.
     getDraftId().then((id) => id && setSaveTick((value) => value + 1));
   };
@@ -802,11 +831,13 @@ export default function StudioDialog({
     setImages(value.images ?? []);
     if (value.shotItems?.length) restoreShots(value.shotItems);
     if (value.shots) setShots((current) => ({ ...current, status: "ready", source: value.shots }));
-    decisionRef.current = value.decision ?? { decision: null, selectedId: null, skipArchive: false };
+    decisionRef.current = { decision: null, selectedIds: [], skipArchive: false, ...(value.decision ?? {}) };
+    if (!Array.isArray(decisionRef.current.selectedIds)) decisionRef.current.selectedIds = decisionRef.current.selectedId ? [decisionRef.current.selectedId] : [];
+    setApproaches(value.approaches ?? []);
     if (value.compare?.result) {
-      setSimilar((current) => ({ ...current, status: "ready", key: value.compare.key, result: value.compare.result, decision: decisionRef.current.decision, selectedId: decisionRef.current.selectedId ?? value.compare.result.matches[0]?.id ?? null }));
+      setSimilar((current) => ({ ...current, status: "ready", key: value.compare.key, result: value.compare.result, decision: decisionRef.current.decision, selectedIds: decisionRef.current.selectedIds }));
     }
-    const input = { url: value.url ?? "", notes: value.notes ?? "", brief: { ...DEFAULT_BRIEF, ...value.brief }, templateChoice: value.templateChoice ?? "auto", method: value.method ?? "auto" };
+    const input = { url: value.url ?? "", notes: value.notes ?? "", brief: { ...DEFAULT_BRIEF, ...value.brief }, templateChoice: value.templateChoice ?? "auto", method: value.method ?? "auto", approaches: value.approaches ?? [] };
     inputRef.current = input;
     setView({ input, read: value.source?.source ?? null, shots: value.shots ?? null });
     if (value.draft) {
@@ -829,12 +860,27 @@ export default function StudioDialog({
     baseRef.current = null;
   };
 
-  const act = (action) => {
+  const act = async (action) => {
     if (action === "edit") return setPhase("start");
-    if (action === "alt") {
+    if (action === "alt" || action === "pasteText") {
       setShowAlt(true);
       setPhase("start");
       setFocusNotes(true);
+      return;
+    }
+    if (action === "screenshots") {
+      setMethod("screenshots");
+      setShowAlt(true);
+      setPhase("start");
+      return;
+    }
+    if (action === "copyText") {
+      try {
+        await navigator.clipboard.writeText(copyableText());
+        setCopied(true);
+      } catch {
+        setCopied(false);
+      }
       return;
     }
     if (action === "skipArchive") decisionRef.current = { ...decisionRef.current, skipArchive: true };
@@ -842,9 +888,26 @@ export default function StudioDialog({
       setMethod("auto");
       return run({ ...inputRef.current, method: "auto" });
     }
+    if (action === "readerRetry") {
+      // Ücretsiz okuyucu: Jina Reader (bu sunucuda kullanılabiliyorsa), yoksa otomatik zincir.
+      const reader = readers?.jina?.available ? "jina" : "auto";
+      cache.current.source = null;
+      setMethod(reader);
+      return run({ ...inputRef.current, method: reader });
+    }
     run(inputRef.current);
   };
-  const ACTION_LABELS = { edit: "Linki düzenle", alt: "Metin veya ekran görüntüsü ekle", retry: "Tekrar dene", skipArchive: "Karşılaştırmadan devam et", autoFallback: "Otomatik yöntemle dene" };
+  const ACTION_LABELS = {
+    edit: "Linki düzenle",
+    alt: "Metni kendim ekle",
+    pasteText: "Metni kendim ekle",
+    screenshots: "Ekran görüntüsü yükle",
+    copyText: "Kaynak metni kopyala",
+    readerRetry: "Ücretsiz okuyucuyla tekrar dene",
+    retry: "Tekrar dene",
+    skipArchive: "Karşılaştırmadan devam et",
+    autoFallback: "Otomatik yöntemle dene",
+  };
 
   const regenerateWith = (key) => {
     setTemplateChoice(key);
@@ -872,7 +935,7 @@ export default function StudioDialog({
 
         <div className={styles.body}>
           {phase === "start" ? (
-            <form className={styles.start} onSubmit={submit} noValidate>
+            <form id="studio-start-form" className={styles.start} onSubmit={submit} noValidate>
               <h3 className={styles.startTitle}>Yeni blog yazısı oluştur</h3>
               <p className={styles.startLead}>Kaynak linkini ekle; içeriği analiz edip sana uygun bir taslak hazırlayalım.</p>
 
@@ -926,9 +989,34 @@ export default function StudioDialog({
               {pasteHint ? <p className={styles.hint}>{pasteHint}</p> : null}
               {inputError ? <p id="studio-url-error" className={styles.errorBox} role="alert">{inputError}</p> : null}
 
-              <button type="submit" className={styles.primaryWide} disabled={!ready}>
-                <Wand2 size={18} aria-hidden="true" /> Analiz Et ve Taslağı Hazırla
-              </button>
+              <details className={styles.more} open={approaches.length > 0 || undefined}>
+                <summary>
+                  <span>
+                    Yaklaşım: <strong className={styles.methodCurrent}>{approaches.length ? approaches.map(approachLabel).join(", ") : "Otomatik"}</strong>
+                  </span>
+                </summary>
+              <fieldset className={styles.chips}>
+                <legend className={styles.srOnly}>Yaklaşım (isteğe bağlı, en fazla {MAX_APPROACHES})</legend>
+                {APPROACHES.map((item) => {
+                  const on = approaches.includes(item.key);
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      className={styles.chip}
+                      aria-pressed={on}
+                      disabled={!on && approaches.length >= MAX_APPROACHES}
+                      onClick={() => setApproaches((list) => (on ? list.filter((key) => key !== item.key) : [...list, item.key].slice(0, MAX_APPROACHES)))}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </fieldset>
+                <p className={styles.hint}>
+                  {approaches.length > 1 ? "Seçtiğin yaklaşımlar tek yazıda birlikte uygulanır." : `En fazla ${MAX_APPROACHES} yaklaşım seçebilirsin; hepsi tek yazıda birlikte uygulanır.`}
+                </p>
+              </details>
 
               <details className={styles.more} open={methodOpen} onToggle={(event) => setMethodOpen(event.currentTarget.open)}>
                 <summary>
@@ -980,7 +1068,7 @@ export default function StudioDialog({
                   <p className={styles.hint}>
                     {notes.trim().length} / 20.000 · en az 40 karakter. Link de verdiysen not, ek bilgi olarak kullanılır.
                   </p>
-                  <details className={styles.more} open={method === "screenshots" || undefined}>
+                  <details className={styles.more} open={method === "screenshots" || shots.items.length > 0 || undefined}>
                     <summary>Ekran görüntüsünden ekle</summary>
                     <ShotsPanel shots={shots} setShots={setShots} inputRef={shotsRef} onUpload={uploadShot} onRemove={removeShot} />
                   </details>
@@ -1057,16 +1145,25 @@ export default function StudioDialog({
                 <p className={styles.sourceLine}>{sourceLabel}</p>
                 <ProgressList stages={stages} />
                 {stageError ? (
-                  <div className={styles.errorBox} role="alert">
+                  <div className={styles.errorBox} role="alert" data-code={stageError.code}>
+                    <p className={styles.errorTitle}>{stageError.title}</p>
                     <p>{stageError.message}</p>
                     <div className={styles.errorActions}>
-                      {stageError.actions.map((action, index) => (
-                        <button key={action} type="button" className={index === 0 ? styles.primary : styles.secondary} onClick={() => act(action)}>
-                          {action === "retry" ? <RefreshCw size={15} aria-hidden="true" /> : null}
-                          {ACTION_LABELS[action]}
-                        </button>
-                      ))}
+                      {stageError.actions
+                        .filter((action) => action !== "copyText" || stageError.copyable)
+                        .map((action, index) => (
+                          <button key={action} type="button" className={index === 0 ? styles.primary : styles.secondary} onClick={() => act(action)}>
+                            {action === "retry" || action === "readerRetry" ? <RefreshCw size={15} aria-hidden="true" /> : null}
+                            {action === "copyText" && copied ? "Kopyalandı" : ACTION_LABELS[action]}
+                          </button>
+                        ))}
                     </div>
+                    {stageError.details ? (
+                      <details className={styles.techDetails}>
+                        <summary>Teknik ayrıntılar</summary>
+                        <p>{stageError.details}</p>
+                      </details>
+                    ) : null}
                   </div>
                 ) : null}
                 {running ? (
@@ -1083,8 +1180,8 @@ export default function StudioDialog({
               source={compareSourceView}
               onRetry={() => run(inputRef.current)}
               onBackToSource={() => setPhase("start")}
-              onDecide={(decision, selectedId) => {
-                decisionRef.current = { ...decisionRef.current, decision, selectedId };
+              onDecide={(decision, selectedIds) => {
+                decisionRef.current = { ...decisionRef.current, decision, selectedIds: selectedIds ?? [] };
                 run(inputRef.current);
               }}
             />
@@ -1121,6 +1218,15 @@ export default function StudioDialog({
           ) : null}
         </div>
 
+        {phase === "start" ? (
+          // Analiz düğmesi altta sabit: metin yapıştırıldıktan sonra yukarı kaydırmak gerekmez.
+          <footer className={styles.foot}>
+            <span className={styles.saveLine} role="status">{draftReady ? "Girdilerin taslağa kaydedilir" : ""}</span>
+            <button type="submit" form="studio-start-form" className={styles.primary} disabled={!ready || running}>
+              <Wand2 size={17} aria-hidden="true" /> Analiz Et ve Taslağı Hazırla
+            </button>
+          </footer>
+        ) : null}
         {phase === "review" ? (
           <footer className={styles.foot}>
             <button type="button" className={styles.secondary} onClick={() => run(inputRef.current)}>Yeniden oluştur</button>

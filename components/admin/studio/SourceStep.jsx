@@ -76,7 +76,7 @@ export async function analyzeScreenshots(items, { signal } = {}) {
     response = await fetch("/api/admin/ai/screenshots", { method: "POST", body, signal });
   }
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "Ekran görüntüleri analiz edilemedi.");
+  if (!response.ok) throw Object.assign(new Error(data.error || "Ekran görüntüleri analiz edilemedi."), { kind: data.kind, status: response.status });
   return data.source;
 }
 

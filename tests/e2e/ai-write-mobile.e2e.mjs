@@ -75,10 +75,10 @@ try {
     const blocks = await page.locator("[data-block-id]").count();
     check(title.trim().length > 5 && blocks >= 3, `taslak editöre aktarıldı (başlık var, ${blocks} blok)`);
     await page.getByRole("navigation", { name: "Yazı işlemleri" }).getByRole("button", { name: "Taslak Kaydet" }).tap();
-    check(await page.getByText(/Taslak kaydedildi\.|Değişiklikler kaydedildi\./).first().waitFor({ timeout: 30_000 }).then(() => true, () => false), "taslak alt çubuktan kaydedildi");
-    await page.waitForURL(/\/admin\/blog\/[0-9a-f-]{36}$/, { timeout: 20_000 });
-    postId = page.url().split("/").pop();
-    await page.reload({ waitUntil: "networkidle" });
+    // Kayıt gerçekten bitince yazı listesine dönülür.
+    const back = await page.waitForURL(/\/admin\/blog\?kaydedildi=[0-9a-f-]{36}$/, { timeout: 30_000 }).then(() => true, () => false);
+    check(back && (await page.getByText("Taslak kaydedildi.").first().isVisible()), "taslak alt çubuktan kaydedildi; listeye dönüldü");
+    postId = new URL(page.url()).searchParams.get("kaydedildi");
     const [row] = await sql(ref, `select title, status, jsonb_array_length(content->'blocks') as blocks from public.blog_posts where id = '${postId}'`);
     check(row?.status === "draft" && row.blocks >= 3 && row.title === title, `yenilemeden sonra taslak veritabanında (${row?.blocks} blok, taslak)`);
   }

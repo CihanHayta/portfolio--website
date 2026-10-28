@@ -1,6 +1,7 @@
 .panel {
   position: fixed;
-  left: 16px;
+  /* Masaüstünde tuvalin solunda; sol kütüphanedeki düğmeleri örtmez. */
+  left: calc(var(--float-left, 0px) + 16px);
   bottom: 16px;
   z-index: 55;
   display: grid;

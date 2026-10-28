@@ -109,8 +109,17 @@ try {
     await page.keyboard.press("Escape");
     await studio.waitFor({ state: "hidden", timeout: 10_000 }).catch(() => {});
 
-    const visuals = width < 1024 ? page.locator("[class*=mobileBar]").getByRole("button", { name: "AI Görselleri" }) : page.getByRole("button", { name: "AI Görselleri" }).first();
-    await visuals.click();
+    if (width < 1024) {
+      // Telefonda tek görsel girişi: "Görseller"; bölüm planı oradan açılır.
+      await page.locator("[class*=mobileBar]").getByRole("button", { name: "Görseller" }).click();
+      const images = page.getByRole("dialog", { name: "Görseller" });
+      await images.waitFor({ timeout: 15_000 });
+      await scan(page, `${width} Görseller`);
+      await images.getByRole("tab", { name: "Yeni üret" }).click();
+      await images.getByRole("button", { name: /AI Görselleri/ }).click();
+    } else {
+      await page.getByRole("button", { name: "AI Görselleri" }).first().click();
+    }
     await page.getByRole("dialog", { name: "AI Görselleri" }).waitFor({ timeout: 15_000 });
     await scan(page, `${width} Görsel stüdyosu`);
     await page.getByRole("button", { name: "Görsel stüdyosunu kapat" }).click();

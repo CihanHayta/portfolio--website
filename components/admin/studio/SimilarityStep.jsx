@@ -33,10 +33,13 @@ function scopeText(archive) {
 }
 
 // Kaynak okunduktan sonra, taslak üretilmeden önce arşiv karşılaştırması.
-// state: { status, result, error, decision, selectedId, update }
+// state: { status, result, error, decision, selectedIds, update }
+// Benzer yazılardan en fazla 5 tanesi seçilebilir: "farklı açı" bu yazıların
+// konularını ana eksen yapmaz; "güncelleme" ilk seçilen yazı için öneri hazırlar.
 // `onDecide(karar)`: "new" ya da "angle" seçilince taslak üretimi hemen sürer.
 export default function SimilarityStep({ state, setState, source, onRetry, onBackToSource, onDecide = () => {} }) {
-  const { status, result, error, decision, selectedId } = state;
+  const { status, result, error, decision } = state;
+  const selectedIds = Array.isArray(state.selectedIds) ? state.selectedIds : [];
   const patch = (value) => setState((current) => ({ ...current, ...value }));
 
   if (!source) {
@@ -93,22 +96,28 @@ export default function SimilarityStep({ state, setState, source, onRetry, onBac
 
   const { matches, archive, profile, method, notes = [] } = result;
   const strong = matches.some((match) => match.category === "very_high" || match.category === "high");
-  const selected = matches.find((match) => match.id === selectedId) ?? matches[0] ?? null;
+  const picked = matches.filter((match) => selectedIds.includes(match.id));
+  const selected = picked[0] ?? null;
+  const toggle = (id) =>
+    patch({ selectedIds: selectedIds.includes(id) ? selectedIds.filter((other) => other !== id) : [...selectedIds, id].slice(0, 5) });
 
   const matchList = matches.length ? (
     <section className={styles.panel} aria-labelledby="sim-matches">
       <h3 id="sim-matches" className={styles.panelTitle}>Benzer yazılar ({matches.length})</h3>
+      <p className={styles.hint}>Dikkate alınacak yazıları seç (en fazla 5). Seçilenlerin konuları yeni yazıda ana eksen yapılmaz.</p>
       <ol className={styles.matches}>
         {matches.map((match) => (
-          <li key={match.id} data-picked={match.id === selected?.id || undefined} data-category={match.category}>
+          <li key={match.id} data-picked={selectedIds.includes(match.id) || undefined} data-category={match.category}>
             <label className={styles.matchPick}>
-              <input type="radio" name="sim-match" checked={match.id === selected?.id} onChange={() => patch({ selectedId: match.id })} />
+              <input type="checkbox" checked={selectedIds.includes(match.id)} disabled={!selectedIds.includes(match.id) && selectedIds.length >= 5} onChange={() => toggle(match.id)} />
               <span className={styles.matchTitle}>{match.title || "(başlıksız)"}</span>
             </label>
             <div className={styles.matchMeta}>
               <span className={styles.badge}>{match.label}</span>
               <span className={styles.stateBadge} data-state={match.state}>{STATE_LABELS[match.state] ?? match.state}</span>
             </div>
+            <details className={styles.matchDetails}>
+              <summary>Neden benzer?</summary>
             <ul className={styles.reasons}>
               {match.reasons.map((reason) => <li key={reason}>{reason}</li>)}
             </ul>
@@ -127,6 +136,7 @@ export default function SimilarityStep({ state, setState, source, onRetry, onBac
                 <FilePenLine size={15} aria-hidden="true" /> Editörde aç
               </a>
             </div>
+            </details>
           </li>
         ))}
       </ol>
@@ -169,15 +179,18 @@ export default function SimilarityStep({ state, setState, source, onRetry, onBac
               role="radio"
               aria-checked={decision === item.key}
               className={styles.mode}
+              disabled={Boolean(item.needsMatch) && picked.length === 0}
               data-recommended={index === 0 || undefined}
               onClick={() => {
-                patch({ decision: item.key, selectedId: selected?.id ?? null });
-                if (item.key === "new" || item.key === "angle") onDecide(item.key, selected?.id ?? null);
+                patch({ decision: item.key });
+                if (item.key === "new" || item.key === "angle") onDecide(item.key, selectedIds);
               }}
             >
               {index === 0 ? <span className={styles.recommended}>Önerilen</span> : null}
               <strong>{item.label}</strong>
-              <span>{item.key === "angle" || item.key === "update" ? `${item.note} Seçili yazı: “${selected?.title ?? ""}”.` : item.note}</span>
+              <span>
+                {item.key === "angle" ? `${item.note} ${picked.length ? `Seçili: ${picked.map((match) => `“${match.title}”`).join(", ")}.` : "Önce aşağıdan en az bir yazı seç."}` : item.key === "update" ? `${item.note} ${selected ? `Yazı: “${selected.title}”.` : "Önce aşağıdan bir yazı seç."}` : item.note}
+              </span>
             </button>
           ))}
         </div>

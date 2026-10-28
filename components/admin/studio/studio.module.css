@@ -674,6 +674,81 @@
   color: var(--blog-danger);
 }
 
+.matchDetails summary {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--blog-link);
+  cursor: pointer;
+}
+
+.matchDetails[open] {
+  display: grid;
+  gap: 6px;
+}
+
+/* İçerik yaklaşımı: kompakt çoklu seçim (en fazla 3). */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.chips legend {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: 999px;
+  background: var(--blog-bg);
+  font: inherit;
+  font-size: 13px;
+  color: var(--blog-ink);
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--blog-accent);
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+}
+
+.chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--blog-gold);
+  outline-offset: 2px;
+}
+
+.errorTitle {
+  font-weight: 800;
+}
+
+.techDetails summary {
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.techDetails p {
+  margin-top: 4px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  opacity: 0.85;
+}
+
 /* Görsel adımı: tek liste, seçim + hedef, sabit işlem çubuğu. */
 .imageStep {
   display: grid;

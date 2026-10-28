@@ -136,8 +136,16 @@ try {
     check(true, "gerçek girişten sonra hedef yazıya dönüldü (?next)");
     await page.getByRole("textbox", { name: "Yazı başlığı" }).waitFor({ timeout: 30_000 });
     const openStudio = async () => {
-      const button = mobile ? page.locator("[class*=mobileBar]").getByRole("button", { name: "AI Görselleri" }) : page.getByRole("button", { name: "AI Görselleri" });
-      await button.click();
+      if (mobile) {
+        // Telefonda "Görseller" → "Yeni üret" → bölüm bölüm AI görsel planı.
+        await page.locator("[class*=mobileBar]").getByRole("button", { name: "Görseller" }).click();
+        const images = page.getByRole("dialog", { name: "Görseller" });
+        await images.waitFor();
+        await images.getByRole("tab", { name: "Yeni üret" }).click();
+        await images.getByRole("button", { name: /AI Görselleri/ }).click();
+      } else {
+        await page.getByRole("button", { name: "AI Görselleri" }).click();
+      }
       const dialog = page.getByRole("dialog", { name: "AI Görselleri" });
       await dialog.waitFor();
       return dialog;

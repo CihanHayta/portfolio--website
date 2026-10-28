@@ -3,6 +3,8 @@
 .builder {
   --left-width: 344px;
   --right-width: 340px;
+  /* Yüzen paneller (taslak notları) sol kütüphanenin üstüne binmez. */
+  --float-left: var(--left-width);
   position: fixed;
   inset: 0;
   display: grid;
@@ -18,6 +20,7 @@
 }
 
 .builder[data-preview="true"] {
+  --float-left: 0px;
   grid-template-columns: minmax(0, 1fr);
 }
 
@@ -1589,6 +1592,7 @@
 @media (max-width: 1180px) {
   .builder,
   .builder[data-left="false"] {
+    --float-left: 0px;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 56px auto minmax(0, 1fr);
   }

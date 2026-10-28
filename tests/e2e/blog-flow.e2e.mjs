@@ -154,11 +154,12 @@ try {
   await page.getByLabel("Meta açıklaması").fill("E2E meta açıklaması: reklam bütçesi planlama.");
   await page.getByRole("button", { name: "Ayarları kapat" }).click();
   await page.getByRole("button", { name: "Taslak Kaydet" }).click();
-  check(await toast(page, "Taslak kaydedildi."), "taslak kaydedildi bildirimi");
-  await page.waitForURL(/\/admin\/blog\/[0-9a-f-]{36}$/, { timeout: 20_000 });
-  const postUrl = page.url();
-  const postId = postUrl.split("/").pop();
-  await page.reload({ waitUntil: "networkidle" });
+  // "Taslak Kaydet": kayıt gerçekten bitince yazı listesine dönülür; yazı listede işaretlidir.
+  await page.waitForURL(/\/admin\/blog\?kaydedildi=[0-9a-f-]{36}$/, { timeout: 20_000 });
+  const postId = new URL(page.url()).searchParams.get("kaydedildi");
+  check(await toast(page, "Taslak kaydedildi."), "taslak kaydedildi bildirimi (listede)");
+  check((await page.locator("[data-saved]").first().innerText()).includes(`E2E Reklam Bütçesi ${RUN}`), "kaydedilen taslak listede işaretli");
+  await page.goto(`${base}/admin/blog/${postId}`, { waitUntil: "networkidle" });
   await page.getByRole("textbox", { name: "Yazı başlığı" }).waitFor();
   check((await page.getByRole("textbox", { name: "Yazı başlığı" }).inputValue()) === `E2E Reklam Bütçesi ${RUN}`, "yenilemeden sonra başlık veritabanından geldi");
   const canvasText = await page.getByRole("article", { name: "Yazı tuvali" }).innerText();
@@ -171,7 +172,12 @@ try {
   check(row?.slug === `${RUN}-butce` && row.status === "draft", "kayıt test veritabanında doğrulandı (taslak)");
 
   step("Gerçek AI: görsel planı + Pollinations görseli + ekleme + geri al");
-  await bar.getByRole("button", { name: "AI Görselleri" }).click();
+  // Telefonda tek görsel girişi "Görseller"; bölüm planı (AI Görselleri) "Yeni üret" sekmesinden açılır.
+  await bar.getByRole("button", { name: "Görseller" }).click();
+  const images = page.getByRole("dialog", { name: "Görseller" });
+  await images.waitFor();
+  await images.getByRole("tab", { name: "Yeni üret" }).click();
+  await images.getByRole("button", { name: /AI Görselleri/ }).click();
   const dialog = page.getByRole("dialog", { name: "AI Görselleri" });
   await dialog.waitFor();
   await dialog.getByRole("button", { name: "Görsel planını hazırla" }).click();
@@ -222,8 +228,9 @@ try {
         check((await coverImg().count()) > 0, "İleri al: kapak geri geldi");
       }
       await page.getByRole("button", { name: "Taslak Kaydet" }).click();
+      await page.waitForURL(/\/admin\/blog\?kaydedildi=/, { timeout: 20_000 });
       check(await toast(page, "Taslak kaydedildi."), "görselli taslak kaydedildi");
-      await page.reload({ waitUntil: "networkidle" });
+      await page.goto(`${base}/admin/blog/${postId}`, { waitUntil: "networkidle" });
       await page.getByRole("textbox", { name: "Yazı başlığı" }).waitFor();
       const [saved] = await sql(ref, `select cover_media_id, content::text like '%"type":"image"%' as has_image_block from public.blog_posts where id = '${postId}'`);
       check(isCover ? Boolean(saved.cover_media_id) : saved.has_image_block, `yenilemeden sonra ${isCover ? "kapak" : "bölüm görseli"} veritabanında korunuyor`);

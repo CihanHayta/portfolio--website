@@ -26,6 +26,7 @@ import {
 import { uniqueSlug } from "@/lib/ai/uniqueSlug";
 import { contentText, sanitizeBlocks } from "@/lib/blog/blocks/model";
 import { instantiateTemplate, templateByKey } from "@/lib/blog/blocks/templates";
+import { readApproaches } from "@/lib/ai/approaches";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -125,6 +126,7 @@ async function fill(admin, body) {
   const images = readImages(body.images);
   const related = readRelated(body.related);
   const angle = body.angle === true && related.some((item) => item.focus);
+  const approaches = readApproaches(body.approaches);
 
   if ((postId && !UUID.test(postId)) || (body.templateKey && !template)) {
     return json({ error: "Geçersiz istek." }, 400);
@@ -180,7 +182,7 @@ async function fill(admin, body) {
       task: "draft",
       db: admin.supabase,
       system: FILL_SYSTEM,
-      prompt: buildFillPrompt({ brief, template, slots, links, categories, sources, targetWords: Math.min(targetWords, FIRST_PASS_MAX_WORDS), extraShare, images, related, angle }),
+      prompt: buildFillPrompt({ brief, template, slots, links, categories, sources, targetWords: Math.min(targetWords, FIRST_PASS_MAX_WORDS), extraShare, images, related, angle, approaches }),
       schema: buildFillSchema(slots, { extra: extraShare > 0, coverage: hasSourceText, images: images.length > 0 }),
       temperature: 0.6,
       maxOutputTokens: 32_768,
