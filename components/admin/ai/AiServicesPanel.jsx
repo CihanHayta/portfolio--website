@@ -187,9 +187,12 @@ export default function AiServicesPanel({ initial }) {
       setRefreshing(false);
     }
   };
+  // Anahtarı tanımlı olmayan servisler etkin/kullanılabilir listelerde gösterilmez;
+  // yalnızca aşağıdaki kapalı bölümde adıyla ve gereken değişken adıyla durur.
+  const unconfigured = data.services.filter((service) => !service.configured);
   const groups = [
-    ["Metin servisleri", data.services.filter((service) => service.category === "text")],
-    ["Görsel servisleri", data.services.filter((service) => service.category === "image")],
+    ["Metin servisleri", data.services.filter((service) => service.category === "text" && service.configured)],
+    ["Görsel servisleri", data.services.filter((service) => service.category === "image" && service.configured)],
   ];
 
   return (
@@ -222,9 +225,11 @@ export default function AiServicesPanel({ initial }) {
         </p>
       ) : null}
 
-      <section className={styles.neurons} aria-label="Cloudflare Neuron">
-        <Meter label="Cloudflare Neuron (TAHMİN; metin + görsel ortak, UTC gününe göre)" used={Math.round(data.neurons.used)} limit={data.neurons.limit} note={`Cloudflare Neuron'u API'de bildirmez; resmî fiyatla hesaplanır. Ücretsiz üst sınır ${number(data.neurons.ceiling)}/gün.`} />
-      </section>
+      {data.services.some((service) => service.provider === "cloudflare" && service.configured) ? (
+        <section className={styles.neurons} aria-label="Cloudflare Neuron">
+          <Meter label="Cloudflare Neuron (TAHMİN; metin + görsel ortak, UTC gününe göre)" used={Math.round(data.neurons.used)} limit={data.neurons.limit} note={`Cloudflare Neuron'u API'de bildirmez; resmî fiyatla hesaplanır. Ücretsiz üst sınır ${number(data.neurons.ceiling)}/gün.`} />
+        </section>
+      ) : null}
 
       {groups.map(([title, list]) => (
         <section key={title} aria-label={title}>
@@ -237,13 +242,30 @@ export default function AiServicesPanel({ initial }) {
         </section>
       ))}
 
+      {unconfigured.length || !data.designArena.configured ? (
+        <details className={styles.more}>
+          <summary>Anahtarı tanımlı olmayan servisler ({unconfigured.length + (data.designArena.configured ? 0 : 1)}) — kullanılmıyor</summary>
+          <ul className={styles.plainList}>
+            {unconfigured.map((service) => (
+              <li key={service.key}>
+                <strong>{service.label}:</strong> {service.envNames.length ? `${service.envNames.join(", ")} tanımlı değil` : service.configuredReason}; bu servise hiçbir istek gönderilmez.
+              </li>
+            ))}
+            {!data.designArena.configured ? (
+              <li>
+                <strong>Design Arena (model sıralaması):</strong> DESIGN_ARENA_API_KEY tanımlı değil. İçerik ya da görsel üretmez; yalnızca sıralama gösterir.{" "}
+                <a href={data.designArena.apply} target="_blank" rel="noopener noreferrer">Erişim başvurusu</a>
+              </li>
+            ) : null}
+          </ul>
+          <p className={styles.note}>Anahtar eklenirse servis kendiliğinden listeye ve yedek sırasına girer. Değerler yalnızca sunucu ortam değişkeni olarak eklenir; buraya yazılmaz.</p>
+        </details>
+      ) : null}
+
+      {data.designArena.configured ? (
       <section className={styles.neurons} aria-label="Design Arena">
         <h2 className={styles.groupTitle}>Model keşfi — Design Arena</h2>
-        {!data.designArena.configured ? (
-          <p className={styles.note}>
-            Yapılandırılmamış. Erişim başvurusu: <a href={data.designArena.apply} target="_blank" rel="noopener noreferrer">designarena.ai/developers/apply</a>. Onaylanan anahtar sunucuya DESIGN_ARENA_API_KEY olarak eklenir. Yalnızca model sıralaması gösterilir; içerik ya da görsel üretiminde kullanılmaz.
-          </p>
-        ) : data.designArena.ok ? (
+        {data.designArena.ok ? (
           <>
             <ol className={styles.plainList}>
               {data.designArena.top.map((item) => (
@@ -256,6 +278,7 @@ export default function AiServicesPanel({ initial }) {
           <p className={styles.error}>{data.designArena.error}</p>
         )}
       </section>
+      ) : null}
 
       <details className={styles.more}>
         <summary>Değerlendirilip kullanılmayan servisler</summary>
