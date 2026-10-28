@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { GripVertical, Search } from "lucide-react";
 import { PALETTE } from "@/lib/blog/blocks/palette";
 import { TEMPLATES } from "@/lib/blog/blocks/templates";
 import { slugify } from "@/lib/blog/slug";
@@ -10,7 +10,7 @@ import styles from "./builder.module.css";
 
 // Sol panel: blok kartları ve hazır şablonlar. Kartlar tıklanarak ya da
 // sürüklenerek eklenir; klavyeyle her kart bir düğmedir.
-export default function BlockLibrary({ onAdd, onDragStart, onDragEnd, onTemplate, insertHint }) {
+export default function BlockLibrary({ onAdd, onDragStart, onDragEnd, onPointerDrag = null, onTemplate, insertHint }) {
   const [tab, setTab] = useState("blocks");
   const [query, setQuery] = useState("");
 
@@ -79,6 +79,12 @@ export default function BlockLibrary({ onAdd, onDragStart, onDragEnd, onTemplate
                         <Icon size={24} strokeWidth={1.6} />
                       </span>
                       <span className={styles.blockCardLabel}>{item.label}</span>
+                      {/* Dokunmatikte tuvale sürüklemek için tutamaç; dokunmak bloğu ekler. */}
+                      {onPointerDrag ? (
+                        <span className={styles.cardGrip} aria-hidden="true" onPointerDown={(event) => event.pointerType !== "mouse" && onPointerDrag(event, { kind: "new", key: item.key }, item.label)}>
+                          <GripVertical size={16} />
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}

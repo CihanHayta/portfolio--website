@@ -128,6 +128,7 @@ function renderNode(node, key, ctx) {
 export default function PostContent({ doc, className = "" }) {
   const headingIds = new Map(collectHeadings(doc).map(({ node, id }) => [node, id]));
   return (
-    <div className={`${styles.prose} ${className}`}>{renderChildren(doc ?? {}, { headingIds })}</div>
+    // data-doc-root: editörde paragraflar arasına bırakma noktaları bu kökten ölçülür.
+    <div className={`${styles.prose} ${className}`} data-doc-root="">{renderChildren(doc ?? {}, { headingIds })}</div>
   );
 }

@@ -41,6 +41,7 @@ import {
 import { contentHeadings, createBlock, toBlocks } from "@/lib/blog/blocks/model";
 import { instantiateTemplate } from "@/lib/blog/blocks/templates";
 import { placeAtTargets } from "@/lib/blog/blocks/imageTargets";
+import { dropBlocks } from "@/lib/blog/blocks/arrange";
 import { insertVisuals } from "@/lib/blog/blocks/insertVisuals";
 import { adoptNewContext, loadVisualState } from "@/lib/blog/sourceContext";
 import { PALETTE_ITEMS } from "@/lib/blog/blocks/palette";
@@ -54,6 +55,7 @@ import UpdateSuggestions from "./UpdateSuggestions";
 import DraftNotes from "./DraftNotes";
 import BlockLibrary from "./BlockLibrary";
 import Canvas from "./Canvas";
+import { usePointerDrag } from "./usePointerDrag";
 import Inspector from "./Inspector";
 import { useBlocks } from "./useBlocks";
 import styles from "./builder.module.css";
@@ -656,6 +658,31 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
     [addFromPalette, endDrag, moveBlock]
   );
 
+  // Fare/dokunmatik sürükleme (Pointer Events): bloklar arası ya da bir metin
+  // bloğunun iki paragrafı arası. Her bırakma tek geri alınabilir adımdır ve
+  // otomatik kayıtla Supabase'e (content.blocks sırası) gider.
+  const paperRef = useRef(null);
+  const getPaper = useCallback(() => paperRef.current, []);
+  const pointerDrop = useCallback(
+    (payload, target) => {
+      let source = payload;
+      if (payload.kind === "new") {
+        const item = PALETTE_ITEMS[payload.key];
+        if (!item) return;
+        source = { kind: "new", block: createBlock(item.type, item.props ? structuredClone(item.props) : {}) };
+      }
+      const next = dropBlocks(blocksRef.current, source, target);
+      if (!next) return;
+      actions.replaceAll(next);
+      setInsertAt(null);
+      setDrawer(null);
+      select(source.kind === "new" ? source.block.id : source.id);
+      if (target.blockId) toast("Blok iki paragrafın arasına yerleşti; metin iki parçaya bölündü. “Geri al” ile geri dönebilirsin.");
+    },
+    [actions, select]
+  );
+  const { active: dragActive, begin: beginDrag, ghostRef, lineRef } = usePointerDrag({ getContainer: getPaper, onDrop: pointerDrop });
+
   const applyTemplate = (mode) => {
     const fresh = instantiateTemplate(pendingTemplate);
     if (mode === "replace") setActiveTemplate(pendingTemplate.key);
@@ -900,7 +927,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
             <X size={18} />
           </button>
           <div className={styles.leftInner}>
-            <BlockLibrary onAdd={addFromPalette} onDragStart={startDrag} onDragEnd={endDrag} onTemplate={chooseTemplate} insertHint={insertHint} />
+            <BlockLibrary onAdd={addFromPalette} onDragStart={startDrag} onDragEnd={endDrag} onPointerDrag={beginDrag} onTemplate={chooseTemplate} insertHint={insertHint} />
             <AiLauncher
               postId={postId}
               ensureDraft={ensureDraft}
@@ -945,12 +972,21 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           onDropAt={dropAt}
           onPickInsert={setInsertAt}
           onQuickAdd={addFromPalette}
-          onDragStart={startDrag}
-          onDragEnd={endDrag}
+          onPointerDrag={beginDrag}
+          paperRef={paperRef}
           visualMarks={visualMarks}
           onOpenVisuals={() => setVisualOpen(true)}
         />
       </main>
+
+      {/* Sürükleme hayaleti ve bırakma çizgisi: sabit konumlu, yerleşimi kaydırmaz. */}
+      <div ref={ghostRef} className={styles.dragGhost} hidden={!dragActive} aria-hidden="true">
+        {dragActive?.label}
+      </div>
+      <div ref={lineRef} className={styles.dropLine} hidden aria-hidden="true" />
+      <p className={styles.srOnly} aria-live="polite">
+        {dragActive ? `${dragActive.label} taşınıyor. Bırakmak için parmağını kaldır; iptal için Esc.` : ""}
+      </p>
 
       {/* Telefonda ana işlemler başparmak erişiminde: Önizle · Kaydet · Yayınla.
           Taslak kaydı ile yayın ayrı düğmelerdir; yayın kısa bir onay ister. */}

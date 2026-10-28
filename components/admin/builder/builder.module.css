@@ -818,9 +818,126 @@
   cursor: pointer;
 }
 
-.frameTool[draggable="true"] {
+/* Sürükleme tutamacı: dokunmatikte sayfa kaydırması yerine sürükleme başlar. */
+.frameTool[data-drag-handle] {
+  touch-action: none;
   cursor: grab;
   color: var(--blog-ink-soft);
+}
+
+/* "Konuma taşı": simgenin üzerinde görünmez yerel liste (klavye ve ekran okuyucu uyumlu). */
+.frameTool[data-move-to] {
+  position: relative;
+}
+
+.frameTool[data-move-to] select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.frameTool[data-move-to]:focus-within {
+  outline: 2px solid var(--blog-gold);
+  outline-offset: 1px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.dragGhost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  box-shadow: var(--blog-shadow-pop);
+  pointer-events: none;
+}
+
+.dropLine {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--blog-gold);
+  box-shadow: 0 0 0 3px rgba(201, 162, 75, 0.25);
+  pointer-events: none;
+}
+
+.dropLine[data-split="true"]::after {
+  content: "Paragrafların arasına";
+  position: absolute;
+  top: -24px;
+  right: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--blog-gold);
+  color: var(--p-night);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dragGhost[hidden],
+.dropLine[hidden] {
+  display: none;
+}
+
+/* Sürükleme sürerken metin seçilmez; telefonda kütüphane çekmecesi kenara çekilir. */
+:global(html[data-block-dragging]) .stage {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+:global(html[data-block-dragging="new"]) .left {
+  opacity: 0.15;
+  transform: translateX(-88%);
+  transition: opacity 0.15s var(--ease), transform 0.15s var(--ease);
+}
+
+:global(html[data-block-dragging]) .backdrop {
+  display: none;
+}
+
+/* Kütüphane kartındaki dokunmatik sürükleme tutamacı (yalnızca dokunmatik ekranlarda). */
+.blockCard {
+  position: relative;
+}
+
+.cardGrip {
+  display: none;
+}
+
+@media (hover: none) {
+  .cardGrip {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    color: var(--blog-ink-soft);
+    touch-action: none;
+  }
 }
 
 .frameTool:hover {

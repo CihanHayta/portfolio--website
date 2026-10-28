@@ -2,10 +2,11 @@
 
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, ChevronUp, Copy, GripVertical, ImagePlus, Plus, Settings2, Trash2 } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronUp, Copy, GripVertical, ImagePlus, Plus, Settings2, Trash2 } from "lucide-react";
 import { BLOCKS } from "@/lib/blog/blocks/registry";
 import { PALETTE_ITEMS } from "@/lib/blog/blocks/palette";
 import { Block, blockStyles } from "@/components/blog/Blocks";
+import { blockSummary } from "@/lib/blog/blocks/arrange";
 import { TYPE_ICONS } from "./blockIcons";
 import { RichTextField } from "./fields";
 import styles from "./builder.module.css";
@@ -65,8 +66,8 @@ const BlockFrame = memo(function BlockFrame({
   onDuplicate,
   onRemove,
   onOpenSettings,
-  onDragStart,
-  onDragEnd,
+  onPointerDrag,
+  positions = null,
 }) {
   const label = BLOCKS[block.type]?.label ?? "Bilinmeyen blok";
   const Icon = TYPE_ICONS[block.type];
@@ -105,6 +106,7 @@ const BlockFrame = memo(function BlockFrame({
       data-selected={selected}
       data-block-id={block.id}
       data-block-type={block.type}
+      data-node-count={block.type === "text" ? (block.props.doc?.content?.length ?? 0) : undefined}
       role="group"
       aria-label={`${label} bloğu${selected ? " (seçili)" : ""}`}
       tabIndex={0}
@@ -123,21 +125,14 @@ const BlockFrame = memo(function BlockFrame({
 
       {selected ? (
         <div className={styles.frameTools} role="toolbar" aria-label={`${label} bloğu araçları`}>
+          {/* Fare, dokunmatik ve kalemle sürükleme (Pointer Events); klavye için "Konuma taşı". */}
           <span
             className={styles.frameTool}
-            draggable
             role="img"
             aria-label="Sürükleyerek taşı"
             title="Sürükleyerek taşı"
             data-drag-handle
-            onDragStart={(event) => {
-              event.dataTransfer.effectAllowed = "move";
-              event.dataTransfer.setData("text/plain", label);
-              const frame = event.currentTarget.closest("[data-block-id]");
-              if (frame) event.dataTransfer.setDragImage(frame, 24, 24);
-              onDragStart({ kind: "move", id: block.id });
-            }}
-            onDragEnd={onDragEnd}
+            onPointerDown={(event) => onPointerDrag?.(event, { kind: "move", id: block.id }, label)}
           >
             <GripVertical size={16} />
           </span>
@@ -147,6 +142,24 @@ const BlockFrame = memo(function BlockFrame({
           <button type="button" className={styles.frameTool} aria-label="Aşağı taşı" title="Aşağı taşı" disabled={index === count - 1} onClick={() => onMove(block.id, index + 2)}>
             <ChevronDown size={16} />
           </button>
+          {positions?.length ? (
+            <label className={styles.frameTool} data-move-to title="Konuma taşı">
+              <ArrowUpDown size={16} aria-hidden="true" />
+              <select
+                aria-label="Konuma taşı"
+                value=""
+                onClick={(event) => event.stopPropagation()}
+                onChange={(event) => {
+                  if (event.target.value !== "") onMove(block.id, Number(event.target.value));
+                }}
+              >
+                <option value="" disabled>Konuma taşı…</option>
+                {positions.map((item) => (
+                  <option key={item.index} value={item.index}>{item.label}</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <button type="button" className={styles.frameTool} aria-label="Çoğalt" title="Çoğalt" onClick={() => onDuplicate(block.id)}>
             <Copy size={16} />
           </button>
@@ -187,8 +200,8 @@ export default function Canvas({
   onDropAt,
   onPickInsert,
   onQuickAdd,
-  onDragStart,
-  onDragEnd,
+  onPointerDrag,
+  paperRef = null,
   visualMarks = null, // { başlık bloğu kimliği: [öneri amacı, …] } — AI Görsel Stüdyosu planı
   onOpenVisuals = null,
 }) {
@@ -219,6 +232,17 @@ export default function Canvas({
     return () => observer.disconnect();
   }, [title, preview]);
 
+  // Seçili blok için "Konuma taşı" listesi (etkisiz konumlar hariç).
+  const selectedIndex = blocks.findIndex((block) => block.id === selectedId);
+  const positions = useMemo(() => {
+    if (selectedIndex === -1 || blocks.length < 2) return null;
+    const short = (block, index) => `${index + 1}. ${BLOCKS[block.type]?.label ?? "Blok"}${blockSummary(block) ? `: ${blockSummary(block).slice(0, 40)}` : ""}`;
+    return [
+      ...(selectedIndex === 0 ? [] : [{ index: 0, label: "En başa" }]),
+      ...blocks.flatMap((block, index) => (index === selectedIndex || index === selectedIndex - 1 ? [] : [{ index: index + 1, label: `${short(block, index)} — sonrasına` }])),
+    ];
+  }, [blocks, selectedIndex]);
+
   const zone = (index) =>
     preview ? null : (
       <DropZone index={index} dragging={dragging} active={insertAt === index} onDropAt={onDropAt} onPick={onPickInsert} />
@@ -226,7 +250,7 @@ export default function Canvas({
 
   return (
     <div className={styles.canvas} data-device={device} onClick={() => onSelect(null)}>
-      <article className={styles.paper} data-preview={preview} aria-label="Yazı tuvali">
+      <article ref={paperRef} className={styles.paper} data-preview={preview} aria-label="Yazı tuvali">
         <header className={styles.paperHead}>
           {preview ? (
             <h1 className={styles.titleInput}>{title || "Başlıksız yazı"}</h1>
@@ -300,8 +324,8 @@ export default function Canvas({
                 onDuplicate={onDuplicate}
                 onRemove={onRemove}
                 onOpenSettings={onOpenSettings}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
+                onPointerDrag={onPointerDrag}
+                positions={selectedId === block.id ? positions : null}
               />
               {!preview && visualMarks?.[block.id] ? (
                 <button type="button" className={styles.visualMark} onClick={onOpenVisuals}>
