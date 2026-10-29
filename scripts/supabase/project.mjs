@@ -54,9 +54,17 @@ const localMigrations = () =>
     .sort()
     .map((file) => ({ version: file.slice(0, 14), name: file.slice(15, -4), file }));
 
+// Geçmiş okunamazsa (zaman aşımı, ağ) boş SAYILMAZ: tüm migration'lar bekliyor
+// sanılıp eski migration'lar yeniden çalıştırılmaya kalkılırdı. Yalnızca geçmiş
+// tablosu hiç yoksa (yeni proje) boş kabul edilir.
 async function remoteMigrations(ref) {
-  const rows = await sql(ref, "select version, name from supabase_migrations.schema_migrations order by version").catch(() => []);
-  return rows.map((row) => ({ version: row.version, name: row.name }));
+  try {
+    const rows = await sql(ref, "select version, name from supabase_migrations.schema_migrations order by version");
+    return rows.map((row) => ({ version: row.version, name: row.name }));
+  } catch (error) {
+    if (/does not exist|42P01|3F000/.test(String(error.message))) return [];
+    throw new Error(`Migration geçmişi okunamadı; güvenlik için durduruldu (${String(error.message).slice(0, 160)})`);
+  }
 }
 
 const TAG = "$migration_body$";
@@ -91,8 +99,13 @@ async function createTest() {
   return status("test");
 }
 
-async function migrate(target, { dryRun }) {
-  const { ref, pending, unknown } = await status(target);
+// `only`: yalnızca bu sürüm uygulanır (ör. birbirinden bağımsız ve ayrı onay
+// gerektiren migration'lar). Diğer bekleyenlere dokunulmaz.
+async function migrate(target, { dryRun, only = null }) {
+  const status_ = await status(target);
+  const { ref, unknown } = status_;
+  const pending = only ? status_.pending.filter((migration) => migration.version === only) : status_.pending;
+  if (only && !pending.length) throw new Error(`${only} bekleyenler arasında değil (zaten uygulanmış ya da yok).`);
   if (unknown.length) throw new Error("Uzakta yerelde olmayan migration var; geçmiş tahminle düzeltilmez. Durduruldu.");
   for (const migration of pending) {
     const body = readFileSync(join("supabase", "migrations", migration.file), "utf8");
@@ -117,6 +130,6 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const [command, target = "linked", ...rest] = process.argv.slice(2);
   if (command === "status") await status(target);
   else if (command === "create-test") await createTest();
-  else if (command === "migrate") await migrate(target, { dryRun: rest.includes("--dry-run") });
+  else if (command === "migrate") await migrate(target, { dryRun: rest.includes("--dry-run"), only: rest.includes("--only") ? rest[rest.indexOf("--only") + 1] : null });
   else console.log("Komutlar: status <linked|test> · create-test · migrate <linked|test> [--dry-run]");
 }

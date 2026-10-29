@@ -111,3 +111,23 @@ test("ağ hatası sıradaki modelle telafi edilir", async () => {
   const { impl } = fakeFetch([new TypeError("fetch failed"), ok('{"ok":1}')]);
   assert.deepEqual((await generateJson({ ...base, fetchImpl: impl })).data, { ok: 1 });
 });
+
+test("ilk veriden sonra duran ve iptali yok sayan akış toplam süreyi aşamaz", async () => {
+  // Gerçek olay: Gemini birkaç olay gönderip durdu; sunucu 15 dakika bekledi.
+  const stalled = () =>
+    new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('data: {"candidates":[{"content":{"parts":[{"text":"{"}]}}]}\n\n'));
+          // kapanmıyor; iptal sinyalini de dinlemiyor
+        },
+      }),
+      { status: 200, headers: { "content-type": "text/event-stream" } }
+    );
+  const started = Date.now();
+  await assert.rejects(
+    generateJson({ ...base, maxModels: 1, budgetMs: 1500, fetchImpl: async () => stalled() }),
+    (error) => error instanceof AiError
+  );
+  assert.ok(Date.now() - started < 4000, `süre sınırı uygulandı (${Date.now() - started} ms)`);
+});

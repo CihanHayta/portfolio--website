@@ -259,3 +259,18 @@ test("yedek için süre ayrılır: Gemini yanıt vermese de OVH yedeği yetişir
   assert.equal(result.provider, "ovh");
 });
 
+
+test("Anahtarsız servisin gövdesi takılırsa (iptali yok sayan akış) bütçe aşılmaz", async () => {
+  const stalled = () =>
+    new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('{"choices":[{"message":'));
+        },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } }
+    );
+  const started = Date.now();
+  await assert.rejects(run({ env: {}, fetchImpl: async () => stalled(), order: ["ovh"], store: createTestStore(), budgetMs: 1500 }));
+  assert.ok(Date.now() - started < 4000, `süre sınırı uygulandı (${Date.now() - started} ms)`);
+});
