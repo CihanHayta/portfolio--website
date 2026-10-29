@@ -59,17 +59,19 @@ try {
   let state = "bekliyor";
   for (let waited = 0; waited < 300_000 && state === "bekliyor"; waited += 2_000) {
     if (await toEditor.isVisible().catch(() => false)) state = "taslak";
+    // Boş yeni yazıda taslak onay sormadan doğrudan editöre aktarılır (stüdyo kapanır).
+    else if (!(await studio.isVisible().catch(() => true)) && (await page.locator("[data-block-id]").count()) >= 3) state = "editörde";
     else if (await decide.isVisible().catch(() => false)) {
       await decide.tap();
       console.log("  (arşivde benzer yazı bulundu: 'Yine de yeni yazı oluştur' seçildi)");
     } else if (await failed.first().isVisible().catch(() => false)) state = `hata: ${(await failed.first().innerText()).slice(0, 160)}`;
     else await page.waitForTimeout(2_000);
   }
-  check(state === "taslak", `kaynak analiz edildi ve taslak hazırlandı (${state})`);
+  check(state === "taslak" || state === "editörde", `kaynak analiz edildi ve taslak hazırlandı (${state})`);
   check(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth) <= 0, "AI stüdyosunda yatay taşma yok");
 
-  if (state === "taslak") {
-    await toEditor.tap();
+  if (state === "taslak" || state === "editörde") {
+    if (state === "taslak") await toEditor.tap();
     await studio.waitFor({ state: "hidden", timeout: 20_000 }).catch(() => {});
     const title = await page.getByRole("textbox", { name: "Yazı başlığı" }).inputValue();
     const blocks = await page.locator("[data-block-id]").count();

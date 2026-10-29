@@ -2,7 +2,7 @@
   position: fixed;
   /* Masaüstünde tuvalin solunda; sol kütüphanedeki düğmeleri örtmez. */
   left: calc(var(--float-left, 0px) + 16px);
-  bottom: 16px;
+  bottom: calc(var(--float-bottom, 0px) + 16px);
   z-index: 55;
   display: grid;
   gap: 8px;
@@ -125,7 +125,7 @@
   .panel {
     right: 8px;
     left: 8px;
-    bottom: calc(8px + env(safe-area-inset-bottom));
+    bottom: calc(var(--float-bottom, env(safe-area-inset-bottom)) + 8px);
     width: auto;
     max-height: 55dvh;
   }

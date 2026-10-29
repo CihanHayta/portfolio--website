@@ -1919,6 +1919,15 @@
 }
 
 @media (max-width: 860px) {
+  /* Yüzen paneller (taslak notları) alt işlem çubuğunun üstünde durur, onu örtmez. */
+  .builder {
+    --float-bottom: calc(66px + env(safe-area-inset-bottom));
+  }
+
+  .builder[data-keyboard="open"] {
+    --float-bottom: 0px;
+  }
+
   .actionBar {
     position: fixed;
     right: 0;
