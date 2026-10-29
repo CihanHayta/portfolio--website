@@ -34,6 +34,9 @@ Test projesinin kimliği ve veritabanı şifresi git dışındaki `supabase/.env
 | `20261023000000_ai_usage_jobs.sql` | AI limit deposu (sayaç, kilit, iş, olay tabloları ve RPC'ler) | ✓ (2026-10-24) |
 | `20261024000000_ai_least_privilege.sql` | `anon` rolünden AI yetkileri alındı | ✓ (2026-10-24) |
 | `20261026000000_backup_reader_role.sql` | Yedekleme için salt okunur `persona_backup` rolü | **Bekliyor**: `BACKUP_AND_RESTORE.md` → "Son adım" |
+| `20261027000000_studio_drafts.sql` | Stüdyo: `blog_media` köken sütunları (`origin`, `source_url`, `provider`, `model`, `draft_post_id`), taslağa bağlı `blog_studio_sessions` (RLS: yalnızca yönetici), HERKESE KAPALI `studio-sources` kovası (ekran görüntüleri) | Test ✓ · **Canlı: onay bekliyor** (yedek 2026-10-29 alındı, kuru deneme başarılı) |
+
+`draft_post_id` bilerek **yabancı anahtarsızdır**: `blog_media → blog_posts` ikinci bir ilişki olursa PostgREST'teki `cover:blog_media(...)` gömmeleri belirsizleşir (PGRST201) ve canlı blog sorguları bozulur. `verify-local-pg.sh` bunu denetler (yazı ↔ medya arasında tek yabancı anahtar).
 
 **Canlıda doğrulanan güvenlik durumu:**
 - `public` şemasındaki 12 tablonun hepsinde RLS açık; 18 tablo ve 4 depolama politikası var.
@@ -60,14 +63,14 @@ Kimlik doğrulaması bu makinedeki Supabase CLI oturumuyla yapılır (`npx supab
 
 ```bash
 node scripts/supabase/project.mjs status  linked|test
-node scripts/supabase/project.mjs migrate test|linked [--dry-run]
+node scripts/supabase/project.mjs migrate test|linked [--dry-run] [--only <sürüm>]
 node scripts/supabase/project.mjs create-test
 node scripts/supabase/backup.mjs <klasör>        # salt okunur elle yedek
 node scripts/supabase/restore.mjs <klasör>       # yalnızca test projesine, doğrulamalı
 bash scripts/supabase/verify-local-pg.sh          # geçici yerel Postgres'te migration + paralel yarış testleri
 ```
 
-`migrate` her migration'ı önce `BEGIN … ROLLBACK` içinde dener. Sonra SQL'i ve geçmiş satırını tek işlemde yazar (Supabase CLI `db push` ile uyumlu). Uzak geçmişte yerelde olmayan bir sürüm varsa durur.
+`migrate` her migration'ı önce `BEGIN … ROLLBACK` içinde dener. Sonra SQL'i ve geçmiş satırını tek işlemde yazar (Supabase CLI `db push` ile uyumlu). Uzak geçmişte yerelde olmayan bir sürüm varsa durur. Migration geçmişi okunamazsa (zaman aşımı) geçmiş boş sayılmaz, betik durur. `--only <sürüm>` yalnızca o migration'ı uygular (ayrı onay gerektiren bağımsız migration'lar için).
 
 **Yeni migration için güvenli sıra:**
 1. Yedek alın.

@@ -15,6 +15,17 @@ Durum tarihi: **2026-10-26**. Canlı kod: `31a1dc6` (`dpl_38XKSBdiotWabMpHmfUiJs
 - **Erişilebilirlik:** taranan ekranlarda kritik ya da ciddi bulgu yok.
 - **Otomatik yedek:** hazır ve test projesiyle uçtan uca sınandı. Canlıya bağlama adımı site sahibinin onayını bekliyor.
 
+## Görseller / sürükle-bırak / kalıcı stüdyo turu (2026-10-29)
+
+Bulunan kök nedenler ve düzeltmeler (Preview'da doğrulandı, canlı migration onayı bekliyor):
+- **Seçilen kaynak görselleri kayboluyordu:** ayrı "kütüphaneye aktar" adımı olmadan seçim yok sayılıyordu; yerleşim 0 olsa da başarı mesajı çıkıyordu. Yeni "Görseller" adımı: tek liste, seçim durumdan ayrı, görsel başına hedef bölüm, doğru sayılar.
+- **Beyaz katman:** "AI ile Yaz" açma isteği tek seferlik değildi; önizlemeden dönünce/kayıt bitince tam ekran stüdyo kendiliğinden açılıyordu (WebKit testinde yeniden üretildi). Pencereler artık kapatılarak sökülür; telefonda görünür alana uyar.
+- **Paneller çakışıyordu:** taslak notları paneli sol kütüphanedeki ve telefonda alt çubuktaki düğmeleri örtüyordu.
+- **AI isteği 15 dakika takılabiliyordu:** duran Gemini akışı; artık süre sınırı kesin.
+- **Migration ilişki hatası (canlıya çıkmadan yakalandı):** `draft_post_id` yabancı anahtarı kapak sorgusunu belirsizleştirip blog sayfalarını bozacaktı.
+- **Yazılan link kayboluyordu:** stüdyo açılırken gelen kayıtlı oturum, kullanıcının yazdığını eziyordu.
+- **Sürükle-bırak dokunmatikte yoktu:** Pointer Events, paragraflar arasına bırakma, "Konuma taşı".
+
 ## Bu çalışmada bulunup canlıda düzeltilen hatalar
 
 | Hata | Etki | Düzeltme |

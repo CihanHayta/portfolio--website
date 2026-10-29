@@ -17,6 +17,7 @@ import { chromium } from "playwright-core";
 import sharp from "sharp";
 import { projectKeys } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
+import { prepareContext } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3100";
 const out = process.env.QA_OUT ?? mkdtempSync(join(tmpdir(), "persona-images-"));
@@ -99,7 +100,7 @@ try {
     // Önceki stüdyo çalışmasından kalan kaynak (taslağa bağlı oturum).
     await service.from("blog_studio_sessions").insert({ post_id: post.id, data: { version: 1, url: "https://kaynak.example.com/meta", source: { url: "https://kaynak.example.com/meta", title: "Meta Ads Budget", text: "Metin ".repeat(30), images: SOURCE_IMAGES }, images: [], phase: "applied" } }).throwOnError();
 
-    const context = await browser.newContext({ viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile });
+    const context = await prepareContext(await browser.newContext({ viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile }), base);
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: base });
     const log = { visual: [] };
     await context.route("**/api/admin/ai/services", (route) => route.fulfill({ json: SERVICES }));

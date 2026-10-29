@@ -15,6 +15,7 @@ import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
 import { projectKeys } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
+import { prepareContext } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3100";
 const out = process.env.QA_OUT ?? mkdtempSync(join(tmpdir(), "persona-dnd-"));
@@ -52,7 +53,7 @@ try {
     const mobile = w < 1024;
     const { data: post } = await service.from("blog_posts").insert({ title: `E2E DnD ${w}`, slug: `${RUN}-${w}`, content: { type: "blocks", version: 1, blocks: BLOCKS }, author_id: user.user.id }).select("id").single().throwOnError();
     postIds.push(post.id);
-    const context = await browser.newContext({ viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile });
+    const context = await prepareContext(await browser.newContext({ viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile }), base);
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));

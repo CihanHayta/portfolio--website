@@ -25,6 +25,25 @@ Durum tarihi: **2026-10-26**.
 | `18bbab7` | `dpl_56NFmG1Afsoye79g8PM9AoJ63wQg` | Erişilebilirlik düzeltmesi ve axe testi |
 | `31a1dc6` | `dpl_38XKSBdiotWabMpHmfUiJsvAi2AJ` | Stüdyo: genişletme hatasında taslak korunur; yedek betikleri; belgeler |
 
+### Görseller, sürükle-bırak ve kalıcı stüdyo turu (2026-10-29) — durum
+
+| Adım | Durum |
+|---|---|
+| Kod | `blok-editoru` dalı, `3d90db9` ve sonrası (yalnızca test/belge) |
+| Preview | `dpl_2ymM9DDsrMDPMn7KUybGodhopiTf` (TEST veritabanı) — studio-images, dnd, ai-write-flow, overlay (WebKit + Chromium), a11y, visual-studio geçti |
+| Canlı migration `20261027000000_studio_drafts` | **Onay bekliyor.** Yedek alındı (`/Volumes/Hayta-SSD/persona-yedekler/2026-10-29-studio-oncesi`, depo dışında), `--dry-run --only` başarılı. Uygulama otomatik güvenlik denetiminde onay istedi. |
+| Canlı kod dağıtımı | Migration'dan SONRA: `git push origin <sha>:main` (ileri sarma), ardından live-admin, public-seo, footer, admin-login |
+
+Migration uygulanmadan kod canlıya alınırsa yayın bozulmaz (AI/köken bilgisi atlanarak görseller kaydedilir), ancak taslak oturumu ve ekran görüntüleri yalnızca tarayıcıda kalır ve "Seçimler kaydedilemedi" uyarısı görünür. Bu yüzden sıra: migration → kod.
+
+Komut (canlı, yalnızca bu migration):
+
+```bash
+node scripts/supabase/project.mjs migrate linked --dry-run --only 20261027000000
+node scripts/supabase/project.mjs migrate linked --only 20261027000000
+node scripts/supabase/project.mjs status linked
+```
+
 ## Ortam değişkenleri
 
 Gerçek değerler bu belgede ve depoda **yer almaz**. Vercel'de tümü *Sensitive* türündedir.

@@ -11,6 +11,7 @@ import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
 import { projectKeys } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
+import { prepareContext } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3100";
 const RUN = `e2e-ai-${Date.now().toString(36)}`;
@@ -31,7 +32,8 @@ const { data: post } = await service.from("blog_posts").insert({ title: "E2E AI 
 
 const browser = await chromium.launch();
 try {
-  const page = await browser.newPage();
+  const context = await prepareContext(await browser.newContext(), base);
+  const page = await context.newPage();
   await page.goto(`${base}/admin/login?next=/admin/blog`, { waitUntil: "networkidle" });
   await page.getByLabel("E-posta").fill(email);
   await page.getByLabel("Şifre", { exact: true }).fill(password);

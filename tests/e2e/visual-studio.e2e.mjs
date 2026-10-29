@@ -13,6 +13,7 @@ import { chromium } from "playwright-core";
 import sharp from "sharp";
 import { projectKeys } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
+import { prepareContext } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3100";
 const out = process.env.QA_OUT ?? mkdtempSync(join(tmpdir(), "persona-visual-"));
@@ -79,7 +80,7 @@ try {
     const mobile = w <= 1180;
     const { data: post } = await service.from("blog_posts").insert({ title: `E2E Görsel ${w}`, slug: `${RUN}-${w}`, content: { type: "blocks", version: 1, blocks: BLOCKS }, author_id: user.user.id }).select("id").single().throwOnError();
     postIds.push(post.id);
-    const context = await browser.newContext({ viewport: { width: w, height: h }, isMobile: w < 1024, hasTouch: w < 1024 });
+    const context = await prepareContext(await browser.newContext({ viewport: { width: w, height: h }, isMobile: w < 1024, hasTouch: w < 1024 }), base);
     const log = { plan: 0, images: [], media: [], imports: 0, failNext: { v2: true } };
     await context.addInitScript(({ source, key }) => {
       if (!sessionStorage.getItem("qa-seeded")) {

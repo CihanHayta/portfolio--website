@@ -16,6 +16,7 @@ import { chromium } from "playwright-core";
 import sharp from "sharp";
 import { projectKeys } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
+import { prepareContext } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3100";
 const out = process.env.QA_OUT ?? mkdtempSync(join(tmpdir(), "persona-write-"));
@@ -62,7 +63,7 @@ try {
     const h = w < 1024 ? 844 : 900;
     const mobile = w < 1024;
     console.log(`\n=== ${w}x${h}`);
-    const context = await browser.newContext({ viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile });
+    const context = await prepareContext(await browser.newContext({ viewport: { width: w, height: h }, isMobile: mobile, hasTouch: mobile }), base);
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: base });
     const log = { screenshots: [], template: [], similar: 0, mode: "busy" };
     await context.route("**/api/admin/ai/screenshots", async (route) => {
@@ -123,8 +124,13 @@ try {
     const analyze = studio.getByRole("button", { name: "Analiz Et ve Taslağı Hazırla" });
     const box = await analyze.boundingBox();
     check(box && box.y + box.height <= h && box.y >= 0, "metin eklendikten sonra 'Analiz Et' düğmesi kaydırmadan görünüyor (altta sabit)");
-    await page.waitForTimeout(1200);
-    const session = (await service.from("blog_studio_sessions").select("data").eq("post_id", postId).single()).data?.data;
+    // Kayıt gecikmeli (debounce + ağ): en fazla 15 sn yoklanır.
+    let session = null;
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      session = (await service.from("blog_studio_sessions").select("data").eq("post_id", postId).maybeSingle()).data?.data;
+      if (session?.notes === NOTES && session.shots?.length === 2 && session.approaches?.length === 3) break;
+      await page.waitForTimeout(500);
+    }
     check(session?.notes === NOTES && session.shots?.length === 2 && session.approaches?.length === 3, "not, 2 ekran görüntüsü ve yaklaşımlar Supabase'e kaydedildi");
     const files = (await service.storage.from("studio-sources").list(postId)).data ?? [];
     check(files.length === 2, "ekran görüntüleri özel kovada (2 dosya)");

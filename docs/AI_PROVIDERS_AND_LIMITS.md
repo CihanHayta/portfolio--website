@@ -107,6 +107,21 @@ Veri notları:
    - Gerekçe: 2026-10-26'da canlıda Gemini yoğunken dört model ~30 sn harcamış, OVH'ye 9 sn kalmış ve plan üretilememişti.
 7. **İsteğe bağlı adımlar akışı bozmaz:** AI Blog Stüdyosu'nda "kısa bölümleri genişletme" turu başarısız olursa hazır taslak atılmaz; notla incelemeye geçilir.
 
+### Yeniden doğrulama (2026-10-28, gerçek kısa istek, anahtar değeri yazdırılmadı)
+
+| Sağlayıcı | Sonuç |
+|---|---|
+| Gemini | `gemini-3.8-flash` yoğun ("high demand"); `gemini-3.6-flash` yanıt verdi (4,6 sn, Türkçe uygun). Görsel tarifi (`image-describe`) gerçek testte çalıştı. |
+| OVHcloud AI Endpoints (anonim) | `gpt-oss-120b` yanıt verdi (6,8 sn, Türkçe uygun); 22 model listelendi. |
+| LLM7 (anonim) | Yanıt verdi (1 sn) ama ticari kullanım şartları resmî olarak doğrulanamadı → **kapalı**. |
+| Pollinations metin (anonim) | Yanıt verdi (0,4 sn) ama şartlar doğrulanamadı → **kapalı**. |
+| Pollinations görsel | Tarif modunda gerçek üretim: 21 sn, 1344×768, filigranlı, düşük kalite. Görselden görsele ücretsiz değil (402). |
+| Groq, Cloudflare, OpenRouter, ComfyUI, Design Arena | Anahtar tanımlı değil (yerel ve Vercel): istek gönderilmez; panelde yalnızca kapalı "Anahtarı tanımlı olmayan servisler" bölümünde. |
+
+Vercel'de yalnızca `GEMINI_API_KEY` (Production) tanımlı; Preview'da Gemini yoktur, anahtarsız servisler kullanılır.
+
+**Zaman sınırı:** Gemini akışı ilk veriden sonra durursa istek eskiden 15 dakika takılıyordu (gerçek testte görüldü). Artık fetch ve her okuma son tarihle yarışır; bütçe aşılmaz ve sıradaki model/servis denenir.
+
 ### Canlı gözlemler (2026-10-26)
 
 - **Gemini:**
