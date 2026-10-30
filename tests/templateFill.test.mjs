@@ -226,3 +226,11 @@ test("SSS yoksa konuya özel SSS CTA'dan önce eklenir; zayıf ya da tek soru ek
   const cta = BLOCKS.cta.fields.find((field) => field.key === "buttonText");
   assert.equal(cta.default, "Benimle iletişime geç");
 });
+
+test("yardımcı alanlar (bölüm eşlemesi, SSS) eksik olsa da taslak şeması geçerli", async () => {
+  const { buildFillSchema } = await import("../lib/ai/templateFill.js");
+  const { checkSchema } = await import("../lib/ai/schemaCheck.js");
+  const schema = buildFillSchema([], { mapping: true, faq: true, extra: true, seo: false });
+  assert.ok(!schema.required.includes("sectionSources") && !schema.required.includes("faq"));
+  assert.deepEqual(checkSchema({ sections: {}, extraSections: [{ level: "2", heading: "Ek", paragraphs: ["p"] }], sectionSources: [{ slot: "s_x" }], faq: [{ question: "Soru?" }] }, schema), []);
+});

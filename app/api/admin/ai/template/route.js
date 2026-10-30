@@ -189,7 +189,9 @@ async function fill(admin, body) {
       schema: buildFillSchema(slots, { extra: extraShare > 0, coverage: hasSourceText, images: images.length > 0, mapping: hasSourceText, faq: !blocks.some((block) => block.type === "faq") }),
       temperature: 0.6,
       maxOutputTokens: 32_768,
-      budgetMs: 52_000,
+      budgetMs: 54_000,
+      // Gemini yanıt veremezse yedek servise (OVH, taslak ~22–39 sn) gerçekten süre kalsın.
+      backupReserveMs: 24_000,
     });
 
     const fields = normalizeFillFields(result.data, { categorySlugs: categories.map((category) => category.slug) });
@@ -290,7 +292,8 @@ async function expand(admin, body) {
       schema: buildFillSchema(selected, { seo: false, append: true }),
       temperature: 0.5,
       maxOutputTokens: 32_768,
-      budgetMs: 52_000,
+      budgetMs: 54_000,
+      backupReserveMs: 20_000,
     });
     const filled = applyFill(blocks, slotsFromResponse(result.data, selected), { links, keepIds: true });
     const text = contentText({ type: "blocks", version: 1, blocks: filled.blocks });

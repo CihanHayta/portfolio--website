@@ -138,20 +138,26 @@ try {
         await verify("Görseller Esc ile kapatıldı");
       }
 
-      // 4) AI Görselleri (görsel planı) aç → kapat
-      if (mobile) {
-        await tap(bar.getByRole("button", { name: "Görseller", exact: true }));
-        dialog = page.getByRole("dialog", { name: "Görseller" });
-        await dialog.waitFor();
-        await tap(dialog.getByRole("tab", { name: "Yeni üret" }));
-        await tap(dialog.getByRole("button", { name: /AI Görselleri/ }));
-      } else {
-        await page.getByRole("button", { name: "AI Görselleri" }).first().click();
-      }
-      dialog = page.getByRole("dialog", { name: "AI Görselleri" });
+      // 4) Görseller → ChatGPT ile elle üretim paneli → kapat (yeni bölüm ekranı)
+      if (mobile) await tap(bar.getByRole("button", { name: "Görseller", exact: true }));
+      else await page.getByRole("button", { name: "Görseller", exact: true }).click();
+      dialog = page.getByRole("dialog", { name: "Görseller" });
+      await dialog.locator("[data-section=cover]").waitFor({ timeout: 20_000 });
+      await tap(dialog.locator("[data-section=cover]").getByRole("button", { name: /Kapak oluştur \(ChatGPT\)/ }));
+      await dialog.getByTestId("handoff-panel").waitFor();
+      await tap(dialog.getByTestId("handoff-panel").getByRole("button", { name: "Paneli kapat" }));
+      await tap(dialog.getByRole("button", { name: "Bitti" }));
+      await verify("Görseller (ChatGPT paneli) kapatıldı");
+
+      // 4b) Sayfa ayarları → kapak → "Yapay zekâyla oluştur" penceresi → kapat
+      if (mobile) await tap(bar.getByRole("button", { name: "Ayarlar" }));
+      await tap(page.getByRole("tab", { name: "Sayfa Ayarları" }));
+      await tap(page.locator("section[aria-labelledby=set-cover]").getByRole("button", { name: "Yapay zekâyla oluştur" }));
+      dialog = page.getByRole("dialog", { name: "Kapak görselini yapay zekâyla oluştur" });
       await dialog.waitFor();
-      await tap(dialog.getByRole("button", { name: "Görsel stüdyosunu kapat" }));
-      await verify("AI Görselleri kapatıldı");
+      await tap(dialog.getByRole("button", { name: "Kapat" }));
+      if (mobile) await tap(page.getByRole("button", { name: "Ayarları kapat" }));
+      await verify("Yapay zekâyla oluştur penceresi kapatıldı");
 
       // 5) Bağlantı paneli: paragrafta bağlantı ekle → kaydet
       const text = page.locator('[data-block-id="t1ovl0001"]');
