@@ -20,7 +20,8 @@ import { saveSourceContext } from "@/lib/blog/sourceContext";
 import { useModalDialog } from "../useModalDialog";
 
 const CURRENT = "__current";
-const TIMEOUT_MS = 80_000;
+// Tur başına üst sınır: sunucu yedek servise (OVH) geçerse taslak ~2 dk sürebilir.
+const TIMEOUT_MS = 150_000;
 const MAX_EXPAND_ROUNDS = 2;
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const PRESET_WORDS = { short: 600, medium: 1000, long: 1500 };

@@ -32,7 +32,9 @@ import { instantiateTemplate, templateByKey } from "@/lib/blog/blocks/templates"
 import { readApproaches } from "@/lib/ai/approaches";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// Fluid compute açık (Hobby'de en fazla 300 sn, ücretsiz). Gemini yanıt veremezse yedek
+// servis (OVH, anonim) gerçek boyutlu taslağı ~60–80 sn'de yazabiliyor (2026-10-30 Preview).
+export const maxDuration = 150;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_SOURCE_CHARS = 36_000;
@@ -189,9 +191,9 @@ async function fill(admin, body) {
       schema: buildFillSchema(slots, { extra: extraShare > 0, coverage: hasSourceText, images: images.length > 0, mapping: hasSourceText, faq: !blocks.some((block) => block.type === "faq") }),
       temperature: 0.6,
       maxOutputTokens: 32_768,
-      budgetMs: 54_000,
-      // Gemini yanıt veremezse yedek servise (OVH, taslak ~22–39 sn) gerçekten süre kalsın.
-      backupReserveMs: 24_000,
+      budgetMs: 135_000,
+      // Gemini'ye ~55 sn; yanıt veremezse yedek servise (OVH) gerçekten süre kalsın.
+      backupReserveMs: 80_000,
     });
 
     const fields = normalizeFillFields(result.data, { categorySlugs: categories.map((category) => category.slug) });
@@ -292,8 +294,8 @@ async function expand(admin, body) {
       schema: buildFillSchema(selected, { seo: false, append: true }),
       temperature: 0.5,
       maxOutputTokens: 32_768,
-      budgetMs: 54_000,
-      backupReserveMs: 20_000,
+      budgetMs: 135_000,
+      backupReserveMs: 75_000,
     });
     const filled = applyFill(blocks, slotsFromResponse(result.data, selected), { links, keepIds: true });
     const text = contentText({ type: "blocks", version: 1, blocks: filled.blocks });
