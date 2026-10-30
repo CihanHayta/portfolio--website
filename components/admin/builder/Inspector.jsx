@@ -84,6 +84,52 @@ function BlockSettings({ block, onChange, onRemove }) {
   );
 }
 
+// Yazının teması: yayımlanmış sayfa ve editör tuvali bu tonda görünür. "Koyu
+// temayı denemek ister misin?" önerisi bir kez gösterilir; reddedilirse bu
+// tarayıcıda tekrar çıkmaz (yalnızca kişisel kolaylık; tema yazıyla kaydedilir).
+const THEME_HINT_KEY = "persona-dark-theme-hint";
+function ThemeSettings({ theme = "light", onUpdate }) {
+  const [hint, setHint] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.localStorage.getItem(THEME_HINT_KEY) !== "kapalı";
+    } catch {
+      return false;
+    }
+  });
+  const dismiss = () => {
+    setHint(false);
+    try {
+      window.localStorage.setItem(THEME_HINT_KEY, "kapalı");
+    } catch {
+      // gizli pencere: öneri yalnızca bu oturumda kapanır
+    }
+  };
+  return (
+    <section className={styles.section} aria-labelledby="set-theme">
+      <h3 id="set-theme" className={styles.sectionTitle}>Görünüm</h3>
+      <div className={styles.segmented} role="radiogroup" aria-labelledby="set-theme">
+        {[["light", "Açık tema"], ["dark", "Koyu tema"]].map(([value, label]) => (
+          <label key={value} className={styles.segment} data-checked={theme === value || undefined}>
+            <input type="radio" name="post-theme" value={value} checked={theme === value} onChange={() => onUpdate({ theme: value })} />
+            <span>{label}</span>
+          </label>
+        ))}
+      </div>
+      <p className={styles.hint}>Yazının herkese açık sayfası seçilen temada görünür. Blog listesi ziyaretçinin cihaz ayarını izler.</p>
+      {hint && theme === "light" ? (
+        <div className={styles.themeHint} role="status">
+          <span>Yeni koyu temayı denemek ister misin? Siyah zemin, beyaz başlıklar ve turuncu vurgular.</span>
+          <span className={styles.themeHintActions}>
+            <button type="button" className={styles.btnSmall} data-primary="true" onClick={() => { onUpdate({ theme: "dark" }); dismiss(); }}>Koyu temayı dene</button>
+            <button type="button" className={styles.btnSmall} onClick={dismiss}>Hayır, teşekkürler</button>
+          </span>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 // Arama sonucunda görünen uzunluklar için öneri: başlık ~60, açıklama 120–155
 // karakter. Sınırlar zorunlu değildir; yalnızca dışına çıkıldığında uyarır.
 function seoHint(length, min, max) {
@@ -211,6 +257,8 @@ function PageSettings({ form, meta, state, categories, siteHost, postId, onUpdat
         />
         <p className={styles.counter}>{form.excerpt.length}/200</p>
       </section>
+
+      <ThemeSettings theme={form.theme} onUpdate={onUpdate} />
 
       <section className={styles.section} aria-labelledby="set-cover">
         <h3 id="set-cover" className={styles.sectionTitle}>Kapak Görseli</h3>

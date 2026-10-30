@@ -184,6 +184,7 @@ export default function Canvas({
   excerpt,
   cover,
   coverAlt,
+  theme = "light", // yazının teması: tuval yayımlanmış sayfayla aynı tonda görünür
   device,
   preview,
   selectedId,
@@ -250,7 +251,7 @@ export default function Canvas({
 
   return (
     <div className={styles.canvas} data-device={device} onClick={() => onSelect(null)}>
-      <article ref={paperRef} className={styles.paper} data-preview={preview} aria-label="Yazı tuvali">
+      <article ref={paperRef} className={styles.paper} data-preview={preview} data-tone={theme} aria-label="Yazı tuvali">
         <header className={styles.paperHead}>
           {preview ? (
             <h1 className={styles.titleInput}>{title || "Başlıksız yazı"}</h1>

@@ -946,6 +946,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           excerpt={form.excerpt}
           cover={form.cover}
           coverAlt={form.coverAlt}
+          theme={form.theme}
           device={device}
           preview={preview}
           selectedId={selectedId}

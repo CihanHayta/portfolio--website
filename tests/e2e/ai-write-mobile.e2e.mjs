@@ -83,6 +83,10 @@ try {
     postId = new URL(page.url()).searchParams.get("kaydedildi");
     const [row] = await sql(ref, `select title, status, jsonb_array_length(content->'blocks') as blocks from public.blog_posts where id = '${postId}'`);
     check(row?.status === "draft" && row.blocks >= 3 && row.title === title, `yenilemeden sonra taslak veritabanında (${row?.blocks} blok, taslak)`);
+    // Gerçek AI çıktısı: konuya özel SSS var ve CTA dili tekil birinci şahıs.
+    const [shape] = await sql(ref, `select exists(select 1 from jsonb_array_elements(content->'blocks') b where b->>'type' = 'faq' and jsonb_array_length(b->'props'->'items') >= 2) as has_faq, content_text ~* '(bizimle|ekibimiz|bize ulaşın)' as plural_cta from public.blog_posts where id = '${postId}'`);
+    check(shape?.has_faq === true, "gerçek AI taslağında konuya özel SSS bloğu var (en az 2 soru)");
+    check(shape?.plural_cta === false, "taslakta çoğul/kurumsal CTA dili yok ('bizimle', 'ekibimiz')");
   }
   check(errors.length === 0, `JS hatası yok ${errors.join(" | ").slice(0, 400)}`);
 } catch (error) {

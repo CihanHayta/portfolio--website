@@ -23,6 +23,7 @@ import {
   sourceOutline,
   targetWordsFor,
   templateSlots,
+  withFaq,
 } from "@/lib/ai/templateFill";
 import { verifiedSectionMap } from "@/lib/blog/blocks/imageSections";
 import { uniqueSlug } from "@/lib/ai/uniqueSlug";
@@ -185,7 +186,7 @@ async function fill(admin, body) {
       db: admin.supabase,
       system: FILL_SYSTEM,
       prompt: buildFillPrompt({ brief, template, slots, links, categories, sources, targetWords: Math.min(targetWords, FIRST_PASS_MAX_WORDS), extraShare, images, related, angle, approaches }),
-      schema: buildFillSchema(slots, { extra: extraShare > 0, coverage: hasSourceText, images: images.length > 0, mapping: hasSourceText }),
+      schema: buildFillSchema(slots, { extra: extraShare > 0, coverage: hasSourceText, images: images.length > 0, mapping: hasSourceText, faq: !blocks.some((block) => block.type === "faq") }),
       temperature: 0.6,
       maxOutputTokens: 32_768,
       budgetMs: 52_000,
@@ -193,6 +194,7 @@ async function fill(admin, body) {
 
     const fields = normalizeFillFields(result.data, { categorySlugs: categories.map((category) => category.slug) });
     const filled = applyFill(blocks, slotsFromResponse(result.data, slots), { links, extraSections: result.data?.extraSections });
+    filled.blocks = withFaq(filled.blocks, result.data?.faq);
     if (!fields || filled.filled === 0) {
       throw new AiError("Gemini şablonu dolduramadı. Yeniden dene.", "invalid");
     }

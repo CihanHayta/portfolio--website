@@ -206,3 +206,23 @@ test("şemaya göre gelen yanıt slot listesine çevrilir ve uygulanır", () => 
   assert.deepEqual(faq.props.items.map(({ question, answer }) => ({ question, answer })), [{ question: "Soru mu?", answer: "Evet, cevap." }]);
   assert.deepEqual(slotsFromResponse(null, slots), []);
 });
+
+test("SSS yoksa konuya özel SSS CTA'dan önce eklenir; zayıf ya da tek soru eklenmez; CTA tekil birinci şahıs", async () => {
+  const { withFaq, FILL_SYSTEM, buildFillSchema } = await import("../lib/ai/templateFill.js");
+  const { createBlock } = await import("../lib/blog/blocks/model.js");
+  const { BLOCKS } = await import("../lib/blog/blocks/registry.js");
+  const blocks = [createBlock("heading", { text: "Bütçe", level: "2" }), createBlock("cta", {})];
+  const faq = [
+    { question: "Test bütçesi ne kadar sürmeli?", answer: "Genellikle iki hafta; bu süre farklı kitle ve mesajları karşılaştırmaya yeter." },
+    { question: "Bütçeyi ne zaman artırmalıyım?", answer: "Dönüşüm takibi kurulduktan ve maliyet istikrar kazandıktan sonra kademeli artır." },
+  ];
+  const out = withFaq(blocks, faq);
+  assert.deepEqual(out.map((block) => block.type), ["heading", "faq", "cta"]);
+  assert.equal(out[1].props.items[0].question, "Test bütçesi ne kadar sürmeli?");
+  assert.equal(withFaq(blocks, faq.slice(0, 1)).length, 2, "tek soru eklenmez");
+  assert.equal(withFaq([...blocks, createBlock("faq", {})], faq).filter((block) => block.type === "faq").length, 1, "var olan SSS çoğaltılmaz");
+  assert.match(FILL_SYSTEM, /Benimle iletişime geç/);
+  assert.ok(buildFillSchema([], { faq: true }).properties.faq);
+  const cta = BLOCKS.cta.fields.find((field) => field.key === "buttonText");
+  assert.equal(cta.default, "Benimle iletişime geç");
+});
