@@ -139,7 +139,7 @@ function ServiceRow({ service, fields, editable, onRefresh }) {
         <div><dt>Aynı anda / deneme</dt><dd>{service.limit.maxConcurrent} iş · {service.limit.maxAttempts} deneme</dd></div>
         <div><dt>Son başarılı çağrı</dt><dd>{time(service.health.lastOkAt)}</dd></div>
         <div><dt>Son hata</dt><dd>{service.health.lastErrorKind ? `${KIND[service.health.lastErrorKind] ?? service.health.lastErrorKind} · ${time(service.health.lastErrorAt)}` : "—"}</dd></div>
-        <div><dt>Görevler</dt><dd>{service.tasks.join(", ")}</dd></div>
+        <div><dt>Görevler</dt><dd>{service.tasks.join(", ")}{service.taskNotes ? Object.entries(service.taskNotes).map(([task, note]) => <span key={task} className={styles.taskNote}> · {task}: {note}</span>) : null}</dd></div>
         <div><dt>Ücret riski</dt><dd>{service.billingNote}{service.billingVerified === false ? " — ücretsiz plan onayı bekleniyor (rotasyon dışı)" : service.billingVerified ? " — ücretsiz plan onaylandı" : ""}</dd></div>
         <div><dt>Geçiş sırası</dt><dd>{service.priority ?? "—"}</dd></div>
         {service.category === "text" ? <div><dt>Türkçe testi</dt><dd>{service.turkish === "ok" ? "geçti (gerçek istek)" : service.turkish === "weak" ? "zayıf — içerik görevlerine gönderilmez" : "henüz test edilmedi"}</dd></div> : null}
@@ -216,29 +216,31 @@ export default function AiServicesPanel({ initial }) {
         </p>
       </div>
 
-      {data.available.text === 0 || data.available.image === 0 ? (
+      {data.available.text === 0 ? (
         <p className={styles.banner} data-tone="warn" role="status">
           <CircleAlert size={16} aria-hidden="true" />
-          {data.available.text === 0 ? "Şu anda kullanılabilir ücretsiz METİN servisi yok. " : ""}
-          {data.available.image === 0 ? "Şu anda kullanılabilir ücretsiz GÖRSEL servisi yok. " : ""}
-          Ücretli servise geçilmez; taslaklar korunur. Limitleri, anahtarları ya da ücret onaylarını kontrol et.
+          Şu anda kullanılabilir ücretsiz METİN servisi yok. Ücretli servise geçilmez; taslaklar korunur. Limitleri ve anahtarları kontrol et.
         </p>
-      ) : null}
-
-      {data.services.some((service) => service.provider === "cloudflare" && service.configured) ? (
-        <section className={styles.neurons} aria-label="Cloudflare Neuron">
-          <Meter label="Cloudflare Neuron (TAHMİN; metin + görsel ortak, UTC gününe göre)" used={Math.round(data.neurons.used)} limit={data.neurons.limit} note={`Cloudflare Neuron'u API'de bildirmez; resmî fiyatla hesaplanır. Ücretsiz üst sınır ${number(data.neurons.ceiling)}/gün.`} />
-        </section>
       ) : null}
 
       {groups.map(([title, list]) => (
         <section key={title} aria-label={title}>
           <h2 className={styles.groupTitle}>{title}</h2>
-          <ul className={styles.services}>
-            {list.map((service) => (
-              <ServiceRow key={service.key} service={service} fields={data.fields} editable={data.store.editable} onRefresh={refresh} />
-            ))}
-          </ul>
+          {list.length ? (
+            <ul className={styles.services}>
+              {list.map((service) => (
+                <ServiceRow key={service.key} service={service} fields={data.fields} editable={data.store.editable} onRefresh={refresh} />
+              ))}
+            </ul>
+          ) : title === "Görsel servisleri" ? (
+            <p className={styles.note} data-testid="no-image-service">
+              Otomatik ücretsiz görsel servisi yok. Gemini&apos;nin görsel modelleri ücretsiz katmanda kapalı; Cloudflare,
+              ComfyUI ve Pollinations görseli kullanılmıyor. Kapak ve bölüm görsellerini editördeki hazır istemle
+              ChatGPT&apos;de kendi hesabınla elle üretip yüklersin; bu otomatik bir üretim değildir.
+            </p>
+          ) : (
+            <p className={styles.note}>Yapılandırılmış servis yok.</p>
+          )}
         </section>
       ))}
 

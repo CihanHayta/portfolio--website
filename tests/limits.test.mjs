@@ -226,9 +226,9 @@ test("Görsel limiti metinden ayrıdır; görsel limiti dolunca üretim durur ve
   await store.setOverride("image:pollinations", { dailyImages: 1 });
   const png = await sharp(Buffer.from(Array.from({ length: 64 * 64 * 3 }, (_, i) => (i * 13) % 256)), { raw: { width: 64, height: 64, channels: 3 } }).png().toBuffer();
   const fetchImpl = async () => new Response(png, { status: 200, headers: { "x-model-used": "sana" } });
-  const ok = await generateImage({ prompt: "a", env: {}, fetchImpl, store, log: () => {} });
+  const ok = await generateImage({ prompt: "a", env: {}, fetchImpl, store, log: () => {}, order: ["pollinations"] });
   assert.equal(ok.provider, "pollinations");
-  await assert.rejects(generateImage({ prompt: "b", env: {}, fetchImpl, store, log: () => {} }), /uygulama günlük limiti doldu/);
+  await assert.rejects(generateImage({ prompt: "b", env: {}, fetchImpl, store, log: () => {}, order: ["pollinations"] }), /uygulama günlük limiti doldu/);
   const snapshot = await store.snapshot();
   assert.equal(snapshot.today["image:pollinations"].images, 1);
   assert.equal(snapshot.today["text:gemini"], undefined);
@@ -237,7 +237,7 @@ test("Görsel limiti metinden ayrıdır; görsel limiti dolunca üretim durur ve
 test("Bozuk görsel çıktısında görsel sayacı geri alınır, istek sayılı kalır", async () => {
   const store = createTestStore();
   const fetchImpl = async () => new Response(Buffer.from("bozuk ".repeat(300)), { status: 200 });
-  await assert.rejects(generateImage({ prompt: "c", env: {}, fetchImpl, store, log: () => {} }));
+  await assert.rejects(generateImage({ prompt: "c", env: {}, fetchImpl, store, log: () => {}, order: ["pollinations"] }));
   const snapshot = await store.snapshot();
   assert.deepEqual(snapshot.today["image:pollinations"], { requests: 1, tokens: 0, images: 0 });
 });

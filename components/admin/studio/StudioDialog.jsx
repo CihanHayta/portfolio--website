@@ -1,5 +1,6 @@
 "use client";
 
+import { sourcesFromReader } from "@/lib/blog/meta";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, CircleAlert, ClipboardPaste, ImagePlus, LoaderCircle, MinusCircle, RefreshCw, Wand2, X } from "lucide-react";
 import { contentHeadings } from "@/lib/blog/blocks/model";
@@ -747,10 +748,17 @@ export default function StudioDialog({
   const finish = (result = draft.result, chosen = plan) => {
     const read = cache.current.source?.source ?? null;
     const cover = coverItem ? { media: { id: coverItem.mediaId ?? null, url: coverItem.url, width: coverItem.width ?? null, height: coverItem.height ?? null }, alt: coverItem.alt.trim() } : null;
+    // Kaynakça: yalnızca gerçekten okunan web sayfaları (sıra, metindeki [n] atıflarıyla aynı).
+    const bibliography = sourcesFromReader(
+      (result.sources ?? [])
+        .filter((source) => source.kind === "url" && source.url)
+        .map((source) => (read && read.url === source.url ? { ...source, siteName: read.siteName, sectionUrl: read.sectionUrl, sectionLabel: read.sectionLabel } : source))
+    );
     onApply({
       blocks: result.blocks,
       fields: result.fields,
       cover,
+      bibliography,
       templateKey: chosen?.key ?? null,
       notes: {
         words: result.stats.words,

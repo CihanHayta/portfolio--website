@@ -4,7 +4,6 @@ import {
   buildReferencePrompt,
   buildVisualPlanPrompt,
   draftSections,
-  duckDuckGoImagesUrl,
   imageSearchQuery,
   normalizeVisualPlan,
   visualBudget,
@@ -101,13 +100,11 @@ test("Seçilen görseller doğru başlığın altına eklenir; metin blokları k
   assert.equal(BLOCKS.length, 9, "girdi dizisi değişmez");
 });
 
-test("DuckDuckGo bağlantısı bölüm ve başlıktan sorgu oluşturur (yalnızca kullanıcı açar)", () => {
+test("görsel ifadesi bölüm ve başlıktan oluşur (DuckDuckGo bağlantısı yok)", async () => {
   const query = imageSearchQuery({ target: "h2", heading: "Manuel ve otomatik teklif karşılaştırması" }, "Meta reklam bütçesi");
   assert.equal(query, "manuel otomatik teklif karşılaştırması meta reklam bütçesi");
-  const url = new URL(duckDuckGoImagesUrl(query));
-  assert.equal(url.host, "duckduckgo.com");
-  assert.equal(url.searchParams.get("q"), query);
-  assert.equal(url.searchParams.get("iax"), "images");
+  const visualPlan = await import("../lib/ai/visualPlan.js");
+  assert.equal(visualPlan.duckDuckGoImagesUrl, undefined);
 });
 
 test("Referans istemi kopyalamayı, filigranı ve logoyu açıkça dışlar; format oranı belirler", () => {

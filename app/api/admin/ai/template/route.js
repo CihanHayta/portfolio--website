@@ -150,7 +150,7 @@ async function fill(admin, body) {
       const page = await fetchPage(sourceUrl);
       const article = extractArticle(page.html, page.finalUrl);
       const { text, truncated, missingFrom } = sourceToText(article, MAX_SOURCE_CHARS);
-      sources.unshift({ kind: "url", url: article.canonicalUrl || page.finalUrl, title: article.title, text, truncated, missingFrom, wordCount: article.wordCount });
+      sources.unshift({ kind: "url", url: article.canonicalUrl || page.finalUrl, title: article.title, siteName: article.siteName, sectionUrl: article.section?.url, sectionLabel: article.section?.label, text, truncated, missingFrom, wordCount: article.wordCount });
     }
 
     const now = new Date().toISOString();
@@ -232,7 +232,7 @@ async function fill(admin, body) {
       coverage,
       imagePlacements,
       source: sources[0] ? { url: sources[0].url, title: sources[0].title } : null,
-      sources: sources.map(({ kind, url, title, unreadable, truncated, missingFrom, wordCount }) => ({ kind, url, title, unreadable, truncated, missingFrom, wordCount })),
+      sources: sources.map(({ kind, url, title, siteName, sectionUrl, sectionLabel, unreadable, truncated, missingFrom, wordCount }) => ({ kind, url, title, siteName, sectionUrl, sectionLabel, unreadable, truncated, missingFrom, wordCount })),
       model: result.model,
     });
   } catch (error) {

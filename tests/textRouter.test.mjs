@@ -274,3 +274,13 @@ test("Anahtarsız servisin gövdesi takılırsa (iptali yok sayan akış) bütç
   await assert.rejects(run({ env: {}, fetchImpl: async () => stalled(), order: ["ovh"], store: createTestStore(), budgetMs: 1500 }));
   assert.ok(Date.now() - started < 4000, `süre sınırı uygulandı (${Date.now() - started} ms)`);
 });
+
+test("Varsayılan metin sırası: Gemini önce, Cloudflare iptal, OVH taslakta yalnızca yedek notlu", async () => {
+  const { TEXT_ORDER, CANCELLED, TEXT_PROVIDERS, IMAGE_ORDER } = await import("../lib/ai/freePolicy.js");
+  assert.equal(TEXT_ORDER[0], "gemini");
+  assert.equal(TEXT_ORDER.includes("cloudflare"), false);
+  assert.ok(CANCELLED.has("text:cloudflare") && CANCELLED.has("image:pollinations"));
+  assert.deepEqual(IMAGE_ORDER, []);
+  assert.ok(TEXT_ORDER.indexOf("ovh") > TEXT_ORDER.indexOf("gemini"));
+  assert.match(TEXT_PROVIDERS.ovh.taskNotes.draft, /yedek/);
+});

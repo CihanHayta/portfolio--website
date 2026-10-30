@@ -47,6 +47,7 @@ import { adoptNewContext, loadVisualState } from "@/lib/blog/sourceContext";
 import { PALETTE_ITEMS } from "@/lib/blog/blocks/palette";
 import { STATE_LABELS, formatDateTime, postState } from "@/lib/blog/format";
 import { slugify } from "@/lib/blog/slug";
+import { mergeSources, readMeta, sourcesReady } from "@/lib/blog/meta";
 import ConfirmDialog from "../ConfirmDialog";
 import Toaster from "../Toaster";
 import { toast } from "../toast";
@@ -167,6 +168,10 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
     seoTitle: post?.seo_title ?? "",
     seoDescription: post?.seo_description ?? "",
     canonicalUrl: post?.canonical_url ?? "",
+    // content.meta: tema ve kaynakça yazıyla birlikte Supabase'de kalıcıdır.
+    theme: readMeta(post?.content).theme ?? "light",
+    sources: readMeta(post?.content).sources ?? [],
+    sourcesWaived: readMeta(post?.content).sourcesWaived === true,
   }));
   const [meta, setMeta] = useState({
     status: post?.status ?? "draft",
@@ -242,7 +247,12 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
       title: current.title,
       slug: slugify(current.slug) || savedSlugRef.current,
       excerpt: current.excerpt,
-      content: { type: "blocks", version: 1, blocks: blocksRef.current },
+      content: {
+        type: "blocks",
+        version: 1,
+        blocks: blocksRef.current,
+        meta: { theme: current.theme, sources: current.sources, sourcesWaived: current.sourcesWaived },
+      },
       categoryId: current.categoryId || null,
       tags: current.tags,
       coverMediaId: current.cover?.id ?? null,
@@ -508,6 +518,8 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
         ...(fields.categoryId ? { categoryId: fields.categoryId } : {}),
         // Kapak yalnızca stüdyoda seçildiyse değişir; mevcut kapak korunur.
         ...(filled.cover ? { cover: filled.cover.media, coverAlt: filled.cover.alt } : {}),
+        // Okunan kaynaklar kaynakçaya eklenir (var olanlar korunur, tekrar yazılmaz).
+        ...(filled.bibliography?.length ? { sources: mergeSources(formRef.current.sources, filled.bibliography), sourcesWaived: false } : {}),
       },
       { slugTouched: true }
     );

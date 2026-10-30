@@ -370,3 +370,8 @@
     animation-duration: 2.4s;
   }
 }
+
+/* Görev bazlı doğrulama notu (ör. "taslak: yalnızca yedek"). */
+.taskNote {
+  color: var(--blog-ink-soft);
+}

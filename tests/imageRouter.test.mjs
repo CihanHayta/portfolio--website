@@ -31,7 +31,10 @@ function makeFetch(handler) {
 }
 // Cloudflare (hesaba göre ücret riski) testte açıkça "ücretsiz planda" onaylanır.
 const ATTESTED = { "image:cloudflare": { billingVerified: true } };
-const run = (options) => generateImage({ prompt: "minimal flat illustration of a marketing dashboard", log: () => {}, sleep: async () => {}, store: createTestStore({ overrides: ATTESTED }), ...options });
+// Adaptör testleri (mock): üretimde otomatik görsel sırası BOŞTUR; burada
+// adaptörlerin davranışı eski sırayla açıkça denenir.
+const ADAPTER_ORDER = ["comfyui", "cloudflare", "pollinations"];
+const run = (options) => generateImage({ prompt: "minimal flat illustration of a marketing dashboard", log: () => {}, sleep: async () => {}, store: createTestStore({ overrides: ATTESTED }), order: ADAPTER_ORDER, ...options });
 
 beforeEach(() => {
   resetHealth();
@@ -168,10 +171,10 @@ test("ComfyUI erişilemezse güvenli biçimde sıradaki ücretsiz sağlayıcıya
 });
 
 test("Canlı ortamda korumasız ComfyUI kullanılmaz", () => {
-  const onVercel = listImageProviders({ ...COMFY, VERCEL: "1" }).find((provider) => provider.id === "comfyui");
+  const onVercel = listImageProviders({ ...COMFY, VERCEL: "1" }, ADAPTER_ORDER).find((provider) => provider.id === "comfyui");
   assert.equal(onVercel.available, false);
   assert.match(onVercel.reason, /https ve COMFYUI_TOKEN/);
-  const secured = listImageProviders({ COMFYUI_URL: "https://comfy.example.com", COMFYUI_CHECKPOINT: "a.safetensors", COMFYUI_TOKEN: "x", VERCEL: "1" }).find((provider) => provider.id === "comfyui");
+  const secured = listImageProviders({ COMFYUI_URL: "https://comfy.example.com", COMFYUI_CHECKPOINT: "a.safetensors", COMFYUI_TOKEN: "x", VERCEL: "1" }, ADAPTER_ORDER).find((provider) => provider.id === "comfyui");
   assert.equal(secured.available, true);
 });
 
@@ -199,4 +202,22 @@ test("Ücret riski doğrulanmamış Cloudflare görsel üretimine girmez; Pollin
   assert.equal(result.provider, "pollinations");
   assert.equal(calls.filter((call) => call.provider === "cloudflare").length, 0);
   assert.match(result.attempts.find((attempt) => attempt.provider === "cloudflare").skipped, /Ücret riski doğrulanmadı/);
+});
+
+test("Üretimde otomatik görsel servisi yok: hiçbir ağ isteği yapılmaz, açık 'ChatGPT' hatası döner", async () => {
+  let calls = 0;
+  const fetchImpl = async () => {
+    calls += 1;
+    throw new Error("çağrılmamalıydı");
+  };
+  await assert.rejects(
+    generateImage({ prompt: "a", env: { CLOUDFLARE_ACCOUNT_ID: "x", CLOUDFLARE_API_TOKEN: "y" }, fetchImpl, log: () => {}, store: createTestStore({ overrides: ATTESTED }) }),
+    (error) => error.kind === "config" && /ChatGPT/.test(error.message)
+  );
+  await assert.rejects(
+    generateImage({ prompt: "a", provider: "pollinations", env: {}, fetchImpl, log: () => {}, store: createTestStore({ overrides: ATTESTED }) }),
+    (error) => error.kind === "config"
+  );
+  assert.equal(calls, 0);
+  assert.deepEqual(listImageProviders({}), []);
 });

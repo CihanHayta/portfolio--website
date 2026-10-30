@@ -34,8 +34,9 @@ export async function POST(request) {
       try {
         const out = await readSource(url, { onEvent: (event) => send({ type: "stage", ...event }), only: provider === "auto" ? null : provider });
         if (out.source) {
-          const { provider, url: finalUrl, title, text, truncated, images, wordCount } = out.source;
-          send({ type: "result", source: { kind: "url", provider, url: finalUrl, title, text, truncated, images, wordCount }, attempts: out.attempts });
+          const { provider, url: finalUrl, title, siteName, sectionUrl, sectionLabel, text, truncated, images, wordCount } = out.source;
+          // siteName/sectionUrl kaynakça içindir; yalnızca sayfada gerçekten bulunanlar gelir.
+          send({ type: "result", source: { kind: "url", provider, url: finalUrl, title, siteName, sectionUrl, sectionLabel, text, truncated, images, wordCount }, attempts: out.attempts });
         } else {
           send({
             type: "fallback",

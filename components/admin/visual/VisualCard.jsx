@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ExternalLink, ImagePlus, LoaderCircle, RefreshCw, Sparkles, Upload, X, ZoomIn } from "lucide-react";
-import { REFERENCE_FORMATS, REFERENCE_OPTIONS, VISUAL_KINDS, duckDuckGoImagesUrl, imageSearchQuery } from "@/lib/ai/visualPlan";
+import { REFERENCE_FORMATS, REFERENCE_OPTIONS, VISUAL_KINDS, imageSearchQuery } from "@/lib/ai/visualPlan";
 import styles from "./visual.module.css";
 
 const CHOICES = [
@@ -214,10 +214,6 @@ export default function VisualCard({ item, card, images, sections, sourceImages,
           ) : null}
         </div>
       ) : null}
-
-      <a className={styles.link} href={duckDuckGoImagesUrl(query)} target="_blank" rel="noopener noreferrer">
-        <ExternalLink size={15} aria-hidden="true" /> DuckDuckGo&apos;da görsel ara
-      </a>
 
       <label className={styles.label}>
         Alt metin {card.selected ? "(zorunlu)" : ""}

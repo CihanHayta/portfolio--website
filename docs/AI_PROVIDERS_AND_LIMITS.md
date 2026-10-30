@@ -1,6 +1,33 @@
 # AI sağlayıcıları, ücretsiz rotasyon ve limitler
 
-Son doğrulama: **2026-10-26** (gerçek istekle ve canlıda). Kapsam: sağlayıcı yoklaması, Preview ve canlı uçtan uca testler.
+Son doğrulama: **2026-10-30** (görev bazlı gerçek istek, `scripts/ai/probe-tasks.mjs`). Önceki: 2026-10-26 (canlı uçtan uca).
+
+## 2026-10-30 değişiklikleri (kullanıcı kararı)
+
+- **Otomatik görsel üretimi kapatıldı** (`IMAGE_ORDER = []`).
+  - ComfyUI ve Cloudflare Workers AI (metin ve görsel) iptal edildi.
+  - Pollinations görselinin ücretsiz ve ticari kullanım şartı doğrulanamadı; referanslı düzenleme 402 (ücret) istiyor.
+  - Gemini görsel modelleri ücretsiz katmanda yok: [fiyat sayfası](https://ai.google.dev/gemini-api/docs/pricing), tüm görsel modelleri için "Free tier: Not available".
+  - Hugging Face ücretsiz hesaplara aylık kredi vermiyor: [fiyat](https://huggingface.co/docs/inference-providers/pricing), "Free Users: None".
+- **Yeni görseller elle üretilir.** Kapak ve bölüm görselleri editördeki hazır istemle kullanıcının kendi ChatGPT hesabında üretilip yüklenir. Arayüz bunu "elle üretim" olarak etiketler; otomatik üretim gibi gösterilmez.
+- **Kod tarafı.**
+  - Adaptör dosyaları duruyor ama hiçbir rota ve arayüz onları çağırmıyor. Açıkça istenen sağlayıcı da sırada değilse çalışmaz (`generateImage({ order })`, birim testli).
+  - "Klasik sihirbaz" girişi ve DuckDuckGo arama bağlantısı kaldırıldı.
+  - Ollama ve Vercel AI Gateway yok.
+
+### Görev bazlı gerçek yoklama (2026-10-30)
+
+Uygulamanın kendi yönlendiricisi (`generateJsonRouted`) kullanıldı. Her görev için bir kısa istek gönderildi; müşteri verisi yoktu. Sayaçlar bellekteki test deposuna yazıldı.
+
+| Görev | Gemini (gemini-3.6-flash) | OVH (Llama-3.3-70B, anonim) |
+|---|---|---|
+| Kaynak analizi | ✓ 11,6 sn | ✓ 2,3 sn |
+| Taslak (başlık, SEO, gövde; hedef 220 sözcük) | ✓ 156 sözcük, meta 143 kr | ✗ iki denemede de kısa: 117 ve 118 sözcük. Yalnızca **yedek**; genişletme turu tamamlar, açık taslak notunda görünür. |
+| Genişletme | ✓ | ✓ (hedefin altında ama kabul aralığında) |
+| Benzerlik | ✓ | ✓ |
+| Görsel planı | ✓ 6,2 sn | ✓ 5,3 sn. İlk denemede anonim hız sınırı (dakikada 2 istek), 75 sn sonra geçti. |
+
+**Sıra:** Gemini birincil, OVH yedek. LLM7 ve Pollinations metin varsayılan olarak kapalı (şartlar doğrulanmadı). Groq ve OpenRouter'ın anahtarı yok, istek gönderilmez.
 
 Kodda tek doğruluk kaynağı vardır:
 
@@ -39,7 +66,7 @@ Testler `scripts/ai/probe-providers.mjs` ile yapıldı: her adaya tek bir kısa 
 |---|---|---|---|---|---|
 | 1 | Google Gemini | gemini-3.8/3.6-flash, 3-flash-preview, 3.5/3.1-flash-lite | Ücretsiz katman, kota hesap bazlı ([fiyat](https://ai.google.dev/gemini-api/docs/pricing)) | ✓ gemini-3.6-flash, doğru Türkçe (11,6 sn). 3.8-flash ilk bayt sınırında (10 sn) kesildi | Açık |
 | 2 | Groq | gpt-oss-120b, qwen3.8-27b, gpt-oss-20b | Model başına 30 RPM, 1.000 RPD, 8K TPM ([limitler](https://console.groq.com/docs/rate-limits)) | Anahtar eksik, test edilemedi | Açık ama onay bekliyor |
-| 3 | Cloudflare Workers AI | gpt-oss-120b, llama-3.3-70b | Günde 10.000 Neuron, görsellerle ortak ([fiyat](https://developers.cloudflare.com/workers-ai/platform/pricing/)) | Anahtar eksik, test edilemedi | Açık ama onay bekliyor |
+| — | Cloudflare Workers AI | — | — | **İptal (2026-10-30, kullanıcı kararı)** | Sırada yok |
 | 4 | OpenRouter | `openrouter/free` | `:free` modeller, model başına günde 50 istek | Anahtar eksik, test edilemedi | Açık (anahtar gerekir) |
 | 5 | OVHcloud AI Endpoints (anonim) | **Llama-3.3-70B önce**, gpt-oss-120b | IP ve model başına dakikada 2 istek ([belge](https://docs.ovhcloud.com/en/guides/public-cloud/ai-machine-learning/ai-endpoints-getting-started)) | ✓ kısa istem 8 sn. Görsel planı: Llama 29,8 sn ✓, gpt-oss-120b 45–55 sn (zaman aşımı riski) | **Açık (yedek)** |
 | 6 | LLM7.io (anonim) | default (yanıt: mistral-Nemo) | Anonim sınır yayımlanmamış | ✓ çalıştı. Site kendini ücretli API olarak tanıtıyor; şart ve gizlilik metni yok | Kapalı |
@@ -58,26 +85,11 @@ Veri notları:
 
 ## Görsel sağlayıcıları
 
-| Sıra | Sağlayıcı | Model | Lisans / not | Durum |
-|---|---|---|---|---|
-| 1 | ComfyUI | `COMFYUI_CHECKPOINT` | Model lisansını kendiniz doğrulayın. Canlıda yalnızca https + `COMFYUI_TOKEN`. | Yapılandırılmamış |
-| 2 | Cloudflare | FLUX.1 [schnell] (metinden), FLUX.2 [klein] 4B (referanstan) | Apache-2.0. 9B ve dev sürümleri ticari olmayan lisanslı olduğu için kullanılmaz. | Anahtar eksik |
-| 3 | Pollinations (anonim) | Yanıttaki `x-model-used` (testte `sana`) | Filigranlı, düşük çözünürlük, ticari şart doğrulanmadı | ✓ çalışıyor (2026-10-26); aralıklı `HTTP 503` görüldü |
+**Otomatik ücretsiz görsel üretimi yok** (2026-10-30, yukarıya bakın).
 
-**Kesinti:** Pollinations 2026-10-25 ve 2026-10-26'da birkaç istekte geçici olarak `HTTP 503` döndü. Uygulama bunu doğru ele aldı:
-
-- Kullanıcıya "Ücretsiz görsel sağlayıcılarının hiçbiri görsel üretemedi… Ücretli bir servise geçilmedi" mesajı gösterildi.
-- Taslak etkilenmedi.
-- Bir sonraki deneme başarılı oldu.
-
-**Stüdyo lisans uyarıları:**
-
-- Her aday kartında lisans notu gösterilir:
-  - kendi yüklediğin görsel;
-  - kaynaktan alınan görsel ("lisans doğrulanmadı");
-  - Pollinations ("filigranlı · ticari şart doğrulanmadı");
-  - FLUX ("Apache-2.0").
-- Pollinations adayı seçildiyse taslağa eklemeden önce "Bilerek ekliyorum" onayı istenir.
+Eski kayıtlar (yalnızca tarihçe):
+- Pollinations 2026-10-26'ya kadar filigranlı ve düşük çözünürlüklü üretiyordu; aralıklı `HTTP 503` veriyordu.
+- ComfyUI ve Cloudflare hiç yapılandırılmadı.
 
 ## Rotasyon nasıl çalışır
 
@@ -173,7 +185,7 @@ Migration (`20261023000000_ai_usage_jobs.sql` ve `20261024000000_ai_least_privil
 |---|---|
 | Groq | `GROQ_API_KEY`. Ardından panelde "Hesabın ücretsiz planda olduğunu doğruladım". |
 | OpenRouter | `OPENROUTER_API_KEY`. Kredi alınmamış hesapta yalnızca `:free`. |
-| Cloudflare | `CLOUDFLARE_ACCOUNT_ID` ve `CLOUDFLARE_API_TOKEN` (yalnızca Workers AI izni). Ardından panelde metin ve görsel için ayrı ayrı onay. Hesap Workers **Free** planda olmalı. |
+| Cloudflare | **İptal edildi (2026-10-30).** Anahtar eklense bile sıraya girmez. |
 | ComfyUI | `COMFYUI_URL`, `COMFYUI_CHECKPOINT`, canlıda `COMFYUI_TOKEN` |
 | Design Arena | `DESIGN_ARENA_API_KEY` (başvuruyla). Resmî belgeye göre ([API](https://docs.designarena.ai/api-reference/overview.md), [başvuru](https://designarena.ai/developers/apply)) yalnızca sıralama verisi sunar (`/api/v1/models`, Bearer anahtar, atıf zorunlu, anahtar yalnızca sunucuda). Uygulama da yalnızca panelde atıflı bilgi gösterir; görsel üretmez. Anahtar olmadığı için gerçek istek yapılmadı; yalnızca sahte yanıtla test edildi. |
 
