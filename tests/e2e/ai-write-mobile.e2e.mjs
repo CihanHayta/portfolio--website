@@ -71,7 +71,9 @@ try {
     // Preview'da Gemini anahtarı yok; taslak görevinde doğrulanmış ücretsiz yedek de yok.
     // Beklenen: anlaşılır hata, ücretli servise geçiş yok, girilen link korunur.
     check(state.startsWith("hata:"), `Gemini yokken taslak üretilmedi ve anlaşılır hata gösterildi (${state.slice(0, 90)})`);
-    check(!/ücretli/i.test(state) || /geçilmedi/i.test(state) || true, "ücretli servise geçilmedi");
+    const alertText = await failed.first().innerText().catch(() => "");
+    check(/Ücretli bir servise geçilmedi/.test(alertText), "hata ekranı ücretli servise geçilmediğini açıkça söylüyor");
+    check((await studio.getByRole("button", { name: /Tekrar dene|Metni kendim ekle/ }).count()) > 0, "hata ekranında 'Tekrar dene / Metni kendim ekle' seçenekleri var");
     check((await studio.getByPlaceholder("https://ornek.com/makale").inputValue()) === source, "girilen link kaybolmadı");
   } else check(state === "taslak" || state === "editörde", `kaynak analiz edildi ve taslak hazırlandı (${state})`);
   check(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth) <= 0, "AI stüdyosunda yatay taşma yok");
