@@ -1226,7 +1226,9 @@ export default function StudioDialog({
                 setImages={setImages}
                 sectionMap={draft.result?.sectionMap ?? sectionMap}
                 cover={draft.result ? (coverItem ? { url: coverItem.url, alt: coverItem.alt } : null) : liveCover}
+                coverContext={{ title: draft.result?.fields?.title || title || shown.brief.topic || "", excerpt: draft.result?.fields?.excerpt || "", audience: shown.brief.audience || "" }}
                 focusSection={focusSection}
+                postId={postId}
                 onPlace={placeImagesNow}
                 ensureDraft={getDraftId}
               />

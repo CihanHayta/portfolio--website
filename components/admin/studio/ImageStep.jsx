@@ -4,9 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Check, CircleAlert, ImagePlus, Images, LoaderCircle, Replace, Sparkles, Star, Trash2, Upload, Wand2 } from "lucide-react";
 import { deleteMedia } from "@/app/admin/blog/actions";
-import { buildHandoffPrompt } from "@/lib/ai/brandVisual";
+import { buildCoverPrompt, buildHandoffPrompt } from "@/lib/ai/brandVisual";
 import { imageSections } from "@/lib/blog/blocks/imageSections";
 import HandoffPanel from "../images/HandoffPanel";
+import MascotRefs from "../images/MascotRefs";
 import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES, uploadMedia } from "../upload";
 import { resizeForAnalysis } from "./resizeImage";
 import studio from "./studio.module.css";
@@ -82,6 +83,8 @@ export default function ImageStep({
   setImages,
   sectionMap = {},
   cover = null, // { url, alt } — yazının şu anki kapağı
+  postId = null,
+  coverContext = {}, // { title, excerpt, audience } — kapak istemi için
   onPlace,
   ensureDraft = async () => null,
   focusSection = null,
@@ -95,6 +98,7 @@ export default function ImageStep({
   const [handoff, setHandoff] = useState(null);
   const [picker, setPicker] = useState(null); // { target, replace?, slot?, title }
   const [uploads, setUploads] = useState([]);
+  const [mascotRefs, setMascotRefs] = useState([]);
   const busyRef = useRef(false);
   const imagesRef = useRef(images);
   const fileRef = useRef(null);
@@ -346,7 +350,7 @@ export default function ImageStep({
   };
 
   // --- ChatGPT ile elle üretim ----------------------------------------------------
-  const startHandoff = ({ target, title, references = [], replace = false, slot = null, alt = "" }) => {
+  const startHandoff = ({ target, title, references = [], replace = false, slot = null, alt = "", prompt = null }) => {
     const section = sectionOfTarget(target);
     const purpose = target === "cover" ? "cover" : "inline";
     setHandoff({
@@ -357,10 +361,27 @@ export default function ImageStep({
       title,
       references,
       defaultAlt: alt || [topic, section?.title].filter(Boolean).join(" — ").slice(0, 300),
-      prompt: buildHandoffPrompt({ topic, section: section?.title ?? "", purpose, alt: alt || section?.title || topic, hasReference: references.length > 0 }),
+      prompt: prompt ?? buildHandoffPrompt({ topic, section: section?.title ?? "", purpose, alt: alt || section?.title || topic, hasReference: references.length > 0 }),
       acceptLabel: replace ? "Kabul et ve görseli değiştir" : target === "cover" ? "Kabul et ve kapak yap" : "Kabul et ve bu bölüme ekle",
     });
   };
+  // Kapak: bu yazıya özgü sahne + kullanıcının kendi maskotu (referans olarak).
+  const startCover = () =>
+    startHandoff({
+      target: "cover",
+      title: "Kapak görseli · ChatGPT ile elle üretim",
+      references: mascotRefs.map((item) => ({ url: item.url, label: item.label })),
+      alt: [coverContext.title || topic, "kapak görseli"].filter(Boolean).join(" — "),
+      prompt: buildCoverPrompt({
+        title: coverContext.title || topic,
+        idea: coverContext.excerpt,
+        topic,
+        highlight: layout.sections[0]?.title ?? "",
+        audience: coverContext.audience,
+        mascotCount: mascotRefs.length,
+      }),
+    });
+
   const acceptHandoff = async (file, alt) => {
     const current = handoff;
     if (!current || busyRef.current) return { ok: false, error: "Başka bir işlem sürüyor." };
@@ -391,6 +412,16 @@ export default function ImageStep({
     const alt = String(media.alt_text || "").trim() || [topic, section?.title].filter(Boolean).join(" — ").slice(0, 300) || "Yazı görseli";
     const ok = placeMedia(media, { target: current.target, alt, replace: current.replace, slot: current.slot });
     setNotice(ok ? { tone: "ok", text: current.replace ? "Görsel değiştirildi." : current.target === "cover" ? "Kapak görseli ayarlandı." : `Görsel ${targetName(current.target)} bölümüne eklendi.` } : { tone: "error", text: "Seçilen bölüm yazıda bulunamadı." });
+    // Her yazının kapağı kendine özgü olmalı: aynı görsel başka yazının kapağıysa uyar (engellemez).
+    if (ok && current.target === "cover" && media.id) {
+      fetch(`/api/admin/media?coverUse=${media.id}`, { cache: "no-store" })
+        .then(readJson)
+        .then((data) => {
+          const others = (data.posts ?? []).filter((post) => post.id !== postId);
+          if (others.length) setNotice({ tone: "warn", text: `Kapak ayarlandı, ancak bu görsel “${others[0].title || "başlıksız"}” yazısının da kapağı. Her yazıya özgü bir kapak önerilir.` });
+        })
+        .catch(() => {});
+    }
   };
 
   const accept = (item) => patch(item.id, { state: "archived", selected: false });
@@ -553,8 +584,12 @@ export default function ImageStep({
               <ul className={styles.thumbs}>{sourceThumb(coverSource, null, "cover")}</ul>
             </>
           ) : null}
+          <details className={styles.more}>
+            <summary>Maskot referansların ({mascotRefs.length} kullanılıyor)</summary>
+            <MascotRefs onChange={setMascotRefs} />
+          </details>
           <div className={styles.actions}>
-            <button type="button" className={studio.primary} disabled={disabled} onClick={() => startHandoff({ target: "cover", title: "Kapak görseli · ChatGPT ile elle üretim" })}>
+            <button type="button" className={studio.primary} disabled={disabled} onClick={startCover}>
               <Sparkles size={15} aria-hidden="true" /> {cover?.url ? "Yeni kapak oluştur (ChatGPT)" : "Kapak oluştur (ChatGPT)"}
             </button>
             <button type="button" className={studio.secondary} disabled={disabled} onClick={() => pickUpload("cover")}>

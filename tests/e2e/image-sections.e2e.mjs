@@ -74,6 +74,7 @@ try {
   const handoffPng = await pngFile("chatgpt.png", 120, 80, 50);
   const coverPng = await pngFile("kapak.png", 20, 20, 24);
   const replacePng = await pngFile("degisim.png", 200, 120, 40);
+  const mascotPng = await pngFile("maskot.png", 224, 144, 47);
   for (const [w, h] of VIEWPORTS) {
     console.log(`\n=== ${w}x${h}`);
     const mobile = w < 1024;
@@ -202,14 +203,27 @@ try {
     await panel().getByRole("button", { name: /Kabul et ve görseli değiştir/ }).click();
     await dialog.getByText(/Görsel değiştirildi/).waitFor({ timeout: 45_000 });
 
-    // 6) Kapak (ChatGPT, referanssız → istem adreste)
+    // 6) Kapak: kullanıcının maskotu (varsayılan + yüklenen) + yazıya özgü istem
+    const mascots = card("cover").locator("details").filter({ hasText: "Maskot referansların" });
+    await mascots.locator("summary").click();
+    await mascots.getByTestId("mascot-refs").locator("img").first().waitFor();
+    const mascotChooser = page.waitForEvent("filechooser");
+    await mascots.getByRole("button", { name: "Maskot görseli ekle" }).click();
+    await (await mascotChooser).setFiles(mascotPng);
+    await mascots.locator("ul li").nth(1).waitFor({ timeout: 30_000 });
+    const mascotRow = (await service.from("blog_media").select("storage_path").like("storage_path", "maskot/%").eq("created_by", user.user.id)).data ?? [];
+    check(mascotRow.length === 1, "maskot referansı medya arşivinde 'maskot/' klasörüne kalıcı kaydedildi");
+    check((await mascots.locator("summary").innerText()).includes("2 kullanılıyor"), "varsayılan tilki işareti + yüklenen maskot istemde kullanılıyor");
     await card("cover").getByRole("button", { name: /Kapak oluştur \(ChatGPT\)/ }).click();
     await panel().waitFor();
+    check((await panel().locator("ul[class*=refList] > li").count()) === 2, "kapak panelinde 2 maskot referansı");
     const coverPopup = context.waitForEvent("page");
     await panel().getByRole("button", { name: /İstemi kopyala ve ChatGPT/ }).click();
     const coverTab = await coverPopup;
-    check(/^https:\/\/chatgpt\.com\/\?q=/.test(coverTab.url()), "kapak: ChatGPT hazır istemle açıldı");
+    check(coverTab.url().replace(/\/$/, "") === "https://chatgpt.com", "kapak: maskot eklenecek, istem panoda (adreste gönderilmedi)");
     await coverTab.close();
+    const coverPrompt = await page.evaluate(() => navigator.clipboard.readText().catch(() => ""));
+    check(coverPrompt.includes(`E2E Bölümler ${w}`) && /KENDİ maskotudur/.test(coverPrompt) && /HİÇBİR yazı, harf/.test(coverPrompt) && /Ölçüm|Meta reklam bütçesi/.test(coverPrompt), "kapak istemi: yazı başlığı, kendi maskotu, yazısız kuralı, öne çıkan bölüm");
     await panel().locator("input[type=file]").setInputFiles(coverPng);
     await panel().getByLabel("Alt metin (zorunlu)").fill("Reklam bütçesi kapak görseli");
     await panel().getByRole("button", { name: /Kabul et ve kapak yap/ }).click();
@@ -233,7 +247,7 @@ try {
     const media = await draftMedia(post.id);
     check(media.filter((row) => row.origin === "handoff").some((row) => row.url === lastImage.props.image.url), "Bölüm 3'teki görsel ChatGPT sonucuyla yerinde değişti (yeni blok yok)");
     const origins = ["source", "handoff", "upload"].map((kind) => media.filter((row) => row.origin === kind).length);
-    check(origins[0] === 2 && origins[1] === 3 && origins[2] === 1, `medya kökenleri doğru (kaynak ${origins[0]}, ChatGPT ${origins[1]}, yükleme ${origins[2]})`);
+    check(origins[0] === 2 && origins[1] === 3 && origins[2] === 1, `taslağa bağlı medya kökenleri doğru (kaynak ${origins[0]}, ChatGPT ${origins[1]}, yükleme ${origins[2]})`);
     const session = (await service.from("blog_studio_sessions").select("data").eq("post_id", post.id).single()).data.data;
     check(session.sectionMap?.hsec00002 === "Manual vs automatic bidding" && !JSON.stringify(session).includes("blob:") && !JSON.stringify(session).includes("data:image"), "oturumda bölüm eşlemesi korunuyor; geçici adres yok");
 
@@ -243,6 +257,10 @@ try {
     dialog = await openImages();
     check(!(await card("cover").innerText()).includes("Henüz kapak görseli yok") && (await card("hsec00002").innerText()).includes("Yazıda"), "yenilemeden sonra kapak ve bölüm görselleri geri geldi");
     check(!(await card("hsec00004").innerText()).includes("Bu bölümde henüz görsel yok."), "yenilemeden sonra Bölüm 3 görseli korunuyor");
+    const mascotsAfter = card("cover").locator("details").filter({ hasText: "Maskot referansların" });
+    await mascotsAfter.locator("summary").click();
+    await mascotsAfter.locator("ul li").nth(1).waitFor({ timeout: 15_000 }).catch(() => {});
+    check((await mascotsAfter.locator("ul li").count()) >= 2, "yenilemeden sonra maskot referansı korunuyor");
     check(errors.length === 0, `JS hatası yok ${errors.join(" | ").slice(0, 200)}`);
     await context.close();
   }
@@ -254,7 +272,7 @@ try {
   await browser.close();
   // Temizlik: bu çalıştırmanın medya kayıtları ve dosyaları, oturumlar (yazıyla birlikte), yazılar, kullanıcı.
   if (postIds.length) {
-    const rows = (await service.from("blog_media").select("id, storage_path").or(`draft_post_id.in.(${postIds.join(",")}),storage_path.like.e2e/${RUN}%`)).data ?? [];
+    const rows = (await service.from("blog_media").select("id, storage_path").or(`draft_post_id.in.(${postIds.join(",")}),storage_path.like.e2e/${RUN}%,created_by.eq.${user.user.id}`)).data ?? [];
     if (rows.length) {
       await service.from("blog_posts").update({ cover_media_id: null }).in("id", postIds);
       await service.storage.from("blog-media").remove(rows.map((row) => row.storage_path));
