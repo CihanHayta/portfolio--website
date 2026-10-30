@@ -20,9 +20,11 @@ import {
   slotKey,
   slotsFromResponse,
   slotsToExpand,
+  sourceOutline,
   targetWordsFor,
   templateSlots,
 } from "@/lib/ai/templateFill";
+import { verifiedSectionMap } from "@/lib/blog/blocks/imageSections";
 import { uniqueSlug } from "@/lib/ai/uniqueSlug";
 import { contentText, sanitizeBlocks } from "@/lib/blog/blocks/model";
 import { instantiateTemplate, templateByKey } from "@/lib/blog/blocks/templates";
@@ -183,7 +185,7 @@ async function fill(admin, body) {
       db: admin.supabase,
       system: FILL_SYSTEM,
       prompt: buildFillPrompt({ brief, template, slots, links, categories, sources, targetWords: Math.min(targetWords, FIRST_PASS_MAX_WORDS), extraShare, images, related, angle, approaches }),
-      schema: buildFillSchema(slots, { extra: extraShare > 0, coverage: hasSourceText, images: images.length > 0 }),
+      schema: buildFillSchema(slots, { extra: extraShare > 0, coverage: hasSourceText, images: images.length > 0, mapping: hasSourceText }),
       temperature: 0.6,
       maxOutputTokens: 32_768,
       budgetMs: 52_000,
@@ -211,6 +213,17 @@ async function fill(admin, body) {
       .map((item) => ({ imageId: clip(item?.imageId, 64), afterBlockId: keyToBlock.get(String(item?.afterSlot ?? "")) }))
       .filter((item) => item.afterBlockId && images.some((image) => image.id === item.imageId));
 
+    // Bölüm eşlemesi: yalnızca kaynakta GERÇEKTEN geçen başlıklar kalır (görsellerin
+    // hangi bölüme ait olduğu bununla doğrulanır; uydurma eşleşme sayılmaz).
+    const rawMap = {};
+    for (const item of Array.isArray(result.data?.sectionSources) ? result.data.sectionSources : []) {
+      const blockId = keyToBlock.get(String(item?.slot ?? ""));
+      if (blockId && item?.sourceHeading) rawMap[blockId] = clip(item.sourceHeading, 160);
+    }
+    for (const item of filled.extraHeadings) rawMap[item.blockId] = item.sourceHeading;
+    const outlineHeadings = sources.filter((source) => source.kind !== "text").flatMap((source) => sourceOutline(source.text, 200).map((heading) => heading.text));
+    const sectionMap = verifiedSectionMap(rawMap, outlineHeadings);
+
     const { categorySlug, ...rest } = fields;
     return json({
       blocks: filled.blocks,
@@ -231,6 +244,7 @@ async function fill(admin, body) {
       warnings: review.warnings,
       coverage,
       imagePlacements,
+      sectionMap,
       source: sources[0] ? { url: sources[0].url, title: sources[0].title } : null,
       sources: sources.map(({ kind, url, title, siteName, sectionUrl, sectionLabel, unreadable, truncated, missingFrom, wordCount }) => ({ kind, url, title, siteName, sectionUrl, sectionLabel, unreadable, truncated, missingFrom, wordCount })),
       model: result.model,

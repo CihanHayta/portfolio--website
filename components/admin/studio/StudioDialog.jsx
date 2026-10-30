@@ -194,7 +194,8 @@ export default function StudioDialog({
   imageSource = null,
   ensureDraft = async () => postId ?? null,
   coverTaken = false,
-  onOpenVisualPlan = null,
+  currentCover = null, // { url, alt } — editördeki kapak (görsel adımında gösterilir)
+  focusSection = null, // görsel adımı bu bölüm kartına kayar
   title = "",
 }) {
   const dialogRef = useRef(null);
@@ -226,6 +227,9 @@ export default function StudioDialog({
   const [draft, setDraft] = useState({ status: "idle", result: null, error: "" });
   // Görseller (kaynak, yüklenen, AI, ChatGPT): seçim, hedef bölüm ve durum. Taslağa bağlı saklanır.
   const [images, setImages] = useState([]);
+  const [liveCover, setLiveCover] = useState(currentCover);
+  // Taslak başlığı → kaynaktaki başlık (görselleri doğru bölüme bağlar; sunucuda doğrulanır).
+  const [sectionMap, setSectionMap] = useState({});
   // Sunucu oturumu yüklenene kadar kayıt yapılmaz (boş durum kayıtlı çalışmanın üzerine yazılmasın).
   const [hydrated, setHydrated] = useState(!postId);
   const [restoredSource, setRestoredSource] = useState(null);
@@ -340,6 +344,7 @@ export default function StudioDialog({
     fetchServerSession(postId).then((data) => {
       if (!active) return;
       baseRef.current = data;
+      if (data?.sectionMap && typeof data.sectionMap === "object") setSectionMap(data.sectionMap);
       if (hasWork(data)) {
         const value = fromServer(data);
         if (initialPhase === "start" && value.phase !== "applied") {
@@ -387,6 +392,7 @@ export default function StudioDialog({
       shots: shots.items.filter((item) => item.path).map(({ id, path, name, width, height }) => ({ id, path, name, width, height })),
       shotSource: cache.current.shots ? { text: cache.current.shots.text, title: cache.current.shots.title, wordCount: cache.current.shots.wordCount } : null,
       images,
+      sectionMap: draft.result?.sectionMap ?? sectionMap,
       phase,
       plan,
       draft: draft.result,
@@ -742,6 +748,7 @@ export default function StudioDialog({
     }
     const out = onPlaceImages ? onPlaceImages(items) : { placed: 0, cover: null, unplaced: items, blocks: liveBlocks };
     if (out?.blocks) setLiveBlocks(out.blocks);
+    if (out?.cover?.media?.url) setLiveCover({ url: out.cover.media.url, alt: out.cover.alt });
     return out;
   };
 
@@ -1217,10 +1224,11 @@ export default function StudioDialog({
                 topic={draft.result?.fields?.title || title || shown.brief.topic || urlSource?.title || ""}
                 images={images}
                 setImages={setImages}
+                sectionMap={draft.result?.sectionMap ?? sectionMap}
+                cover={draft.result ? (coverItem ? { url: coverItem.url, alt: coverItem.alt } : null) : liveCover}
+                focusSection={focusSection}
                 onPlace={placeImagesNow}
                 ensureDraft={getDraftId}
-                coverTaken={coverTaken && !draft.result}
-                onOpenVisualPlan={draft.result ? null : onOpenVisualPlan}
               />
             )
           ) : null}

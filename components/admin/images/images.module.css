@@ -1,0 +1,428 @@
+/* Görseller ekranı (bölüm sırasıyla) ve ChatGPT ile elle üretim paneli.
+   Mevcut blog token'ları kullanılır; telefonda tek sütun, dokunma hedefleri ≥44px. */
+
+/* --- Elle üretim paneli ------------------------------------------------------- */
+
+.handoff {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--blog-accent-line);
+  border-radius: 12px;
+  background: var(--blog-accent-soft);
+  scroll-margin-top: 12px;
+}
+
+.handoffHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.handoffHead h3:focus {
+  outline: none;
+}
+
+.manualNote {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--blog-gold);
+  border-radius: 4px;
+  background: var(--blog-bg);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.steps {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding-left: 22px;
+  font-size: 13.5px;
+}
+
+.steps > li {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.steps textarea {
+  width: 100%;
+  min-height: 110px;
+  font-size: 13px;
+}
+
+.refList {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.refList > li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.refList img {
+  grid-row: span 2;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--blog-bg-muted);
+}
+
+.refLabel {
+  overflow-wrap: anywhere;
+  font-size: 12.5px;
+  color: var(--blog-ink-soft);
+}
+
+.refActions,
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.previewBox {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.previewBox img {
+  width: 100%;
+  max-height: 320px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: var(--blog-bg-muted);
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* --- Bölüm sırası ----------------------------------------------------------- */
+
+.layout {
+  display: grid;
+  gap: 14px;
+}
+
+.lead {
+  margin: 0;
+  color: var(--blog-ink-soft);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.summary li {
+  padding: 4px 10px;
+  border: 1px solid var(--blog-line);
+  border-radius: 999px;
+  background: var(--blog-bg);
+  font-size: 12.5px;
+}
+
+.sections {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--blog-line);
+  border-radius: 12px;
+  background: var(--blog-bg);
+  scroll-margin-top: 12px;
+}
+
+.card[data-empty] {
+  border-style: dashed;
+}
+
+.card[data-focus] {
+  border-color: var(--blog-gold);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blog-gold) 25%, transparent);
+}
+
+.cardHead {
+  display: grid;
+  gap: 2px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--blog-walnut, var(--blog-link));
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.subheads {
+  margin: 2px 0 0;
+  color: var(--blog-ink-soft);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.groupLabel {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--blog-ink-soft);
+}
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thumb {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.thumbImage {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--blog-line);
+  border-radius: 10px;
+  background: var(--blog-bg-muted);
+}
+
+.thumbImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb[data-selected] .thumbImage {
+  border-color: var(--blog-ink);
+  box-shadow: 0 0 0 2px var(--blog-ink);
+}
+
+/* Seçim kutusu: görselin tamamı dokunma alanıdır, kutu köşede görünür. */
+.pick {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--blog-bg) 92%, transparent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.pick input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--blog-ink);
+}
+
+.chip {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--blog-ink);
+  color: var(--blog-on-accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.chip[data-tone="soft"] {
+  background: var(--blog-bg);
+  color: var(--blog-ink);
+}
+
+.thumbNote {
+  overflow-wrap: anywhere;
+  color: var(--blog-ink-soft);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.thumbActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.small {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+
+.empty {
+  margin: 0;
+  color: var(--blog-ink-soft);
+  font-size: 13.5px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.actions > * {
+  min-height: 44px;
+}
+
+.assign {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.assign select {
+  min-height: 36px;
+  font-size: 12.5px;
+}
+
+.more {
+  padding: 12px 14px;
+  border: 1px solid var(--blog-line);
+  border-radius: 12px;
+  background: var(--blog-bg);
+}
+
+.more > summary {
+  min-height: 32px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.more[open] > summary {
+  margin-bottom: 10px;
+}
+
+/* --- Seçim çubuğu ------------------------------------------------------------ */
+
+.bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: 12px;
+  background: var(--blog-bg);
+  box-shadow: var(--blog-shadow-pop);
+}
+
+.barHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  font-size: 14px;
+}
+
+.barActions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.barActions > button {
+  min-height: 48px;
+  justify-content: center;
+  text-align: center;
+}
+
+.barHint {
+  margin: 0;
+  color: var(--blog-ink-soft);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@media (max-width: 560px) {
+  .barActions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .thumbs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card {
+    padding: 12px;
+  }
+}
+
+/* Kullanılan görsel: solda görsel, sağda bilgi ve işlemler (dar ekranda da yan yana). */
+.thumbs:has(> .thumb[data-variant="row"]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.thumb[data-variant="row"] {
+  grid-template-columns: minmax(112px, 220px) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  column-gap: 14px;
+}
+
+.thumb[data-variant="row"] > .thumbImage {
+  grid-row: span 2;
+}
+
+@media (max-width: 560px) {
+  .thumb[data-variant="row"] {
+    grid-template-columns: 112px minmax(0, 1fr);
+    column-gap: 10px;
+  }
+}

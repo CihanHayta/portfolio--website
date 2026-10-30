@@ -13,7 +13,6 @@ import {
   Ellipsis,
   Eye,
   EyeOff,
-  ImagePlus,
   Images,
   LoaderCircle,
   Monitor,
@@ -42,8 +41,7 @@ import { contentHeadings, createBlock, toBlocks } from "@/lib/blog/blocks/model"
 import { instantiateTemplate } from "@/lib/blog/blocks/templates";
 import { placeAtTargets } from "@/lib/blog/blocks/imageTargets";
 import { dropBlocks } from "@/lib/blog/blocks/arrange";
-import { insertVisuals } from "@/lib/blog/blocks/insertVisuals";
-import { adoptNewContext, loadVisualState } from "@/lib/blog/sourceContext";
+import { adoptNewContext } from "@/lib/blog/sourceContext";
 import { PALETTE_ITEMS } from "@/lib/blog/blocks/palette";
 import { STATE_LABELS, formatDateTime, postState } from "@/lib/blog/format";
 import { slugify } from "@/lib/blog/slug";
@@ -64,21 +62,6 @@ import { useModalDialog } from "../useModalDialog";
 
 // Taslak aktarıldıktan sonra "Görsel ekle" ile açılan stüdyo (yalnızca gerektiğinde yüklenir).
 const StudioDialog = dynamic(() => import("../studio/StudioDialog"), { ssr: false });
-const VisualStudio = dynamic(() => import("../visual/VisualStudio"), { ssr: false });
-
-// Görsel planında olup henüz taslağa eklenmemiş öneriler: { başlık kimliği: [amaç] }.
-function visualMarksFor(postId) {
-  const state = loadVisualState(postId);
-  if (!state?.plan?.items) return null;
-  const marks = {};
-  for (const item of state.plan.items) {
-    const card = state.cards?.[item.id];
-    const target = card?.target ?? item.target;
-    if (target === "cover" || card?.inserted) continue;
-    (marks[target] ??= []).push(item.purpose || "görsel");
-  }
-  return Object.keys(marks).length ? marks : null;
-}
 
 const AUTOSAVE_DELAY = 2500;
 const isAutoSlug = (slug) => /^taslak-[0-9a-f]{8}$/.test(slug);
@@ -430,28 +413,9 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
   );
   const [draftNotes, setDraftNotes] = useState(null);
   const [imagesOpen, setImagesOpen] = useState(false);
-  const [visualOpen, setVisualOpen] = useState(false);
-  const [visualMarks, setVisualMarks] = useState(null);
-  // Plan işaretleri yalnızca tarayıcıda saklıdır; sunucu çiziminden sonra okunur.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setVisualMarks(visualMarksFor(postId));
-  }, [postId]);
+  // Görseller ekranı belirli bir bölüme odaklı açılabilir (editördeki başlıktan).
+  const [imagesFocus, setImagesFocus] = useState(null);
 
-  // AI Görsel Stüdyosu'nda seçilen görseller: tek geri alınabilir adımda doğru
-  // bölümlere eklenir; kapak görseli kapak alanına gider. Yayın durumu değişmez.
-  const insertVisualPicks = (picks) => {
-    const result = insertVisuals(blocksRef.current, picks);
-    const coverChange = result.cover
-      ? { before: { cover: formRef.current.cover, coverAlt: formRef.current.coverAlt }, after: { cover: result.cover.media, coverAlt: result.cover.alt } }
-      : null;
-    // Bloklar ve kapak tek geri alınabilir adımda değişir ("Geri al" kapağı da geri getirir).
-    if (result.placed > 0 || coverChange) actions.replaceAll(result.placed > 0 ? result.blocks : [...blocksRef.current], coverChange);
-    if (coverChange) updateForm(coverChange.after);
-    const count = result.placed + (result.cover ? 1 : 0);
-    if (count) toast(`${count} görsel taslağa eklendi. “Geri al” ile kaldırabilirsin; hiçbir şey yayımlanmadı.`);
-    return result;
-  };
   // Geri al / ileri al: geçişe iliştirilmiş form değişikliği (kapak) da uygulanır.
   const undo = useCallback(() => {
     const restore = actions.undo();
@@ -854,12 +818,6 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
             <span>Görseller</span>
           </button>
         ) : null}
-        {!preview ? (
-          <button type="button" className={`${styles.topButton} ${styles.desktopOnly}`} aria-label="AI Görselleri" onClick={() => setVisualOpen(true)}>
-            <ImagePlus size={16} aria-hidden="true" />
-            <span>AI Görselleri</span>
-          </button>
-        ) : null}
 
         <button type="button" className={styles.topButton} aria-label={preview ? "Düzenle" : "Önizle"} aria-pressed={preview} onClick={togglePreview}>
           {preview ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
@@ -985,8 +943,10 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           onQuickAdd={addFromPalette}
           onPointerDrag={beginDrag}
           paperRef={paperRef}
-          visualMarks={visualMarks}
-          onOpenVisuals={() => setVisualOpen(true)}
+          onOpenVisuals={(headingId) => {
+            setImagesFocus(headingId ?? null);
+            setImagesOpen(true);
+          }}
         />
       </main>
 
@@ -1065,19 +1025,6 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
       {draftNotes && !preview ? (
         <DraftNotes notes={draftNotes} onAddImages={meta.status === "draft" ? () => setImagesOpen(true) : null} onClose={() => setDraftNotes(null)} />
       ) : null}
-      {visualOpen ? (
-        <VisualStudio
-          postId={postId}
-          ensureDraft={ensureDraft}
-          title={form.title}
-          getBlocks={() => blocksRef.current}
-          onInsert={insertVisualPicks}
-          onClose={() => {
-            setVisualOpen(false);
-            setVisualMarks(visualMarksFor(postId));
-          }}
-        />
-      ) : null}
       {imagesOpen ? (
         <StudioDialog
           initialPhase="images"
@@ -1090,11 +1037,12 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           onApply={() => {}}
           onPlaceImages={placeStudioImages}
           coverTaken={Boolean(form.cover)}
-          onOpenVisualPlan={() => {
+          currentCover={form.cover?.url ? { url: form.cover.url, alt: form.coverAlt } : null}
+          focusSection={imagesFocus}
+          onClose={() => {
             setImagesOpen(false);
-            setVisualOpen(true);
+            setImagesFocus(null);
           }}
-          onClose={() => setImagesOpen(false)}
         />
       ) : null}
 
