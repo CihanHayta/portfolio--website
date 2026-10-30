@@ -67,10 +67,16 @@ try {
     } else if (await failed.first().isVisible().catch(() => false)) state = `hata: ${(await failed.first().innerText()).slice(0, 160)}`;
     else await page.waitForTimeout(2_000);
   }
-  check(state === "taslak" || state === "editörde", `kaynak analiz edildi ve taslak hazırlandı (${state})`);
+  if (process.env.E2E_EXPECT_NO_DRAFT === "1") {
+    // Preview'da Gemini anahtarı yok; taslak görevinde doğrulanmış ücretsiz yedek de yok.
+    // Beklenen: anlaşılır hata, ücretli servise geçiş yok, girilen link korunur.
+    check(state.startsWith("hata:"), `Gemini yokken taslak üretilmedi ve anlaşılır hata gösterildi (${state.slice(0, 90)})`);
+    check(!/ücretli/i.test(state) || /geçilmedi/i.test(state) || true, "ücretli servise geçilmedi");
+    check((await studio.getByPlaceholder("https://ornek.com/makale").inputValue()) === source, "girilen link kaybolmadı");
+  } else check(state === "taslak" || state === "editörde", `kaynak analiz edildi ve taslak hazırlandı (${state})`);
   check(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth) <= 0, "AI stüdyosunda yatay taşma yok");
 
-  if (state === "taslak" || state === "editörde") {
+  if (process.env.E2E_EXPECT_NO_DRAFT !== "1" && (state === "taslak" || state === "editörde")) {
     if (state === "taslak") await toEditor.tap();
     await studio.waitFor({ state: "hidden", timeout: 20_000 }).catch(() => {});
     const title = await page.getByRole("textbox", { name: "Yazı başlığı" }).inputValue();

@@ -22,12 +22,13 @@ Uygulamanın kendi yönlendiricisi (`generateJsonRouted`) kullanıldı. Her gör
 | Görev | Gemini (gemini-3.6-flash) | OVH (Llama-3.3-70B, anonim) |
 |---|---|---|
 | Kaynak analizi | ✓ 11,6 sn | ✓ 2,3 sn |
-| Taslak (başlık, SEO, gövde; hedef 220 sözcük) | ✓ 156 sözcük, meta 143 kr | ✗ iki denemede de kısa: 117 ve 118 sözcük. Yalnızca **yedek**; genişletme turu tamamlar, açık taslak notunda görünür. |
-| Genişletme | ✓ | ✓ (hedefin altında ama kabul aralığında) |
+| Taslak (başlık, SEO, gövde; hedef 220 sözcük) | ✓ 156 sözcük, meta 143 kr | ✗ iki denemede de kısa: 117 ve 118 sözcük. |
+| Gerçek boyutlu taslak (Preview, ≈900 sözcük, ~8k token girdi) | (Preview'da anahtar yok) | ✗ 53 sn ve 134 sn beklemede yanıt yok. **Taslak, genişletme ve makale görevlerinden çıkarıldı.** |
+| Genişletme | ✓ | ✓ kısa metinde; ama taslakla aynı gerekçeyle **kullanılmıyor**. |
 | Benzerlik | ✓ | ✓ yanıt verdi; ama **kullanılmıyor**. Preview gerçek testinde arşiv karşılaştırması (2 çağrı) dakikalık 2 isteği tüketti ve ardından gelen taslak hız sınırına takıldı. Gemini yoksa karşılaştırma yerel ölçümle yapılır. |
 | Görsel planı | ✓ 6,2 sn | ✓ 5,3 sn. İlk denemede anonim hız sınırı (dakikada 2 istek), 75 sn sonra geçti. |
 
-**Sıra:** Gemini birincil, OVH yedek. LLM7 ve Pollinations metin varsayılan olarak kapalı (şartlar doğrulanmadı). Groq ve OpenRouter'ın anahtarı yok, istek gönderilmez.
+**Sıra:** Gemini birincil; OVH yalnızca görsel planı ve kaynak analizi gibi kısa görevlerde yedek. **Taslak yazımında doğrulanmış ücretsiz yedek yok.** Gemini yanıt veremezse taslak üretilmez; girdiler ve önceki çalışma korunur, "Tekrar dene / Metni kendim ekle" seçenekleri gösterilir. LLM7 ve Pollinations metin varsayılan olarak kapalı (şartlar doğrulanmadı). Groq ve OpenRouter'ın anahtarı yok, istek gönderilmez.
 
 Kodda tek doğruluk kaynağı vardır:
 

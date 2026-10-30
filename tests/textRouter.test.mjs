@@ -224,6 +224,9 @@ test("Varsayılan kapalı anahtarsız servisler (LLM7, Pollinations metin) çağ
 test("Türkçe içerik kalitesi zayıf olduğu bilinen model taslak görevine gönderilmez", async () => {
   const { TEXT_PROVIDERS } = await import("../lib/ai/freePolicy.js");
   const original = TEXT_PROVIDERS.ovh.turkish;
+  const tasks = TEXT_PROVIDERS.ovh.tasks;
+  // Yalnızca Türkçe kalite kuralı sınanır: görev izni geçici olarak verilir.
+  TEXT_PROVIDERS.ovh.tasks = [...tasks, "draft"];
   TEXT_PROVIDERS.ovh.turkish = "weak";
   try {
     const { fetchImpl, calls } = makeFetch({ other: () => chat({ ok: true }) });
@@ -231,6 +234,7 @@ test("Türkçe içerik kalitesi zayıf olduğu bilinen model taslak görevine g�
     assert.equal(calls.length, 0);
   } finally {
     TEXT_PROVIDERS.ovh.turkish = original;
+    TEXT_PROVIDERS.ovh.tasks = tasks;
   }
 });
 
@@ -275,12 +279,13 @@ test("Anahtarsız servisin gövdesi takılırsa (iptali yok sayan akış) bütç
   assert.ok(Date.now() - started < 4000, `süre sınırı uygulandı (${Date.now() - started} ms)`);
 });
 
-test("Varsayılan metin sırası: Gemini önce, Cloudflare iptal, OVH taslakta yalnızca yedek notlu", async () => {
+test("Varsayılan metin sırası: Gemini önce, Cloudflare iptal, OVH yalnızca kısa görevlerde", async () => {
   const { TEXT_ORDER, CANCELLED, TEXT_PROVIDERS, IMAGE_ORDER } = await import("../lib/ai/freePolicy.js");
   assert.equal(TEXT_ORDER[0], "gemini");
   assert.equal(TEXT_ORDER.includes("cloudflare"), false);
   assert.ok(CANCELLED.has("text:cloudflare") && CANCELLED.has("image:pollinations"));
   assert.deepEqual(IMAGE_ORDER, []);
   assert.ok(TEXT_ORDER.indexOf("ovh") > TEXT_ORDER.indexOf("gemini"));
-  assert.match(TEXT_PROVIDERS.ovh.taskNotes.draft, /yedek/);
+  assert.deepEqual(TEXT_PROVIDERS.ovh.tasks, ["visual-plan", "source-analysis"]);
+  assert.match(TEXT_PROVIDERS.ovh.taskNotes.draft, /134 sn/);
 });
