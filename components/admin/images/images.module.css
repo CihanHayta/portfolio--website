@@ -475,3 +475,76 @@
 .mascotItem span {
   overflow-wrap: anywhere;
 }
+
+/* --- "Yapay zekâyla oluştur" penceresi (blok ayarları) ----------------------- */
+
+.dialog {
+  width: min(760px, calc(100vw - 24px));
+  max-width: none;
+  max-height: min(860px, calc(100dvh - 24px));
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--blog-line);
+  border-radius: 16px;
+  background: var(--blog-bg);
+  color: var(--blog-ink);
+  box-shadow: var(--blog-shadow-pop);
+}
+
+.dialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.dialog::backdrop {
+  background: rgba(20, 18, 15, 0.5);
+}
+
+.dialogHead,
+.dialogFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--blog-line);
+}
+
+.dialogFoot {
+  border-top: 1px solid var(--blog-line);
+  border-bottom: 0;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+.dialogTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+}
+
+.dialogBody {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 14px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.pickGroup {
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 760px) {
+  .dialog {
+    width: 100vw;
+    max-height: none;
+    height: var(--vvh, 100dvh);
+    margin: var(--vvtop, 0px) 0 auto;
+    border-radius: 0;
+  }
+}

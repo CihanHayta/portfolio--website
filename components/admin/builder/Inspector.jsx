@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarClock, ExternalLink, Eye, Link2, Plus, Trash2, X } from "lucide-react";
 import { createCategory } from "@/app/admin/blog/actions";
@@ -10,6 +10,7 @@ import { slugify } from "@/lib/blog/slug";
 import { toast } from "../toast";
 import { TYPE_ICONS } from "./blockIcons";
 import { Field, ImageControl } from "./fields";
+import { ImageAiContext } from "../images/imageAiContext";
 import styles from "./builder.module.css";
 
 const MAX_TAGS = 10;
@@ -17,6 +18,9 @@ const MAX_TAGS = 10;
 function BlockSettings({ block, onChange, onRemove }) {
   const [tab, setTab] = useState("content");
   const fields = fieldsFor(block.type);
+  // Görsel alanının "Yapay zekâyla oluştur" penceresi bu bloğun bölümünü bilsin.
+  const parentContext = useContext(ImageAiContext);
+  const blockContext = useMemo(() => (parentContext ? { ...parentContext, blockId: block.id } : null), [parentContext, block.id]);
 
   if (!fields) {
     return (
@@ -64,15 +68,17 @@ function BlockSettings({ block, onChange, onRemove }) {
         <p className={styles.muted}>Bu sekmede ayar yok.</p>
       ) : null}
 
-      {visible.map((field) => (
-        <Field
-          key={field.key}
-          field={field}
-          value={block.props[field.key]}
-          idPrefix={`blk-${block.id}`}
-          onChange={(value) => onChange(block.id, { [field.key]: value }, field.key)}
-        />
-      ))}
+      <ImageAiContext.Provider value={blockContext}>
+        {visible.map((field) => (
+          <Field
+            key={field.key}
+            field={field}
+            value={block.props[field.key]}
+            idPrefix={`blk-${block.id}`}
+            onChange={(value) => onChange(block.id, { [field.key]: value }, field.key)}
+          />
+        ))}
+      </ImageAiContext.Provider>
     </div>
   );
 }
@@ -209,6 +215,7 @@ function PageSettings({ form, meta, state, categories, siteHost, postId, onUpdat
         <h3 id="set-cover" className={styles.sectionTitle}>Kapak Görseli</h3>
         <ImageControl
           label="Kapak görseli seç"
+          purpose="cover"
           withAlt={false}
           value={form.cover ? { ...form.cover, alt: form.coverAlt } : null}
           onChange={(value) => onUpdate({ cover: value, coverAlt: value ? form.coverAlt || value.alt || "" : "" })}

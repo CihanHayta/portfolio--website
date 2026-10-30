@@ -59,6 +59,7 @@ import Inspector from "./Inspector";
 import { useBlocks } from "./useBlocks";
 import styles from "./builder.module.css";
 import { useModalDialog } from "../useModalDialog";
+import { ImageAiContext } from "../images/imageAiContext";
 
 // Taslak aktarıldıktan sonra "Görsel ekle" ile açılan stüdyo (yalnızca gerektiğinde yüklenir).
 const StudioDialog = dynamic(() => import("../studio/StudioDialog"), { ssr: false });
@@ -206,6 +207,19 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
     insertRef.current = insertAt;
   });
 
+  // Blok ayarlarındaki "Yapay zekâyla oluştur" penceresinin yazı bağlamı (sabit kimlikli).
+  const imageAi = useMemo(
+    () => ({
+      postId,
+      getTitle: () => formRef.current.title,
+      getBlocks: () => blocksRef.current,
+      getCover: () => formRef.current.cover,
+      ensureDraft: () => ensureDraftRef.current?.(),
+    }),
+    [postId]
+  );
+  const ensureDraftRef = useRef(null);
+
   const state = postState(meta);
   const autosaves = meta.status === "draft";
   const headings = useMemo(() => contentHeadings({ type: "blocks", blocks }), [blocks]);
@@ -349,6 +363,9 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
     const result = await flush();
     return result.ok ? idRef.current : null;
   }, [flush]);
+  useEffect(() => {
+    ensureDraftRef.current = ensureDraft;
+  }, [ensureDraft]);
 
   // Yayın onay penceresinden çağrılır. Çift dokunma koruması: istek sürerken
   // ikinci bir yayın isteği gönderilmez (düğme durumu güncellenmeden önce de).
@@ -996,6 +1013,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           <button type="button" className={styles.drawerClose} aria-label="Ayarları kapat" onClick={() => setDrawer(null)}>
             <X size={18} />
           </button>
+          <ImageAiContext.Provider value={imageAi}>
           <Inspector
             tab={rightTab}
             onTab={setRightTab}
@@ -1017,6 +1035,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
               onTrash: () => setConfirmTrash(true),
             }}
           />
+          </ImageAiContext.Provider>
         </aside>
       )}
 

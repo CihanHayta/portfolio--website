@@ -1401,6 +1401,18 @@
   gap: 8px;
 }
 
+/* Görsel alanının iki kaynağı: yükleme ve (ChatGPT ile elle) yapay zekâ. */
+.imageSources {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.imageSources > button {
+  min-height: 40px;
+  justify-content: center;
+}
+
 .list {
   display: grid;
   gap: 8px;

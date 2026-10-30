@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import {
@@ -11,10 +11,13 @@ import {
   ChevronUp,
   ImagePlus,
   Plus,
+  Sparkles,
   Trash2,
+  Upload,
 } from "lucide-react";
 import { defaultProps, videoEmbed } from "@/lib/blog/blocks/model";
 import { safeHref } from "@/lib/blog/content";
+import { ImageAiContext } from "../images/imageAiContext";
 import styles from "./builder.module.css";
 
 // Ağır parçalar (Tiptap, medya kütüphanesi) yalnızca gerektiğinde yüklenir.
@@ -23,6 +26,7 @@ export const RichTextField = dynamic(() => import("./RichTextField"), {
   loading: () => <div className={styles.fieldLoading}>Metin alanı yükleniyor…</div>,
 });
 const MediaPickerDialog = dynamic(() => import("../MediaPickerDialog"), { ssr: false });
+const AiImageDialog = dynamic(() => import("../images/AiImageDialog"), { ssr: false });
 
 const ALIGN_ICONS = { left: AlignLeft, center: AlignCenter, right: AlignRight };
 
@@ -34,8 +38,10 @@ function Label({ id, children }) {
   );
 }
 
-export function ImageControl({ value, onChange, label, withAlt = true }) {
+export function ImageControl({ value, onChange, label, withAlt = true, purpose = "inline" }) {
   const [open, setOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const aiContext = useContext(ImageAiContext);
 
   const pick = (media) => {
     onChange({
@@ -83,9 +89,28 @@ export function ImageControl({ value, onChange, label, withAlt = true }) {
           />
         </label>
       ) : null}
+      {aiContext ? (
+        <div className={styles.imageSources}>
+          <button type="button" className={styles.btnSmall} onClick={() => setOpen(true)}>
+            <Upload size={14} aria-hidden="true" /> Görsel yükle
+          </button>
+          <button type="button" className={styles.btnSmall} onClick={() => setAiOpen(true)}>
+            <Sparkles size={14} aria-hidden="true" /> Yapay zekâyla oluştur
+          </button>
+        </div>
+      ) : null}
       {/* Pencere yalnızca açıldığında yüklenir ve kurulur. */}
       {open ? (
         <MediaPickerDialog open title={label} onSelect={pick} onClose={() => setOpen(false)} />
+      ) : null}
+      {aiOpen && aiContext ? (
+        <AiImageDialog
+          context={aiContext}
+          purpose={purpose}
+          current={value}
+          onAccept={(media) => onChange({ ...media, alt: media.alt || value?.alt || "" })}
+          onClose={() => setAiOpen(false)}
+        />
       ) : null}
     </div>
   );
