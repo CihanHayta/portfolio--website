@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { profile } from "@/data/content";
 import { ADMIN_POST_FIELDS, getAdmin } from "@/lib/blog/admin";
 import { contentImages, contentText, sanitizeContent } from "@/lib/blog/blocks/model";
+import { SOURCES_REQUIRED_MESSAGE, readMeta, sourcesReady } from "@/lib/blog/meta";
 import { findPlaceholders } from "@/lib/blog/blocks/templates";
 import { readingMinutes } from "@/lib/blog/content";
 import { SLUG_PATTERN, slugify } from "@/lib/blog/slug";
@@ -214,13 +215,15 @@ export async function publishPost(id, revision, publishAt) {
 
   const { data: post, error } = await admin.supabase
     .from("blog_posts")
-    .select("title, slug, content_text, published_at, author_name, deleted_at")
+    .select("title, slug, content, content_text, published_at, author_name, deleted_at")
     .eq("id", id)
     .maybeSingle();
   if (error) return fail(dbError(error));
   if (!post || post.deleted_at) return fail("Yazı bulunamadı.");
 
   if (!post.title) return fail("Yayınlamadan önce bir başlık yaz.");
+  // Kaynakça zorunlu: gerçek kaynak ya da yazarın açık "kendi deneyimim" beyanı.
+  if (!sourcesReady(readMeta(post.content))) return fail(SOURCES_REQUIRED_MESSAGE);
   if (isAutoSlug(post.slug)) return fail("Yayınlamadan önce bir kalıcı bağlantı belirle.");
   if (!post.content_text.trim()) return fail("Yayınlamadan önce yazı içeriğini ekle.");
   const leftover = placeholderError(post.content_text);
@@ -264,6 +267,7 @@ export async function publishGeneratedPost(id, revision, input) {
   if (!row.content_text.trim()) return fail("Yayınlamadan önce yazı içeriğini ekle.");
   const leftover = placeholderError(row.content_text);
   if (leftover) return fail(leftover);
+  if (!sourcesReady(readMeta(row.content))) return fail(SOURCES_REQUIRED_MESSAGE);
   if (!row.cover_media_id) return fail("Kapak görseli olmadan yayınlanamaz.");
   if (!row.cover_alt) return fail("Kapak görselinin alt metni boş olamaz.");
 

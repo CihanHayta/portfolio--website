@@ -1,16 +1,18 @@
 // GERÇEK kullanıcı akışı (Playwright) — TEST Supabase projesine bağlı sunucuda.
 //   1) node scripts/supabase/dev-test.mjs          (ayrı terminalde, :3100)
 //   2) node tests/e2e/blog-flow.e2e.mjs
-// Gerçek giriş, gerçek veritabanı ve depolama; sınırlı gerçek AI (1 Gemini planı,
-// 1 Pollinations görseli). Geçici yönetici ve tüm "e2e-" kayıtları sonunda silinir.
+// Gerçek giriş, gerçek veritabanı ve depolama; sınırlı gerçek AI (1 ücretsiz metin
+// servisi görsel planı). Otomatik görsel üretimi yok: kapak ChatGPT ile elle üretim
+// akışıyla (test dosyası) eklenir. Geçici yönetici ve tüm "e2e-" kayıtları sonunda silinir.
 // Canlı veritabanına bağlanmaz: hedef proje test projesidir ve sayfada doğrulanır.
 
 import { randomBytes } from "node:crypto";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
+import sharp from "sharp";
 import { projectKeys, sql } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
 import { prepareContext, targetFetch } from "./_target.mjs";
@@ -171,73 +173,44 @@ try {
   const [row] = await sql(ref, `select title, slug, seo_title, status from public.blog_posts where id = '${postId}'`);
   check(row?.slug === `${RUN}-butce` && row.status === "draft", "kayıt test veritabanında doğrulandı (taslak)");
 
-  step("Gerçek AI: görsel planı + Pollinations görseli + ekleme + geri al");
-  // Telefonda tek görsel girişi "Görseller"; bölüm planı (AI Görselleri) "Yeni üret" sekmesinden açılır.
+  step("Gerçek AI: görsel planı (metin) + ChatGPT ile elle kapak + geri al");
+  // Otomatik görsel üretimi yok (2026-10-30): görsel planı gerçek ücretsiz METİN servisiyle
+  // üretilir (uygulamanın kendi API'si, oturum açmış sayfadan); kapak ChatGPT'de elle
+  // üretilip yüklenir (ChatGPT otomatikleştirilmez, test dosyası kullanılır).
+  const [content] = await sql(ref, `select content from public.blog_posts where id = '${postId}'`);
+  const sections = (content?.content?.blocks ?? []).filter((block) => block.type === "heading").map((block) => ({ id: block.id, level: Number(block.props.level) === 3 ? 3 : 2, heading: block.props.text, text: "", words: 0 }));
+  const plan = await page.evaluate(async ({ id, sections: list }) => {
+    const response = await fetch("/api/admin/ai/visual-plan", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ opId: crypto.randomUUID(), postId: id, title: document.querySelector("textarea[aria-label='Yazı başlığı'], input[aria-label='Yazı başlığı']")?.value ?? "", sections: list }) });
+    return { status: response.status, body: await response.json().catch(() => ({})) };
+  }, { id: postId, sections });
+  const planned = plan.status === 200 && (plan.body.plan?.items?.length ?? 0) > 0;
+  check(planned, `gerçek ücretsiz metin servisiyle görsel planı oluştu (${plan.body.provider ?? plan.body.error ?? plan.status}; beklenen: ${TEXT_LABEL})`);
   await bar.getByRole("button", { name: "Görseller" }).click();
   const images = page.getByRole("dialog", { name: "Görseller" });
-  await images.waitFor();
-  await images.getByRole("tab", { name: "Yeni üret" }).click();
-  await images.getByRole("button", { name: /AI Görselleri/ }).click();
-  const dialog = page.getByRole("dialog", { name: "AI Görselleri" });
-  await dialog.waitFor();
-  await dialog.getByRole("button", { name: "Görsel planını hazırla" }).click();
-  const firstCard = dialog.locator("li[aria-labelledby^='visual-v']").first();
-  const planned = await firstCard.waitFor({ timeout: 70_000 }).then(() => true, () => false);
-  check(planned, `gerçek ücretsiz metin servisiyle görsel planı oluştu (beklenen: ${TEXT_LABEL})`);
-  let coverInserted = false;
-  if (planned) {
-    await firstCard.getByRole("radio", { name: "AI ile üret" }).click();
-    // Ücretsiz servis anlık olarak düşebilir (ör. HTTP 503): hata anlaşılır olmalı, ücretli
-    // servise geçilmemeli; bir kez yeniden denenir. Yine olmazsa akışın geri kalanı sürer.
-    const generateOnce = async () => {
-      await firstCard.getByRole("button", { name: /Görsel üret|Tekrar oluştur/ }).click();
-      const ready = firstCard.getByRole("button", { name: "Bu görseli seç" }).first().waitFor({ timeout: 90_000 }).then(() => "ok");
-      const failed = firstCard.getByRole("alert").filter({ hasText: /görsel üretemedi/ }).waitFor({ timeout: 90_000 }).then(() => "error");
-      return Promise.any([ready, failed]).catch(() => "timeout");
-    };
-    let outcome = await generateOnce();
-    if (outcome === "error") {
-      const message = await firstCard.getByRole("alert").filter({ hasText: /görsel üretemedi/ }).innerText();
-      check(/Ücretli bir servise geçilmedi/.test(message), "ücretsiz servis düşünce anlaşılır hata, ücretli servise geçilmedi");
-      console.log(`  (dış servis hatası, 20 sn sonra bir kez yeniden deneniyor: ${message.slice(0, 160)})`);
-      await page.waitForTimeout(20_000);
-      outcome = await generateOnce();
-    }
-    const generated = outcome === "ok";
-    const cardText = await firstCard.innerText();
-    check(generated, `gerçek ücretsiz görsel üretildi${generated ? ` (${cardText.match(/Pollinations|Cloudflare|ComfyUI/)?.[0] ?? "?"})` : ` — DIŞ SERVİS: ${outcome}`}`);
-    if (!generated) await dialog.getByRole("button", { name: "Görsel stüdyosunu kapat" }).click();
-    if (generated) {
-      check(/sana|flux|model bildirilmedi/i.test(cardText) && /filigranlı|Apache-2\.0|lisans/i.test(cardText), "aday gerçek model adı ve lisans notuyla");
-      await firstCard.getByRole("button", { name: "Bu görseli seç" }).first().click();
-      const alt = firstCard.getByLabel(/Alt metin/);
-      if (!(await alt.inputValue()).trim()) await alt.fill("Reklam bütçesi planlama görseli");
-      const isCover = (await firstCard.getByRole("combobox", { name: "Hedef bölüm" }).inputValue()) === "cover";
-      const risk = dialog.getByRole("checkbox", { name: /Bilerek ekliyorum/ });
-      if (await risk.count()) await risk.check();
-      await dialog.getByRole("button", { name: "Seçili görselleri taslağa ekle" }).click();
-      check(await toast(page, /görsel taslağa eklendi/, 40_000), "seçilen görsel medya kütüphanesine yüklenip taslağa eklendi");
-      await dialog.getByRole("button", { name: "Görsel stüdyosunu kapat" }).click();
-      coverInserted = isCover;
-      if (isCover) {
-        const coverImg = () => page.getByRole("article", { name: "Yazı tuvali" }).locator("img").first();
-        check((await coverImg().count()) > 0, "kapak görseli tuvalde");
-        await page.getByRole("button", { name: "Geri al" }).click();
-        check((await page.getByRole("article", { name: "Yazı tuvali" }).locator("img").count()) === 0, "Geri al: kapak görseli de geri alındı");
-        await page.getByRole("button", { name: "İleri al" }).click();
-        check((await coverImg().count()) > 0, "İleri al: kapak geri geldi");
-      }
-      await page.getByRole("button", { name: "Taslak Kaydet" }).click();
-      await page.waitForURL(/\/admin\/blog\?kaydedildi=/, { timeout: 20_000 });
-      check(await toast(page, "Taslak kaydedildi."), "görselli taslak kaydedildi");
-      await page.goto(`${base}/admin/blog/${postId}`, { waitUntil: "networkidle" });
-      await page.getByRole("textbox", { name: "Yazı başlığı" }).waitFor();
-      const [saved] = await sql(ref, `select cover_media_id, content::text like '%"type":"image"%' as has_image_block from public.blog_posts where id = '${postId}'`);
-      check(isCover ? Boolean(saved.cover_media_id) : saved.has_image_block, `yenilemeden sonra ${isCover ? "kapak" : "bölüm görseli"} veritabanında korunuyor`);
-    }
-  } else {
-    await dialog.getByRole("button", { name: "Görsel stüdyosunu kapat" }).click();
-  }
+  await images.locator("[data-section=cover]").waitFor({ timeout: 30_000 });
+  await images.locator("[data-section=cover]").getByRole("button", { name: /Kapak oluştur \(ChatGPT\)/ }).click();
+  const handoff = images.getByTestId("handoff-panel");
+  await handoff.waitFor();
+  const coverFile = join(out, "kapak.png");
+  writeFileSync(coverFile, await sharp({ create: { width: 1200, height: 630, channels: 3, background: { r: 20, g: 20, b: 24 } } }).png().toBuffer());
+  await handoff.locator("input[type=file]").setInputFiles(coverFile);
+  await handoff.getByLabel("Alt metin (zorunlu)").fill("Reklam bütçesi planlama kapağı");
+  await handoff.getByRole("button", { name: /Kabul et ve kapak yap/ }).click();
+  await images.getByText("ChatGPT görseli kapak olarak ayarlandı.").waitFor({ timeout: 45_000 });
+  await images.getByRole("button", { name: "Bitti" }).click();
+  const coverImg = () => page.getByRole("article", { name: "Yazı tuvali" }).locator("img").first();
+  check((await coverImg().count()) > 0, "kapak görseli tuvalde");
+  await page.getByRole("button", { name: "Geri al" }).click();
+  check((await page.getByRole("article", { name: "Yazı tuvali" }).locator("img").count()) === 0, "Geri al: kapak görseli de geri alındı");
+  await page.getByRole("button", { name: "İleri al" }).click();
+  check((await coverImg().count()) > 0, "İleri al: kapak geri geldi");
+  await page.getByRole("button", { name: "Taslak Kaydet" }).click();
+  await page.waitForURL(/\/admin\/blog\?kaydedildi=/, { timeout: 20_000 });
+  check(await toast(page, "Taslak kaydedildi."), "kapaklı taslak kaydedildi");
+  await page.goto(`${base}/admin/blog/${postId}`, { waitUntil: "networkidle" });
+  await page.getByRole("textbox", { name: "Yazı başlığı" }).waitFor();
+  const [saved] = await sql(ref, `select cover_media_id from public.blog_posts where id = '${postId}'`);
+  check(Boolean(saved?.cover_media_id), "yenilemeden sonra kapak veritabanında korunuyor");
 
   step("Mobil alt çubuk: önizleme, onaylı yayın");
   const actions = page.getByRole("navigation", { name: "Yazı işlemleri" });
@@ -252,6 +225,10 @@ try {
   await actions.getByRole("button", { name: "Yayınla" }).click();
   const confirmPublish = page.getByRole("dialog", { name: "Yazı yayınlansın mı?" });
   check(await confirmPublish.isVisible(), "yayından önce kısa onay soruldu (adres gösteriliyor)");
+  // Kaynakça zorunlu: kaynak yokken yayın düğmesi pasif; açık beyanla açılır.
+  check(await confirmPublish.getByRole("button", { name: "Yayınla" }).isDisabled(), "kaynakça yokken yayınlanamıyor (düğme pasif)");
+  check((await confirmPublish.innerText()).includes("Kaynakça eksik"), "onay penceresi kaynakçanın eksik olduğunu söylüyor");
+  await confirmPublish.getByRole("switch", { name: /kendi deneyimime dayanıyor/ }).check();
   // Çift dokunma: yalnızca bir yayın isteği gider, hata bildirimi çıkmaz.
   await confirmPublish.getByRole("button", { name: "Yayınla" }).dblclick();
   check(await toast(page, "Yazı yayında."), "yazı yayınlandı");
@@ -259,6 +236,8 @@ try {
   const publicPage = await mobile.newPage();
   const response = await publicPage.goto(`${base}/blog/${RUN}-butce`, { waitUntil: "networkidle" });
   check(response.status() === 200 && (await publicPage.locator("h1").innerText()).includes("E2E Reklam Bütçesi"), "yayındaki yazı herkese açık sayfada görünüyor");
+  const [published] = await sql(ref, `select content->'meta'->>'sourcesWaived' as waived from public.blog_posts where id = '${postId}'`);
+  check(published?.waived === "true", "beyan (kendi deneyimim) yazıyla birlikte kaydedildi");
   check(await publicPage.evaluate(() => document.documentElement.scrollWidth - innerWidth) <= 0, "herkese açık yazı sayfasında taşma yok");
   await publicPage.close();
 

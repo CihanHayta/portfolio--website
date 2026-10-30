@@ -37,7 +37,8 @@ import {
   trashPost,
   unpublishPost,
 } from "@/app/admin/blog/actions";
-import { contentHeadings, createBlock, toBlocks } from "@/lib/blog/blocks/model";
+import { contentHeadings, contentText, createBlock, toBlocks } from "@/lib/blog/blocks/model";
+import { danglingCitations } from "@/lib/blog/citations";
 import { instantiateTemplate } from "@/lib/blog/blocks/templates";
 import { placeAtTargets } from "@/lib/blog/blocks/imageTargets";
 import { dropBlocks } from "@/lib/blog/blocks/arrange";
@@ -223,6 +224,9 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
   const state = postState(meta);
   const autosaves = meta.status === "draft";
   const headings = useMemo(() => contentHeadings({ type: "blocks", blocks }), [blocks]);
+  // Metinde kaynakçada karşılığı olmayan [n] atıfları (uyarı; yayını engellemez).
+  const dangling = useMemo(() => danglingCitations(contentText({ type: "blocks", version: 1, blocks }), form.sources.length), [blocks, form.sources.length]);
+  const sourcesOk = sourcesReady({ sources: form.sources, sourcesWaived: form.sourcesWaived });
   const selectedBlock = blocks.find((block) => block.id === selectedId) ?? null;
 
   // --- Kaydetme ---------------------------------------------------------------
@@ -1033,6 +1037,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
               onSchedule: setSchedule,
               onCategoryCreated: (category) => setCategories((current) => [...current, category]),
               onTrash: () => setConfirmTrash(true),
+              dangling,
             }}
           />
           </ImageAiContext.Provider>
@@ -1101,6 +1106,7 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
         title={schedule ? "Yazı planlansın mı?" : "Yazı yayınlansın mı?"}
         confirmLabel={publishLabel}
         busy={busy === "publish"}
+        confirmDisabled={!sourcesOk}
         onCancel={() => setConfirmPublish(false)}
         onConfirm={publish}
       >
@@ -1108,6 +1114,32 @@ export default function BlogBuilder({ post, categories: initialCategories, siteH
           ? `Yazı ${formatDateTime(new Date(schedule).toISOString())} tarihinde herkese açık olur.`
           : `Yazı herkese açık olur: ${siteHost}/blog/${publishSlug || "…"}.`}{" "}
         Gerekirse daha sonra “Yayından kaldır” ile taslağa alabilirsin.
+        {form.sources.length === 0 ? (
+          <span className={styles.publishSources} role="group" aria-label="Kaynakça" data-ready={sourcesOk || undefined}>
+            {sourcesOk ? (
+              <span><strong>Kaynakça:</strong> yazının sonunda “Bu yazı yazarın kendi deneyim ve gözlemlerine dayanır.” notu görünecek.</span>
+            ) : (
+              <span><strong>Kaynakça eksik.</strong> Her yazının sonunda kullanılan kaynaklar gösterilir; kaynak uydurulmaz.</span>
+            )}
+            <button
+              type="button"
+              className={styles.btnSmall}
+              onClick={() => {
+                setConfirmPublish(false);
+                openPageSettings();
+                requestAnimationFrame(() => document.getElementById("kaynakca-ayari")?.scrollIntoView({ block: "start" }));
+              }}
+            >
+              Kaynak ekle
+            </button>
+            <label className={styles.toggle}>
+              <span>Bu yazı kendi deneyimime dayanıyor (kaynak yok)</span>
+              <input type="checkbox" role="switch" checked={form.sourcesWaived} onChange={(event) => updateForm({ sourcesWaived: event.target.checked })} />
+            </label>
+          </span>
+        ) : dangling.length ? (
+          <span className={styles.publishSources}>Not: metinde kaynakçada karşılığı olmayan atıf var ({dangling.map((n) => `[${n}]`).join(", ")}); bunlar bağlantıya dönüşmez.</span>
+        ) : null}
       </ConfirmDialog>
 
       <ConfirmDialog

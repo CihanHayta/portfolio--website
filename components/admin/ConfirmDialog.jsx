@@ -12,6 +12,7 @@ export default function ConfirmDialog({
   confirmLabel,
   danger = false,
   busy = false,
+  confirmDisabled = false,
   onConfirm,
   onCancel,
 }) {
@@ -46,7 +47,7 @@ export default function ConfirmDialog({
           className={styles.confirm}
           data-danger={danger}
           onClick={onConfirm}
-          disabled={busy}
+          disabled={busy || confirmDisabled}
         >
           {busy ? "İşleniyor…" : confirmLabel}
         </button>

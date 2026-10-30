@@ -117,18 +117,14 @@ try {
   check(await page.getByText("Bu yazı otomatik canlı ortam testidir").first().isVisible(), "önizleme içeriği gösteriyor");
   await actions.getByRole("button", { name: "Düzenle" }).click();
 
-  step("Gerçek AI: tek görsel planı (görsel üretilmez)");
-  await bar.getByRole("button", { name: "Görseller" }).click();
-  const images = page.getByRole("dialog", { name: "Görseller" });
-  await images.waitFor();
-  await images.getByRole("tab", { name: "Yeni üret" }).click();
-  await images.getByRole("button", { name: /AI Görselleri/ }).click();
-  const dialog = page.getByRole("dialog", { name: "AI Görselleri" });
-  await dialog.waitFor();
-  await dialog.getByRole("button", { name: "Görsel planını hazırla" }).click();
-  const planned = await dialog.locator("li[aria-labelledby^='visual-v']").first().waitFor({ timeout: 70_000 }).then(() => true, () => false);
-  check(planned, "canlıda ücretsiz metin servisiyle görsel planı oluştu");
-  await dialog.getByRole("button", { name: "Görsel stüdyosunu kapat" }).click();
+  step("Gerçek AI: tek görsel planı (metin; görsel üretilmez)");
+  // Otomatik görsel üretimi yok; görsel planı gerçek ücretsiz METİN servisiyle uygulamanın
+  // kendi API'sinden istenir (oturum açmış sayfadan). Sayaç canlı Supabase'de artmalı.
+  const plan = await page.evaluate(async (id) => {
+    const response = await fetch("/api/admin/ai/visual-plan", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ opId: crypto.randomUUID(), postId: id, title: document.querySelector("[aria-label='Yazı başlığı']")?.value ?? "E2E", sections: [{ id: "livesec01", level: 2, heading: "Canlı test bölümü", text: "", words: 0 }] }) });
+    return { status: response.status, body: await response.json().catch(() => ({})) };
+  }, postId);
+  check(plan.status === 200 && (plan.body.plan?.items?.length ?? 0) > 0, `canlıda ücretsiz metin servisiyle görsel planı oluştu (${plan.body.provider ?? plan.body.error ?? plan.status})`);
   const usageAfter = Number(await usage());
   check(usageAfter > usageBefore, `AI kullanım sayacı canlı Supabase'de arttı (${usageBefore} → ${usageAfter}; AI_USAGE_STORE=supabase çalışıyor)`);
 
@@ -136,6 +132,8 @@ try {
   await actions.getByRole("button", { name: "Yayınla" }).click();
   const confirmPublish = page.getByRole("dialog", { name: "Yazı yayınlansın mı?" });
   check(await confirmPublish.isVisible(), "yayından önce onay soruldu");
+  check(await confirmPublish.getByRole("button", { name: "Yayınla" }).isDisabled(), "kaynakça yokken yayın pasif (canlı)");
+  await confirmPublish.getByRole("switch", { name: /kendi deneyimime dayanıyor/ }).check();
   await confirmPublish.getByRole("button", { name: "Yayınla" }).click();
   check(await toast(page, "Yazı yayında."), "yazı yayınlandı");
   const publicPage = await context.newPage();

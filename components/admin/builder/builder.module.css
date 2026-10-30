@@ -2075,3 +2075,124 @@
     white-space: normal;
   }
 }
+
+/* --- Kaynakça editörü ------------------------------------------------------- */
+
+.sourceWarn {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--blog-accent-line);
+  border-radius: var(--blog-radius-control);
+  background: var(--blog-warning-soft);
+  color: var(--blog-warning);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sourceWarn svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.sourceList {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.sourceItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--blog-line);
+  border-radius: var(--blog-radius-control);
+  background: var(--blog-bg);
+}
+
+.sourceItem:has(> .sourceForm) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sourceNumber {
+  color: var(--blog-ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sourceText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.sourceText strong {
+  overflow-wrap: anywhere;
+}
+
+.sourceText a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow-wrap: anywhere;
+  color: var(--blog-link);
+  font-size: 12.5px;
+}
+
+.sourceTag {
+  justify-self: start;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--blog-bg-muted);
+  color: var(--blog-ink-soft);
+  font-size: 11px;
+}
+
+.sourceTools {
+  grid-column: 2;
+  display: flex;
+  gap: 4px;
+}
+
+.sourceForm {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sourceFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.fieldError {
+  margin: 0;
+  color: var(--blog-danger);
+  font-size: 12.5px;
+}
+
+/* Yayın onayında kaynakça eksikse gösterilen seçenekler. */
+.publishSources {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--blog-accent-line);
+  border-radius: var(--blog-radius-control);
+  background: var(--blog-warning-soft);
+  color: var(--blog-ink);
+  font-size: 13.5px;
+}
+
+.publishSources > button {
+  justify-self: start;
+}

@@ -11,6 +11,7 @@ import { toast } from "../toast";
 import { TYPE_ICONS } from "./blockIcons";
 import { Field, ImageControl } from "./fields";
 import { ImageAiContext } from "../images/imageAiContext";
+import SourcesEditor from "./SourcesEditor";
 import styles from "./builder.module.css";
 
 const MAX_TAGS = 10;
@@ -92,7 +93,7 @@ function seoHint(length, min, max) {
   return { text: `${length} karakter · uygun`, warn: false };
 }
 
-function PageSettings({ form, meta, state, categories, siteHost, postId, onUpdate, onCategoryCreated, schedule, onSchedule, onTrash, busy }) {
+function PageSettings({ form, meta, state, categories, siteHost, postId, onUpdate, onCategoryCreated, schedule, onSchedule, onTrash, busy, dangling = [] }) {
   const titleHint = seoHint(form.seoTitle.length, 30, 60);
   const descriptionHint = seoHint(form.seoDescription.length, 120, 155);
   const serpTitle = form.seoTitle.trim() || form.title.trim() || "Yazı başlığı";
@@ -290,6 +291,8 @@ function PageSettings({ form, meta, state, categories, siteHost, postId, onUpdat
         ) : null}
         <p className={styles.hint}>En fazla {MAX_TAGS} etiket. ({form.tags.length}/{MAX_TAGS})</p>
       </section>
+
+      <SourcesEditor sources={form.sources ?? []} waived={form.sourcesWaived} dangling={dangling} onChange={(value) => onUpdate(value)} />
 
       <section className={styles.section} aria-labelledby="set-seo">
         <h3 id="set-seo" className={styles.sectionTitle}>SEO</h3>
