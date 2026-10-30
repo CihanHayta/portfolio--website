@@ -24,7 +24,7 @@ Uygulamanın kendi yönlendiricisi (`generateJsonRouted`) kullanıldı. Her gör
 | Kaynak analizi | ✓ 11,6 sn | ✓ 2,3 sn |
 | Taslak (başlık, SEO, gövde; hedef 220 sözcük) | ✓ 156 sözcük, meta 143 kr | ✗ iki denemede de kısa: 117 ve 118 sözcük. Yalnızca **yedek**; genişletme turu tamamlar, açık taslak notunda görünür. |
 | Genişletme | ✓ | ✓ (hedefin altında ama kabul aralığında) |
-| Benzerlik | ✓ | ✓ |
+| Benzerlik | ✓ | ✓ yanıt verdi; ama **kullanılmıyor**. Preview gerçek testinde arşiv karşılaştırması (2 çağrı) dakikalık 2 isteği tüketti ve ardından gelen taslak hız sınırına takıldı. Gemini yoksa karşılaştırma yerel ölçümle yapılır. |
 | Görsel planı | ✓ 6,2 sn | ✓ 5,3 sn. İlk denemede anonim hız sınırı (dakikada 2 istek), 75 sn sonra geçti. |
 
 **Sıra:** Gemini birincil, OVH yedek. LLM7 ve Pollinations metin varsayılan olarak kapalı (şartlar doğrulanmadı). Groq ve OpenRouter'ın anahtarı yok, istek gönderilmez.
