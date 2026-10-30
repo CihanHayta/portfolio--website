@@ -71,10 +71,13 @@ try {
     // Preview'da Gemini anahtarı yok; taslak görevinde doğrulanmış ücretsiz yedek de yok.
     // Beklenen: anlaşılır hata, ücretli servise geçiş yok, girilen link korunur.
     check(state.startsWith("hata:"), `Gemini yokken taslak üretilmedi ve anlaşılır hata gösterildi (${state.slice(0, 90)})`);
+    await page.screenshot({ path: `${process.env.QA_OUT ?? "/tmp"}/yaz-hata.png` }).catch(() => {});
     const alertText = await failed.first().innerText().catch(() => "");
     check(/Ücretli bir servise geçilmedi/.test(alertText), "hata ekranı ücretli servise geçilmediğini açıkça söylüyor");
-    check((await studio.getByRole("button", { name: /Tekrar dene|Metni kendim ekle/ }).count()) > 0, "hata ekranında 'Tekrar dene / Metni kendim ekle' seçenekleri var");
-    check((await studio.getByPlaceholder("https://ornek.com/makale").inputValue()) === source, "girilen link kaybolmadı");
+    const dialog = page.getByRole("dialog", { name: "AI Blog Stüdyosu" });
+    check((await dialog.getByRole("button", { name: "Tekrar dene" }).count()) === 1 && (await dialog.getByRole("button", { name: "Metni kendim ekle" }).count()) === 1, "hata ekranında 'Tekrar dene' ve 'Metni kendim ekle' var");
+    check(await dialog.getByText(source, { exact: true }).isVisible(), "girilen link kaybolmadı (hata ekranında gösteriliyor)");
+    check(/Kaynak sayfa okunuyor[\s\S]*okundu/.test(await dialog.innerText()), "tamamlanan adımlar (okuma) korunuyor");
   } else check(state === "taslak" || state === "editörde", `kaynak analiz edildi ve taslak hazırlandı (${state})`);
   check(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth) <= 0, "AI stüdyosunda yatay taşma yok");
 
