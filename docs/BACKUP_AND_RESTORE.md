@@ -1,6 +1,6 @@
 # Yedekleme ve geri yükleme
 
-Durum tarihi: **2026-10-26**.
+Durum tarihi: **2026-10-31**.
 
 ## Özet
 
@@ -8,8 +8,8 @@ Durum tarihi: **2026-10-26**.
 |---|---|
 | Supabase'in kendi yedeği | **Yok.** Free plan otomatik yedek almaz, PITR yok ([kaynak](https://supabase.com/docs/guides/platform/backups)). |
 | Otomatik günlük yedek | **Hazır, son adım onay bekliyor.** Gizli `CihanHayta/persona-yedek` deposundaki iş akışı yazıldı ve test projesiyle uçtan uca sınandı. Canlıya bağlanması için bir migration ve bir gizli değişken gerekiyor (aşağıda). O zamana kadar iş akışı **devre dışı**. |
-| Elle yedekler | `/Volumes/Hayta-SSD/portfolio-yedek-2026-10-24`, `…-2026-10-25`, `…-2026-10-25-dagitim-oncesi` (tablolar + görsel dosyaları) |
-| Geri yükleme provası | 2026-10-26, test projesi: yedek → şifrele → çöz → geri yükle → **2/2 yazı içeriği ve 5/5 görsel dosyası birebir** |
+| Elle yedekler | `/Volumes/Hayta-SSD/persona-yedekler/` altında: `2026-10-29-parti-a-oncesi`, `2026-10-31-prova-canli` (7 yazı, 24 dosya) ve daha eskiler; ayrıca `/Volumes/Hayta-SSD/portfolio-yedek-2026-10-2x`. Depo dışında. |
+| Geri yükleme provası | **2026-10-31, geçici veritabanı (PGlite):** canlı yedek → 6 migration + geri yükleme → 7/7 yazı içeriği, başlık sırası, kapak ve etiket ilişkileri birebir; **24/24 dosya SHA-256 canlıyla aynı**. Kaynakçalı/koyu temalı yazı ve stüdyo oturumu içeren yedek de birebir geldi. 2026-10-26: test projesinde uçtan uca (şifrele → çöz → geri yükle) 2/2 yazı, 5/5 dosya. |
 
 ## Otomatik günlük yedek
 
@@ -18,8 +18,8 @@ Durum tarihi: **2026-10-26**.
 | | |
 |---|---|
 | Zamanlama | Her gün 03:30 (İstanbul). Ayrıca Actions → *Günlük yedek* → *Run workflow* ile elle. |
-| Veritabanı kapsamı | `public` şemasının **tüm** tabloları: blog yazıları ve taslaklar, kategori, etiket, medya kayıtları, AI kullanım kayıtları ve limit ayarları. Ayrıca migration geçmişi. |
-| Görsel kapsamı | `blog-media` kovasındaki **tüm dosyalar**; medya kaydı olmayanlar da dahil. Her dosyanın boyutu Storage kaydıyla karşılaştırılır, SHA-256 özeti yazılır. |
+| Veritabanı kapsamı | `public` şemasının **tüm** tabloları: blog yazıları ve taslaklar (kaynakça, tema ve blok sırası `content` içinde), kategori, etiket, medya kayıtları (köken bilgisiyle), stüdyo oturumları (`blog_studio_sessions`: kaynak, görsel seçimleri, bölüm eşlemesi), AI kullanım kayıtları ve limit ayarları. Ayrıca migration geçmişi ve **tüm kovaların Storage nesne listesi** (`storage_objects.json`). |
+| Görsel kapsamı | `blog-media` kovasındaki **tüm dosyalar** (maskot referansları `maskot/` dahil); medya kaydı olmayanlar da dahil. Her dosyanın boyutu Storage kaydıyla karşılaştırılır, SHA-256 özeti yazılır. **`studio-sources` (özel kova, kaynak ekran görüntüleri) dosyaları yedeğe girmez:** yalnızca analiz girdisidir, yayımlanmaz ve salt okunur rol özel kovadan dosya indiremez; listesi `storage_objects.json`'da durur. |
 | Bağlantı | Salt okunur `persona_backup` rolü: yalnızca SELECT, yazamaz, silemez. Supabase havuzu (session modu) üzerinden. |
 | Şifreleme | RSA-4096 (OAEP-SHA256) ile sarılmış AES-256-GCM. Depoda yalnızca **açık** anahtar var; Actions yedeği açamaz. GCM, değiştirilmiş dosyayı reddeder. |
 | Saklama | Actions artifact: günlük yedek 35 gün, her ayın 1'indeki yedek 90 gün. Kaynak veritabanından ayrı bir yerdedir. |
@@ -34,9 +34,11 @@ Durum tarihi: **2026-10-26**.
 
 ### Son adım: canlıyı bağlamak (bir kez)
 
+Önce kod `main`'e alınmış olmalı (iş akışı betikleri `main`'den okur). Sonra:
+
 ```bash
-node scripts/supabase/project.mjs migrate linked --dry-run
-node scripts/supabase/project.mjs migrate linked          # 20261026000000_backup_reader_role
+node scripts/supabase/project.mjs migrate linked --dry-run --only 20261026000000   # 2026-10-31: başarılı
+node scripts/supabase/project.mjs migrate linked --only 20261026000000             # yalnızca NOLOGIN rol + SELECT izinleri
 node scripts/backup/setup-backup-access.mjs linked --github CihanHayta/persona-yedek
 gh workflow enable "Günlük yedek" -R CihanHayta/persona-yedek
 gh workflow run "Günlük yedek" -R CihanHayta/persona-yedek    # ilk yedeği hemen al
@@ -82,7 +84,18 @@ node scripts/supabase/restore.mjs yedek     # yalnızca TEST projesine
 
 Herhangi biri tutmazsa çıkış kodu 1'dir. Elle (yerel) yedek için: `node scripts/supabase/backup.mjs <klasör>`. Bu betik Supabase CLI oturumunu kullanır ve salt okunurdur.
 
-**Prova (2026-10-26, test projesi):** `ci-backup.mjs` ile 12 tablo ve 5 dosya (190.884 bayt) alındı. Yedek şifrelendi, çözüldü, test projesi boşaltılıp geri yüklendi:
+**Prova (2026-10-31, geçici veritabanı — hiçbir projeye yazmaz):**
+
+```bash
+# PGlite projeye eklenmez; depo dışına bir kez kurulur:
+mkdir -p ../portfolio-tools/pgcheck && npm --prefix ../portfolio-tools/pgcheck i @electric-sql/pglite@0.3.7
+PGLITE_PATH=../portfolio-tools/pgcheck/node_modules/@electric-sql/pglite/dist/index.js \
+  node scripts/supabase/restore-rehearsal.mjs <yedek-klasörü> --verify-live-files
+```
+
+Bütün migration'lar sırayla uygulanır, yedek yüklenir ve şunlar doğrulanır: satır sayıları, her yazının slug/başlık/durum/içeriği (blok sırası, kaynakça, tema), başlık sırası, kapak ve etiket ilişkileri, içerikteki görsel adreslerinin medya kaydı, her dosyanın yedekte olması ve SHA-256'sının kaynaktakiyle aynı olması. Sonuç (canlı yedek, 2026-10-31): **tümü geçti, 24/24 dosya**. Test projesini boşaltıp gerçek Supabase'e geri yükleme adımı bu kez otomatik izin denetimince durduruldu; onun yerine bu izole prova yapıldı.
+
+**Önceki prova (2026-10-26, test projesi):** `ci-backup.mjs` ile 12 tablo ve 5 dosya (190.884 bayt) alındı. Yedek şifrelendi, çözüldü, test projesi boşaltılıp geri yüklendi:
 - 2/2 yazı slug, başlık ve içerik olarak birebir aynı.
 - 5/5 dosya SHA-256 ile doğrulandı.
 - Herkese açık sayfalar hatasız açıldı (`public-seo.e2e.mjs`).

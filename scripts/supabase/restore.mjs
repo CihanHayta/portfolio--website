@@ -55,12 +55,16 @@ const rewrite = (value) => oldPrefixes.reduce((text, prefix) => text.split(prefi
 const posts = JSON.parse(rewrite(JSON.stringify(read("blog_posts")))).map((post) => ({ ...post, author_id: null }));
 
 const insert = (table, rows) => (rows.length ? `insert into public.${table} select * from json_populate_recordset(null::public.${table}, ${TAG}${JSON.stringify(rows)}${TAG});` : "");
-for (const rows of [read("blog_categories"), read("blog_tags"), media, posts, read("blog_post_tags"), read("blog_slug_redirects")]) {
+// Stüdyo oturumları (taslağa bağlı kaynak, görsel seçimleri, bölüm eşlemesi): hedefte
+// tablo varsa geri yüklenir; düzenleyen kullanıcı hedefte olmayabileceği için boşaltılır.
+const [{ has_sessions: hasSessions }] = await sql(ref, "select exists(select 1 from information_schema.tables where table_schema = 'public' and table_name = 'blog_studio_sessions') as has_sessions");
+const sessions = hasSessions ? JSON.parse(rewrite(JSON.stringify(read("blog_studio_sessions")))).map((row) => ({ ...row, updated_by: null })) : [];
+for (const rows of [read("blog_categories"), read("blog_tags"), media, posts, read("blog_post_tags"), read("blog_slug_redirects"), sessions]) {
   if (JSON.stringify(rows).includes(TAG)) throw new Error("Veri ayraç etiketini içeriyor.");
 }
 await sql(
   ref,
-  ["begin;", "delete from public.blog_categories;", insert("blog_categories", read("blog_categories")), insert("blog_tags", read("blog_tags")), insert("blog_media", media), insert("blog_posts", posts), insert("blog_post_tags", read("blog_post_tags")), insert("blog_slug_redirects", read("blog_slug_redirects")), "commit;"].join("\n"),
+  ["begin;", "delete from public.blog_categories;", insert("blog_categories", read("blog_categories")), insert("blog_tags", read("blog_tags")), insert("blog_media", media), insert("blog_posts", posts), insert("blog_post_tags", read("blog_post_tags")), insert("blog_slug_redirects", read("blog_slug_redirects")), insert("blog_studio_sessions", sessions), "commit;"].join("\n"),
   { write: true }
 );
 
@@ -69,6 +73,7 @@ const [after] = await sql(ref, `select json_build_object(
   'blog_categories', (select count(*) from public.blog_categories), 'blog_tags', (select count(*) from public.blog_tags),
   'blog_media', (select count(*) from public.blog_media), 'blog_posts', (select count(*) from public.blog_posts),
   'blog_post_tags', (select count(*) from public.blog_post_tags), 'blog_slug_redirects', (select count(*) from public.blog_slug_redirects),
+  'blog_studio_sessions', ${hasSessions ? "(select count(*) from public.blog_studio_sessions)" : "0"},
   'orphan_post_tags', (select count(*) from public.blog_post_tags pt left join public.blog_posts p on p.id = pt.post_id where p.id is null),
   'broken_covers', (select count(*) from public.blog_posts p where p.cover_media_id is not null and not exists (select 1 from public.blog_media m where m.id = p.cover_media_id)),
   'foreign_storage_urls', (select count(*) from public.blog_posts p where p.content::text ~ 'https://[a-z0-9]+\\.supabase\\.co/storage' and p.content::text not like '%${url.replace("https://", "")}%')
@@ -94,6 +99,17 @@ for (const path of uploaded) {
   const local = createHash("sha256").update(readFileSync(join(dir, "storage", path))).digest("hex");
   if (remote !== local) fileMismatches.push(path);
 }
-const ok = mismatches.length === 0 && result.orphan_post_tags === 0 && result.broken_covers === 0 && result.foreign_storage_urls === 0 && contentMismatches.length === 0 && fileMismatches.length === 0;
-console.log(JSON.stringify({ restoredInto: "test", counts: result, uploadedFiles: uploaded.length, filesVerified: uploaded.length - fileMismatches.length, fileMismatches, contentVerified: posts.length - contentMismatches.length, contentMismatches, mismatches, ok }, null, 1));
+// Kaynakça, tema ve blok sırası content.meta/blocks içinde: içerik eşitliği bunları kapsar;
+// ayrıca sayısal özet raporlanır (kaç yazıda kaynakça/beyan/koyu tema var).
+const metaSummary = (list) => ({
+  withSources: list.filter((post) => (post.content?.meta?.sources ?? []).length > 0).length,
+  waived: list.filter((post) => post.content?.meta?.sourcesWaived === true).length,
+  dark: list.filter((post) => post.content?.meta?.theme === "dark").length,
+  blocks: list.reduce((sum, post) => sum + (post.content?.blocks?.length ?? 0), 0),
+});
+const metaBackup = metaSummary(posts);
+const metaRestored = metaSummary(restoredPosts);
+const metaOk = JSON.stringify(metaBackup) === JSON.stringify(metaRestored);
+const ok = metaOk && mismatches.length === 0 && result.orphan_post_tags === 0 && result.broken_covers === 0 && result.foreign_storage_urls === 0 && contentMismatches.length === 0 && fileMismatches.length === 0;
+console.log(JSON.stringify({ restoredInto: "test", counts: result, meta: { backup: metaBackup, restored: metaRestored, ok: metaOk }, uploadedFiles: uploaded.length, filesVerified: uploaded.length - fileMismatches.length, fileMismatches, contentVerified: posts.length - contentMismatches.length, contentMismatches, mismatches, ok }, null, 1));
 process.exitCode = ok ? 0 : 1;

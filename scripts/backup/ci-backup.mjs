@@ -47,6 +47,13 @@ for (const table of tables) {
 }
 manifest.migrations = JSON.parse(query("select coalesce(json_agg(version || '_' || coalesce(name, '') order by version), '[]') from supabase_migrations.schema_migrations"));
 
+// Storage meta verisi (tüm kovalar). Özel "studio-sources" kovasındaki ekran görüntüleri
+// yalnızca analiz girdisidir; dosyaları bu salt okunur rolle indirilemez ve yedeğe
+// girmez, listeleri storage_objects.json'da kayıtlıdır (bkz. docs/BACKUP_AND_RESTORE.md).
+const allObjects = query("select coalesce(json_agg(json_build_object('bucket', bucket_id, 'name', name, 'size', (metadata->>'size')::bigint) order by bucket_id, name), '[]') from storage.objects");
+writeFileSync(join(out, "tables", "storage_objects.json"), allObjects);
+manifest.tables.storage_objects = { rows: JSON.parse(allObjects).length, sha256: sha(allObjects) };
+
 const objects = JSON.parse(query("select coalesce(json_agg(json_build_object('name', name, 'size', (metadata->>'size')::bigint) order by name), '[]') from storage.objects where bucket_id = 'blog-media'"));
 for (const object of objects) {
   try {

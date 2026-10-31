@@ -13,7 +13,7 @@ const args = process.argv.slice(2);
 const refFlag = args.indexOf("--ref");
 const ref = refFlag >= 0 ? args[refFlag + 1] : linkedProject().ref;
 const out = args.find((arg, index) => !arg.startsWith("--") && args[index - 1] !== "--ref") ?? `backups/${new Date().toISOString().slice(0, 10)}`;
-const TABLES = ["blog_admins", "blog_categories", "blog_tags", "blog_media", "blog_posts", "blog_post_tags", "blog_slug_redirects"];
+const TABLES = ["blog_admins", "blog_categories", "blog_tags", "blog_media", "blog_posts", "blog_post_tags", "blog_slug_redirects", "blog_studio_sessions"];
 const AI_TABLES = ["ai_limit_overrides", "ai_usage_counters", "ai_jobs", "ai_usage_events"];
 const sha = (data) => createHash("sha256").update(data).digest("hex");
 
@@ -28,6 +28,13 @@ for (const table of [...TABLES, ...AI_TABLES].filter((name) => existing.includes
   manifest.tables[table] = { rows: row.rows.length, sha256: sha(body) };
 }
 manifest.migrations = (await sql(ref, "select version, name from supabase_migrations.schema_migrations order by version")).map((row) => `${row.version}_${row.name}`);
+
+// Storage meta verisi (tüm kovalar): hangi dosyanın hangi kovada olduğu ve boyutu.
+// Özel "studio-sources" kovasındaki ekran görüntülerinin DOSYALARI yedeğe girmez
+// (yalnızca analiz girdisi; yayımlanmaz); listeleri burada kayıtlıdır.
+const objects = await sql(ref, "select bucket_id, name, (metadata->>'size')::bigint as size, created_at from storage.objects order by bucket_id, name");
+writeFileSync(join(out, "tables", "storage_objects.json"), JSON.stringify(objects, null, 1));
+manifest.storageObjects = objects.reduce((acc, row) => ({ ...acc, [row.bucket_id]: (acc[row.bucket_id] ?? 0) + 1 }), {});
 
 // Görsel dosyaları: kova herkese açık okunur; medya kayıtlarındaki URL'lerden indirilir.
 const media = JSON.parse(JSON.stringify((await sql(ref, "select storage_path, url from public.blog_media"))));
