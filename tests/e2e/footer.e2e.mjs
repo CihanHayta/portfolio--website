@@ -6,6 +6,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright-core";
+import { prepareContext } from "./_target.mjs";
 const base = process.env.BASE_URL ?? "http://localhost:3000";
 const out = process.env.QA_OUT ?? mkdtempSync(join(tmpdir(), "persona-e2e-"));
 console.log(`Adres: ${base} · ekran görüntüleri: ${out}`);
@@ -17,7 +18,7 @@ let failures = 0;
 const check = (ok, label) => { if (!ok) failures++; console.log(`${ok ? "  ok  " : "  FAIL"} ${label}`); };
 for (const path of paths) {
   for (const [w, h] of VIEWPORTS) {
-    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: w < 800, hasTouch: w < 800 });
+    const page = await (await prepareContext(await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: w < 800, hasTouch: w < 800 }), base)).newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(base + path, { waitUntil: "networkidle", timeout: 60000 });

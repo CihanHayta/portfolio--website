@@ -8,6 +8,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright-core";
+import { prepareContext } from "./_target.mjs";
 const base = process.env.BASE_URL ?? "http://localhost:3000";
 const out = process.env.QA_OUT ?? mkdtempSync(join(tmpdir(), "persona-e2e-"));
 console.log(`Adres: ${base} · ekran görüntüleri: ${out}`);
@@ -19,7 +20,8 @@ const check = (ok, label) => { if (!ok) failures++; console.log(`${ok ? "  ok  "
 
 for (const [w, h] of VIEWPORTS) {
   console.log(`\n=== ${w}x${h}`);
-  const context = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: w < 800, hasTouch: w < 800 });
+  // prepareContext: korumalı Preview'da otomasyon atlatma çerezi (yerel/canlıda etkisiz).
+  const context = await prepareContext(await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, isMobile: w < 800, hasTouch: w < 800 }), base);
   const page = await context.newPage();
   const errors = [];
   const actions = [];

@@ -1,6 +1,6 @@
 # Dağıtım (Vercel)
 
-Durum tarihi: **2026-10-26**.
+Durum tarihi: **2026-10-31**.
 
 ## Özet
 
@@ -24,6 +24,16 @@ Durum tarihi: **2026-10-26**.
 | `8da1c51` | `dpl_GyzSMAVwkNaYK4Hmh8dMfPrh6sE1` | Görsel planında yedek servise süre ayrılır |
 | `18bbab7` | `dpl_56NFmG1Afsoye79g8PM9AoJ63wQg` | Erişilebilirlik düzeltmesi ve axe testi |
 | `31a1dc6` | `dpl_38XKSBdiotWabMpHmfUiJsvAi2AJ` | Stüdyo: genişletme hatasında taslak korunur; yedek betikleri; belgeler |
+
+### Blog sistemi kapsamlı turu (2026-10-30/31) — durum
+
+| Adım | Durum |
+|---|---|
+| Kod | `blok-editoru` dalı, `ea1641b` + test kurulumu düzeltmesi. `main` hâlâ `abbed4c` (canlı kod `31a1dc6`). |
+| Son Preview | `dpl_GDpiimw2KcTrDVXCH2KUTHz3WHtb` (TEST veritabanı). Geçen takımlar: admin-login, footer, public-seo, public-article (5 genişlik), blog-list, theme, image-sections, sources, block-ai-image, dnd, overlay (WebKit + Chromium), a11y, ai-write-flow, blog-flow (gerçek OVH), ai-write-mobile (Gemini'siz mod). |
+| Canlı migration `20261027000000_studio_drafts` | **Site sahibinin komutunu bekliyor.** 2026-10-30: taze yedek (`/Volumes/Hayta-SSD/persona-yedekler/2026-10-29-parti-a-oncesi`), `--dry-run --only` başarılı; uygulama otomatik güvenlik denetiminde yine durduruldu. |
+| Canlı kod | Migration'dan SONRA: `git push origin <sha>:main`, ardından `live-admin` (`E2E_ALLOW_PRODUCTION=1`), `public-seo`, `footer`, `admin-login`. |
+| Yedek rolü `20261026000000` | `--dry-run --only` başarılı (2026-10-31). Rol + GitHub gizli değişkeni adımı site sahibinde (`BACKUP_AND_RESTORE.md`). |
 
 ### Görseller, sürükle-bırak ve kalıcı stüdyo turu (2026-10-29) — durum
 
