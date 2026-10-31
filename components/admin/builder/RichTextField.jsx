@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import { EditorContent, Mark, mergeAttributes, useEditor, useEditorState } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
@@ -9,6 +9,7 @@ import {
   Bold,
   Code,
   Columns3,
+  Highlighter,
   Italic,
   Link as LinkIcon,
   List,
@@ -26,10 +27,23 @@ import { safeHref } from "@/lib/blog/content";
 import proseStyles from "@/components/blog/PostContent.module.css";
 import styles from "./RichTextField.module.css";
 
+// Seçici vurgu: önemli ifadeyi hafif zemin altı çizgisiyle öne çıkarır (yayımlanmış
+// sayfada da aynı). Kalın metin otomatik turuncu yapılmaz; vurgu yazarın seçimidir.
+const Accent = Mark.create({
+  name: "accent",
+  parseHTML() {
+    return [{ tag: "mark[data-accent]" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["mark", mergeAttributes(HTMLAttributes, { "data-accent": "", class: proseStyles.accent }), 0];
+  },
+});
+
 // Blok içi zengin metin alanı. Başlık, görsel ve video burada yoktur; onların
 // kendi blokları vardır. `compact` ayar panelindeki dar sürümdür.
 function createExtensions(compact, placeholder) {
   return [
+    Accent,
     StarterKit.configure({
       heading: false,
       horizontalRule: false,
@@ -137,6 +151,7 @@ export default function RichTextField({
         ? {
             bold: instance.isActive("bold"),
             italic: instance.isActive("italic"),
+            accent: instance.isActive("accent"),
             underline: instance.isActive("underline"),
             strike: instance.isActive("strike"),
             link: instance.isActive("link"),
@@ -187,6 +202,9 @@ export default function RichTextField({
         </Tool>
         <Tool label="İtalik" active={active.italic} onClick={() => chain().toggleItalic().run()}>
           <Italic size={16} />
+        </Tool>
+        <Tool label="Vurgula" active={active.accent} onClick={() => chain().toggleMark("accent").run()}>
+          <Highlighter size={16} />
         </Tool>
         {compact ? null : (
           <>

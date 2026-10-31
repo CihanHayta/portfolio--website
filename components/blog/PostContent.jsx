@@ -1,5 +1,7 @@
+import { Fragment } from "react";
 import Image from "next/image";
 import { collectHeadings, isMediaUrl, safeHref, youtubeId } from "@/lib/blog/content";
+import { sourceAnchor, splitCitations } from "@/lib/blog/citations";
 import styles from "./PostContent.module.css";
 
 // Tiptap JSON belgesini doğrudan React öğelerine çevirir. HTML dizgesi hiç
@@ -7,8 +9,31 @@ import styles from "./PostContent.module.css";
 
 const MARK_TAGS = { bold: "strong", italic: "em", underline: "u", strike: "s", code: "code" };
 
-function renderText(node, key) {
-  let element = node.text;
+// [1], [2, 3] → kaynakçadaki numaralı kaynağa üst simge bağlantısı (yalnızca var olan numaralar).
+function withCitations(text, count) {
+  const parts = splitCitations(text, count);
+  if (parts.length === 1 && parts[0].text !== undefined) return text;
+  return parts.map((part, index) =>
+    part.refs ? (
+      <sup key={index} className={styles.cite}>
+        [
+        {part.refs.map((n, position) => (
+          <Fragment key={n}>
+            {position ? ", " : ""}
+            <a href={`#${sourceAnchor(n)}`} aria-label={`Kaynak ${n}`}>{n}</a>
+          </Fragment>
+        ))}
+        ]
+      </sup>
+    ) : (
+      <Fragment key={index}>{part.text}</Fragment>
+    )
+  );
+}
+
+function renderText(node, key, ctx = {}) {
+  const linked = (node.marks ?? []).some((mark) => mark.type === "link");
+  let element = !linked && ctx.citations ? withCitations(node.text, ctx.citations) : node.text;
   for (const mark of node.marks ?? []) {
     if (mark.type === "link") {
       const href = safeHref(mark.attrs?.href);
@@ -18,6 +43,12 @@ function renderText(node, key) {
         <a href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
           {element}
         </a>
+      );
+    } else if (mark.type === "accent") {
+      element = (
+        <mark className={styles.accent} data-accent="">
+          {element}
+        </mark>
       );
     } else if (MARK_TAGS[mark.type]) {
       const Tag = MARK_TAGS[mark.type];
@@ -34,7 +65,7 @@ function renderChildren(node, ctx) {
 function renderNode(node, key, ctx) {
   switch (node.type) {
     case "text":
-      return renderText(node, key);
+      return renderText(node, key, ctx);
     case "paragraph":
       return <p key={key}>{renderChildren(node, ctx)}</p>;
     case "heading": {
@@ -125,10 +156,11 @@ function renderNode(node, key, ctx) {
   }
 }
 
-export default function PostContent({ doc, className = "" }) {
+// `citations`: kaynakçadaki kaynak sayısı (metindeki [n] bağlantıları için).
+export default function PostContent({ doc, className = "", citations = 0 }) {
   const headingIds = new Map(collectHeadings(doc).map(({ node, id }) => [node, id]));
   return (
     // data-doc-root: editörde paragraflar arasına bırakma noktaları bu kökten ölçülür.
-    <div className={`${styles.prose} ${className}`} data-doc-root="">{renderChildren(doc ?? {}, { headingIds })}</div>
+    <div className={`${styles.prose} ${className}`} data-doc-root="">{renderChildren(doc ?? {}, { headingIds, citations })}</div>
   );
 }

@@ -1,14 +1,17 @@
 import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
-import { profile } from "@/data/content";
+import { home, profile } from "@/data/content";
+import { relatedServices } from "@/lib/blog/relatedServices";
 import { contentText, faqSchemaItems } from "@/lib/blog/blocks/model";
+import { readMeta } from "@/lib/blog/meta";
 import { DEFAULT_OG_IMAGE, ORGANIZATION_ID, openGraph, organizationJsonLd, twitter } from "@/lib/seo";
 import { PRODUCTION_SITE_URL, SITE_URL } from "@/lib/supabase/env";
 import { postCanonical } from "@/lib/blog/canonical";
 import { getPostBySlug, getRedirectSlug, listRelatedPosts } from "@/lib/blog/queries";
-import ArticleCta from "@/components/blog/ArticleCta";
+import ArticleClosing from "@/components/blog/ArticleClosing";
 import BlogContactCard from "@/components/blog/BlogContactCard";
 import ArticleView from "@/components/blog/ArticleView";
+import ReadingProgress from "@/components/blog/ReadingProgress";
 import PostCard from "@/components/blog/PostCard";
 import styles from "./page.module.css";
 
@@ -128,8 +131,12 @@ export default async function BlogPostPage({ params }) {
       }
     : null;
 
+  // Yazının teması (content.meta.theme) sayfanın tamamına uygulanır.
+  const tone = readMeta(post.content).theme === "dark" ? "dark" : "light";
+
   return (
-    <main>
+    <main data-page-tone={tone}>
+      <ReadingProgress />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(articleSchema)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(breadcrumbSchema)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(organizationJsonLd())} />
@@ -138,13 +145,20 @@ export default async function BlogPostPage({ params }) {
       ) : null}
 
       <ArticleView post={post}>
-        <ArticleCta />
+        <ArticleClosing
+          services={relatedServices(home.services.items, {
+            title: post.title,
+            category: post.category?.name ?? "",
+            tags: (post.tags ?? []).map((tag) => tag.name),
+            text: contentText(post.content),
+          })}
+        />
       </ArticleView>
 
       {related.length > 0 ? (
         <section className={`container ${styles.related}`} aria-labelledby="ilgili-baslik">
           <h2 id="ilgili-baslik" className={styles.relatedTitle}>
-            İlgili yazılar
+            {post.category?.name ? `${post.category.name} Üzerine Diğer Yazılar` : "Dijital Pazarlama Üzerine Diğer Yazılar"}
           </h2>
           <div className={styles.relatedGrid}>
             {related.map((item) => (

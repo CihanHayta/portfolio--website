@@ -4,11 +4,12 @@ import { ArrowRight, CalendarDays, ImageIcon } from "lucide-react";
 import { formatDate } from "@/lib/blog/format";
 import styles from "./PostCard.module.css";
 
-export default function PostCard({ post, priority = false, headingLevel = 2 }) {
+// `reveal`: blog listesindeki tek seferlik belirme animasyonuna katılır (ListReveal).
+export default function PostCard({ post, priority = false, headingLevel = 2, reveal = false }) {
   const Heading = `h${headingLevel}`;
 
   return (
-    <article className={styles.card}>
+    <article className={styles.card} data-list-reveal={reveal ? "" : undefined}>
       <div className={styles.media}>
         {post.cover ? (
           <Image

@@ -2258,3 +2258,10 @@
   flex-wrap: wrap;
   gap: 6px;
 }
+
+/* Yazı koyu temadaysa tuval de koyu (yayımlanmış sayfayla aynı görünüm). */
+.paper[data-tone="dark"] {
+  background: var(--blog-bg-page);
+  color: var(--blog-body);
+  border-color: var(--blog-line);
+}

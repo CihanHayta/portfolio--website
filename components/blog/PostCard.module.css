@@ -8,7 +8,14 @@
   transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
 
-.card:hover,
+/* Hover yalnızca fareli cihazlarda (dokunmatikte "takılı" görünüm olmaz); klavye odağı her yerde. */
+@media (hover: hover) {
+  .card:hover {
+    border-color: var(--blog-accent-line);
+    box-shadow: var(--blog-shadow-card);
+  }
+}
+
 .card:focus-within {
   border-color: var(--blog-accent-line);
   box-shadow: var(--blog-shadow-card);
@@ -44,6 +51,8 @@
   border: 1px solid var(--blog-line);
   border-radius: var(--radius-pill);
   background: var(--blog-bg);
+  border-color: var(--blog-accent-line);
+  color: var(--blog-accent-text);
   font-size: 11.5px;
   font-weight: 700;
   line-height: 1.3;
@@ -56,7 +65,19 @@
   padding: 22px 14px 14px;
 }
 
+/* İnce marka vurgusu: başlığın üstünde kısa çizgi. */
+.body::before {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 2px;
+  margin-bottom: 10px;
+  border-radius: 1px;
+  background: var(--blog-h2-rule);
+}
+
 .title {
+  color: var(--blog-heading);
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -116,7 +137,14 @@
   transition: background 0.2s var(--ease), color 0.2s var(--ease), transform 0.2s var(--ease);
 }
 
-.card:hover .arrow,
+@media (hover: hover) {
+  .card:hover .arrow {
+    background: var(--blog-accent);
+    color: var(--blog-on-accent);
+    transform: translateX(2px);
+  }
+}
+
 .card:focus-within .arrow {
   background: var(--blog-accent);
   color: var(--blog-on-accent);

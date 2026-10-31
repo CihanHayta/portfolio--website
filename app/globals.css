@@ -33,6 +33,10 @@
   --radius-pill: 999px;
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Sabit header (68px) + okuma çubuğu (3px): başlık çapaları bunların altında kalmaz. */
+  --site-header-h: 68px;
+  --anchor-offset: calc(var(--site-header-h) + 3px + 24px);
 }
 
 /* Blog ve yönetim paneli için kapsamlı token seti. app/blog ve app/admin
@@ -60,6 +64,17 @@
   --blog-warning: #7a4e2d;
   --blog-warning-soft: #f6ecdc;
 
+  /* Okuma ve vurgu token'ları (açık tema: mevcut kahverengi/altın görünüm). */
+  --blog-body: #2b2824; /* makale gövde metni */
+  --blog-heading: var(--p-night);
+  --blog-orange: #e0902f; /* tilki turuncusu (public/brand/persona-mark.png) — dekoratif çizgi/dolgu */
+  --blog-accent-text: var(--p-walnut); /* metin olarak vurgu (kontrast ≥4.5) */
+  --blog-h2-rule: var(--p-gold);
+  --blog-marker: var(--p-walnut);
+  --blog-emph-bg: rgba(201, 162, 75, 0.28); /* seçici vurgu: hafif alt zemin */
+  --blog-purple: #7c5cff; /* yalnızca koyu temada çok ölçülü ikincil ışık */
+  --blog-progress-track: rgba(20, 20, 20, 0.08);
+
   --blog-radius-card: 14px;
   --blog-radius-control: 8px;
   --blog-shadow-card: 0 1px 2px rgba(20, 20, 20, 0.04), 0 10px 28px rgba(20, 20, 20, 0.06);
@@ -70,6 +85,89 @@
   background: var(--blog-bg-page);
   color: var(--blog-ink);
   min-height: 100dvh;
+}
+
+/* --- Koyu tema ------------------------------------------------------------------
+   1) Yazının kendi seçimi (content.meta.theme = dark): herkese açık sayfanın tamamı
+      ([data-page-tone]) ve editörde tuval/önizleme ([data-tone]) koyu olur. Yönetim
+      panelinin geri kalanı etkilenmez.
+   2) Blog listesi ziyaretçinin cihaz ayarını izler (prefers-color-scheme). */
+[data-theme="blog"]:has([data-page-tone="dark"]),
+[data-theme="blog"] [data-tone="dark"] {
+  --blog-accent: var(--blog-orange);
+  --blog-accent-hover: #f0a24a;
+  --blog-on-accent: #141414;
+  --blog-accent-soft: rgba(224, 144, 47, 0.12);
+  --blog-accent-line: rgba(224, 144, 47, 0.32);
+  --blog-gold: var(--blog-orange);
+  --blog-link: #f2a957;
+
+  --blog-bg: #17171a;
+  --blog-bg-page: #0f0f10;
+  --blog-bg-muted: #1f1f23;
+  --blog-ink: #ffffff;
+  --blog-ink-soft: #bdb7ae;
+  --blog-ink-faint: #9b958c;
+  --blog-line: #2a2a2f;
+  --blog-line-strong: #3b3b42;
+
+  --blog-danger: #ff8a73;
+  --blog-danger-soft: rgba(255, 138, 115, 0.12);
+  --blog-warning: #f2a957;
+  --blog-warning-soft: rgba(242, 169, 87, 0.1);
+
+  --blog-body: #cdc8c0;
+  --blog-heading: #ffffff;
+  --blog-accent-text: #f2a957;
+  --blog-h2-rule: var(--blog-orange);
+  --blog-marker: var(--blog-orange);
+  --blog-emph-bg: rgba(224, 144, 47, 0.22);
+  --blog-progress-track: rgba(255, 255, 255, 0.1);
+  --blog-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.35);
+  --blog-shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="blog"]:has([data-blog-list]) {
+    --blog-accent: var(--blog-orange);
+    --blog-accent-hover: #f0a24a;
+    --blog-on-accent: #141414;
+    --blog-accent-soft: rgba(224, 144, 47, 0.12);
+    --blog-accent-line: rgba(224, 144, 47, 0.32);
+    --blog-gold: var(--blog-orange);
+    --blog-link: #f2a957;
+
+    --blog-bg: #17171a;
+    --blog-bg-page: #0f0f10;
+    --blog-bg-muted: #1f1f23;
+    --blog-ink: #ffffff;
+    --blog-ink-soft: #bdb7ae;
+    --blog-ink-faint: #9b958c;
+    --blog-line: #2a2a2f;
+    --blog-line-strong: #3b3b42;
+
+    --blog-danger: #ff8a73;
+    --blog-danger-soft: rgba(255, 138, 115, 0.12);
+    --blog-warning: #f2a957;
+    --blog-warning-soft: rgba(242, 169, 87, 0.1);
+
+    --blog-body: #cdc8c0;
+    --blog-heading: #ffffff;
+    --blog-accent-text: #f2a957;
+    --blog-h2-rule: var(--blog-orange);
+    --blog-marker: var(--blog-orange);
+    --blog-emph-bg: rgba(224, 144, 47, 0.22);
+    --blog-progress-track: rgba(255, 255, 255, 0.1);
+    --blog-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.35);
+    --blog-shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
+    color-scheme: dark;
+}
+}
+
+[data-tone="dark"] {
+  background: var(--blog-bg-page);
+  color: var(--blog-body);
 }
 
 [data-theme="blog"] :focus-visible {
@@ -104,7 +202,7 @@ html {
 /* Bağlantıyla gidilen bölümler sabit başlık çubuğunun (68 px) altında
    kalmasın. Kaydırma hareketi azaltma tercihinde anlık olur (yukarıda). */
 main [id] {
-  scroll-margin-top: 76px;
+  scroll-margin-top: var(--anchor-offset, 76px);
 }
 
 /* Yatay taşmayı kırpar. "hidden" yerine "clip": hidden, body'yi bir kaydırma
@@ -321,5 +419,33 @@ ul {
 @media (max-width: 700px) {
   body {
     font-size: 15px;
+  }
+}
+
+/* --- Blog listesi: kartların tek seferlik belirmesi (components/blog/ListReveal.jsx) ---
+   Yalnızca JS çalıştıysa ve henüz görünmemiş kartlar etkilenir; hareket azaltmada yok. */
+.list-reveal-ready [data-list-reveal]:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+}
+
+.list-reveal-ready [data-list-reveal][data-reveal-dir="left"]:not([data-revealed]) {
+  transform: translate3d(-18px, 0, 0);
+}
+
+.list-reveal-ready [data-list-reveal][data-reveal-dir="right"]:not([data-revealed]) {
+  transform: translate3d(18px, 0, 0);
+}
+
+.list-reveal-ready [data-list-reveal][data-revealed="in"] {
+  transition:
+    opacity 0.42s var(--ease) var(--reveal-delay, 0ms),
+    transform 0.42s var(--ease) var(--reveal-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list-reveal-ready [data-list-reveal]:not([data-revealed]) {
+    opacity: 1;
+    transform: none;
   }
 }

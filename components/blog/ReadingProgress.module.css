@@ -1,0 +1,21 @@
+/* Okuma ilerleme çubuğu: header'ın altında sabit, 3px, nötr ray + turuncu dolgu. */
+.bar {
+  position: fixed;
+  top: var(--site-header-h, 68px);
+  right: 0;
+  left: 0;
+  z-index: 99; /* header (100) altında, sayfa içeriğinin üstünde */
+  height: 3px;
+  background: var(--blog-progress-track);
+  pointer-events: none;
+}
+
+.fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--blog-orange);
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}

@@ -1,0 +1,347 @@
+/* Makale sonu: kaynakça (editörün notu), konular, yazar kutusu ve kapanış çağrısı.
+   Tüm renkler blog token'larından gelir: açık temada kahverengi/altın, koyu temada
+   beyaz başlık + turuncu vurgu. */
+
+.eyebrow {
+  margin: 0;
+  color: var(--blog-accent-text);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heading {
+  margin: 4px 0 0;
+  color: var(--blog-heading);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.note {
+  max-width: 62ch;
+  margin: 8px 0 0;
+  color: var(--blog-ink-soft);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* --- Kaynakça -------------------------------------------------------------- */
+
+.sources {
+  margin-top: 48px;
+  padding: 24px;
+  border: 1px solid var(--blog-line);
+  border-top: 3px solid var(--blog-h2-rule);
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-bg);
+}
+
+.sourceList {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sourceItem {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  scroll-margin-top: var(--anchor-offset, 96px);
+}
+
+.sourceItem:target {
+  border-radius: 8px;
+  outline: 2px solid var(--blog-orange);
+  outline-offset: 6px;
+}
+
+.sourceNumber {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--blog-accent-soft);
+  color: var(--blog-accent-text);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sourceBody {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.sourceTitle {
+  display: inline;
+  color: var(--blog-heading);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-decoration-color: var(--blog-accent-line);
+  text-underline-offset: 3px;
+}
+
+.sourceTitle svg {
+  margin-left: 4px;
+  vertical-align: -1px;
+  color: var(--blog-ink-faint);
+}
+
+.sourceTitle:hover {
+  text-decoration-color: var(--blog-orange);
+}
+
+.sourceSite {
+  color: var(--blog-ink-soft);
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+
+.sourceSite a {
+  color: var(--blog-link);
+  font-weight: 600;
+}
+
+/* --- Konular ---------------------------------------------------------------- */
+
+.topics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.topicsLabel {
+  margin-right: 4px;
+  color: var(--blog-ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.topicCategory,
+.topicTag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.topicCategory {
+  border: 1px solid var(--blog-accent-line);
+  background: var(--blog-accent-soft);
+  color: var(--blog-accent-text);
+}
+
+.topicCategory:hover {
+  border-color: var(--blog-orange);
+}
+
+.topicTag {
+  background: var(--blog-bg-muted);
+  color: var(--blog-ink-soft);
+}
+
+/* --- Yazar ------------------------------------------------------------------- */
+
+.author {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 32px;
+  padding: 20px;
+  border: 1px solid var(--blog-line);
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-bg);
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #141414;
+}
+
+.authorName {
+  margin: 2px 0 0;
+  color: var(--blog-heading);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.tagline {
+  margin: 2px 0 0;
+  color: var(--blog-accent-text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.bio {
+  margin: 8px 0 0;
+  color: var(--blog-ink-soft);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+/* --- Kapanış çağrısı --------------------------------------------------------- */
+
+.closing {
+  position: relative;
+  margin-top: 32px;
+  padding: 28px;
+  overflow: hidden;
+  border: 1px solid var(--blog-accent-line);
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-accent-soft);
+}
+
+/* Koyu temada ölçülü marka ışığı (turuncu + çok hafif ikincil mor). */
+:global([data-tone="dark"]) .closing {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(124, 92, 255, 0.1), transparent 55%),
+    radial-gradient(90% 80% at 0% 100%, rgba(224, 144, 47, 0.14), transparent 60%),
+    var(--blog-bg);
+}
+
+.closingTitle {
+  margin: 6px 0 0;
+  color: var(--blog-heading);
+  font-size: clamp(21px, 2.4vw, 26px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.closingText {
+  max-width: 58ch;
+  margin: 10px 0 0;
+  color: var(--blog-ink-soft);
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+
+.closingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: var(--blog-radius-control);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.primary {
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+}
+
+.primary:hover {
+  background: var(--blog-accent-hover);
+}
+
+.secondary {
+  border: 1px solid var(--blog-accent-line);
+  background: var(--blog-bg);
+  color: var(--blog-heading);
+}
+
+.secondary:hover {
+  border-color: var(--blog-orange);
+}
+
+.services {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--blog-accent-line);
+}
+
+.servicesTitle {
+  margin: 0 0 10px;
+  color: var(--blog-heading);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.services ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.services a {
+  display: grid;
+  gap: 4px;
+  height: 100%;
+  padding: 14px;
+  border: 1px solid var(--blog-line);
+  border-radius: 10px;
+  background: var(--blog-bg);
+  color: var(--blog-ink-soft);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.services a strong {
+  color: var(--blog-heading);
+  font-size: 14.5px;
+}
+
+.services a:hover {
+  border-color: var(--blog-orange);
+}
+
+@media (max-width: 560px) {
+  .sources,
+  .closing {
+    padding: 22px 18px;
+  }
+
+  .services ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .primary,
+  .secondary {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary {
+    transition: none;
+  }
+}

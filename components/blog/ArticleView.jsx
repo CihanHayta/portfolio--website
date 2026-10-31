@@ -1,9 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, Clock, ListTree, UserRound } from "lucide-react";
+import { CalendarDays, ChevronRight, Clock, UserRound } from "lucide-react";
 import { profile } from "@/data/content";
 import { contentHeadings, isBlocksContent } from "@/lib/blog/blocks/model";
+import { readMeta } from "@/lib/blog/meta";
 import { formatDate } from "@/lib/blog/format";
+import ArticleSources from "./ArticleSources";
+import ArticleToc from "./ArticleToc";
+import AuthorBox from "./AuthorBox";
+import endStyles from "./ArticleEnd.module.css";
 import Blocks from "./Blocks";
 import PostContent from "./PostContent";
 import styles from "./ArticleView.module.css";
@@ -12,22 +17,15 @@ import styles from "./ArticleView.module.css";
 // panelindeki önizleme aynı bileşeni kullanır.
 export default function ArticleView({ post, children }) {
   const headings = contentHeadings(post.content);
+  const meta = readMeta(post.content);
+  const theme = meta.theme === "dark" ? "dark" : "light";
   const showToc = headings.length >= 2;
   const publishedDay = post.published_at?.slice(0, 10);
   const wasUpdated = post.updated_at && publishedDay && post.updated_at.slice(0, 10) > publishedDay;
 
-  const toc = (
-    <ol className={styles.tocList}>
-      {headings.map((heading) => (
-        <li key={heading.id} data-level={heading.level}>
-          <a href={`#${heading.id}`}>{heading.label}</a>
-        </li>
-      ))}
-    </ol>
-  );
 
   return (
-    <article className={`container ${styles.article}`}>
+    <article className={`container ${styles.article}`} data-tone={theme}>
       <nav className={styles.breadcrumb} aria-label="Sayfa yolu">
         <ol>
           <li>
@@ -90,37 +88,46 @@ export default function ArticleView({ post, children }) {
       <div className={styles.layout} data-toc={showToc}>
         <div className={styles.content} data-reading-body>
           {showToc ? (
-            <details className={styles.tocMobile}>
-              <summary>
-                <ListTree size={16} aria-hidden="true" />
-                İçindekiler
-              </summary>
-              {toc}
-            </details>
+            <div className={styles.tocMobile}>
+              <ArticleToc headings={headings} variant="mobile" />
+            </div>
           ) : null}
 
-          {isBlocksContent(post.content) ? (
-            <Blocks blocks={post.content.blocks} headings={headings} />
-          ) : (
-            <PostContent doc={post.content} />
-          )}
+          {/* data-article-body: okuma çubuğu yalnızca esas makale içeriğine göre ölçer. */}
+          <div data-article-body="">
+            {isBlocksContent(post.content) ? (
+              <Blocks blocks={post.content.blocks} headings={headings} citations={meta.sources?.length ?? 0} />
+            ) : (
+              <PostContent doc={post.content} />
+            )}
+          </div>
 
-          {post.tags?.length ? (
-            <ul className={styles.tags} aria-label="Etiketler">
-              {post.tags.map((tag) => (
-                <li key={tag.name}>#{tag.name}</li>
+          <ArticleSources sources={meta.sources ?? []} waived={meta.sourcesWaived === true} />
+
+          {post.category || post.tags?.length ? (
+            // Kategori gerçek liste sayfasına bağlanır; etiketlerin ayrı sayfası yok, bağlantısız gösterilir.
+            <div className={endStyles.topics} aria-label="Konular">
+              <span className={endStyles.topicsLabel}>Konular:</span>
+              {post.category ? (
+                <Link href={`/blog?kategori=${post.category.slug}`} className={endStyles.topicCategory}>
+                  {post.category.name}
+                </Link>
+              ) : null}
+              {(post.tags ?? []).map((tag) => (
+                <span key={tag.name} className={endStyles.topicTag}>#{tag.name}</span>
               ))}
-            </ul>
+            </div>
           ) : null}
+
+          <AuthorBox name={post.author_name} />
 
           {children}
         </div>
 
         {showToc ? (
-          <nav className={styles.toc} aria-label="İçindekiler">
-            <p className={styles.tocTitle}>İçindekiler</p>
-            {toc}
-          </nav>
+          <div className={styles.toc}>
+            <ArticleToc headings={headings} variant="desktop" />
+          </div>
         ) : null}
       </div>
     </article>

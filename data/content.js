@@ -100,24 +100,29 @@ export const home = {
       {
         title: "Meta reklam yönetimi",
         text: "Facebook ve Instagram kampanyalarının kurulumu, bütçe dağılımı ve düzenli takibi.",
+        // keywords: blog yazısının sonunda "ilgili hizmet" eşlemesi (lib/blog/relatedServices.js).
+        keywords: ["meta", "facebook", "instagram", "reklam", "kampanya", "bütçe", "teklif"],
         icon: "target",
         link: { label: "Süreci inceleyin", href: "#calisma-yontemimiz" },
       },
       {
         title: "Reklam kreatifi ve mesaj stratejisi",
         text: "Reklam mesajına uygun görseller, Reels kurguları ve yapay zekâ destekli showroom görselleri.",
+        keywords: ["kreatif", "görsel", "video", "reels", "mesaj", "içerik", "tasarım"],
         icon: "sparkles",
         link: { label: "Yaklaşımımızı görün", href: "#neden" },
       },
       {
         title: "Hedef kitle ve dönüşüm optimizasyonu",
         text: "Hangi kitlenin, mesajın ve kreatifin işe yaradığını kampanya verisinden çıkarır, bütçeyi buna göre yönlendiririz.",
+        keywords: ["hedef kitle", "kitle", "dönüşüm", "müşteri adayı", "optimizasyon", "segment", "test"],
         icon: "search",
         link: { label: "Reklamlarınızı test edin", href: "#reklam-kontrolu" },
       },
       {
         title: "Performans analizi ve raporlama",
         text: "Bütçenin nereye gittiğini ve ne getirdiğini sade, anlaşılır raporlarla paylaşırız.",
+        keywords: ["analiz", "rapor", "ölçüm", "roas", "kpi", "veri", "performans"],
         icon: "clipboard",
         link: { label: "Raporlama nasıl ilerliyor?", href: "#sss" },
       },
@@ -313,6 +318,14 @@ export const blog = {
   description:
     "Reklam, içerik ve görsel üretiminde uyguladığımız yöntemleri, öğrendiklerimizi ve işe yarayanları burada paylaşıyoruz.",
   quote: "Doğru mesaj, doğru kitle, ölçülebilir sonuç.",
+  // Hero panelindeki slogan slaytı: ilk metin mevcut slogan; sırayla değişir.
+  quotes: [
+    "Doğru mesaj, doğru kitle, ölçülebilir sonuç.",
+    "Mutlu bir müşteri, birden fazla müşteri demektir.",
+    "Reklama değil, doğru stratejiye yatırım yap.",
+    "Doğru hedefleme, daha nitelikli müşteri adayları.",
+    "Veriye dayalı reklam, sürdürülebilir büyüme.",
+  ],
   heroImage: null,
   heroImageAlt: "",
   avatar: null,

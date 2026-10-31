@@ -4,7 +4,7 @@
 .blocks {
   container-type: inline-size;
   container-name: blocks;
-  color: #2b2824;
+  color: var(--blog-body);
   font-size: 17px;
   line-height: 1.75;
 }
@@ -53,26 +53,43 @@
 
 /* --- Başlık, bölüm başlıkları -------------------------------------------- */
 
+/* Başlık hiyerarşisi: H2 ana bölüm (solunda marka çizgisi), H3 alt bölüm, H4 kompakt. */
 .heading {
-  color: var(--blog-ink);
+  color: var(--blog-heading);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.25;
   text-wrap: balance;
-  scroll-margin-top: 96px;
+  scroll-margin-top: var(--anchor-offset, 96px);
   margin-top: 12px;
 }
 
 .heading[data-level="2"] {
+  position: relative;
+  padding-left: 16px;
   font-size: 30px;
 }
 
+.heading[data-level="2"]::before {
+  content: "";
+  position: absolute;
+  top: 0.18em;
+  bottom: 0.18em;
+  left: 0;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--blog-h2-rule);
+}
+
 .heading[data-level="3"] {
-  font-size: 24px;
+  font-size: 23px;
+  font-weight: 750;
 }
 
 .heading[data-level="4"] {
-  font-size: 19px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .heading a {
@@ -191,7 +208,7 @@ a.button[data-variant="outline"]:hover {
 
 .button[data-variant="light"] {
   background: #ffffff;
-  color: var(--blog-ink);
+  color: #141414; /* açık düğme her temada açık kalır */
 }
 
 a.button[data-variant="light"]:hover {
@@ -591,7 +608,44 @@ a.button[data-variant="light"]:hover {
   display: none;
 }
 
-/* --- FAQ ------------------------------------------------------------------ */
+/* --- FAQ: solda başlık, sağda numaralı sorular (+/−); animasyon yok ----------- */
+
+.faq {
+  display: grid;
+  gap: 16px;
+}
+
+.faqHead {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+
+.faqEyebrow {
+  color: var(--blog-accent-text);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.faqTitle {
+  color: var(--blog-heading);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.faqCount {
+  color: var(--blog-ink-soft);
+  font-size: 14px;
+}
+
+.faqList {
+  min-width: 0;
+}
 
 .faqItem {
   border-bottom: 1px solid var(--blog-line);
@@ -602,13 +656,13 @@ a.button[data-variant="light"]:hover {
 }
 
 .faqItem summary {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2.2em minmax(0, 1fr) 22px;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
   min-height: 56px;
   padding-block: 12px;
-  color: var(--blog-ink);
+  color: var(--blog-heading);
   font-size: 16.5px;
   font-weight: 700;
   line-height: 1.4;
@@ -620,23 +674,63 @@ a.button[data-variant="light"]:hover {
   display: none;
 }
 
-.faqItem summary::after {
-  content: "+";
-  flex-shrink: 0;
-  color: var(--blog-accent);
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1;
+.faqNumber {
+  color: var(--blog-accent-text);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
-.faqItem[open] summary::after {
-  content: "−";
+.faqQuestion {
+  overflow-wrap: anywhere;
+}
+
+/* Artı/eksi: iki çizgi; açıkken dikey çizgi gizlenir. */
+.faqIcon {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--blog-accent-soft);
+}
+
+.faqIcon::before,
+.faqIcon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--blog-accent-text);
+  transform: translate(-50%, -50%);
+}
+
+.faqIcon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.faqItem[open] .faqIcon::after {
+  display: none;
 }
 
 .faqItem p {
-  padding-bottom: 16px;
+  padding: 0 0 16px calc(2.2em + 10px);
+  color: var(--blog-body);
   font-size: 15.5px;
   line-height: 1.65;
+}
+
+@container blocks (min-width: 640px) {
+  .faq {
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.6fr);
+    gap: 32px;
+  }
+
+  .faqHead {
+    padding-top: 12px;
+  }
 }
 
 /* --- Adımlar -------------------------------------------------------------- */
@@ -913,4 +1007,19 @@ a.button[data-variant="light"]:hover {
   .gallery[data-columns] {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* --- Koyu tema: sabit marka renkleri koyu zeminde okunur tonlara geçer ---------- */
+:global([data-tone="dark"]) .callout {
+  --callout-color: var(--blog-ink-soft);
+}
+
+:global([data-tone="dark"]) .callout[data-variant="success"] {
+  --callout-color: var(--blog-accent-text);
+}
+
+:global([data-tone="dark"]) .callout[data-variant="note"] {
+  --callout-color: var(--blog-accent-text);
+  --callout-bg: rgba(224, 144, 47, 0.1);
+  border-left-color: var(--blog-orange);
 }

@@ -1,7 +1,7 @@
 .prose {
   font-size: 17px;
   line-height: 1.75;
-  color: #2b2824;
+  color: var(--blog-body);
   overflow-wrap: anywhere;
 }
 
@@ -14,12 +14,45 @@
 }
 
 .prose :is(h2, h3, h4) {
-  color: var(--blog-ink);
+  color: var(--blog-heading);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.25;
   text-wrap: balance;
-  scroll-margin-top: 96px;
+  scroll-margin-top: var(--anchor-offset, 96px);
+}
+
+/* Kalın metin gövdeden biraz daha güçlü; otomatik turuncu YAPILMAZ. */
+.prose strong {
+  color: var(--blog-heading);
+  font-weight: 700;
+}
+
+/* Seçici vurgu ("Vurgula" aracı): hafif alt zemin; hareket/yanıp sönme yok. */
+.accent {
+  padding: 0 0.08em;
+  border-radius: 2px;
+  background: linear-gradient(transparent 58%, var(--blog-emph-bg) 58%);
+  color: inherit;
+}
+
+/* Metin içi atıf: [1] → kaynakçadaki 1. kaynağa bağlantı. */
+.cite {
+  margin-left: 1px;
+  font-size: 0.72em;
+  font-weight: 700;
+  line-height: 0;
+  vertical-align: super;
+}
+
+.cite a {
+  color: var(--blog-accent-text);
+  text-decoration: none;
+}
+
+.cite a:hover,
+.cite a:focus-visible {
+  text-decoration: underline;
 }
 
 .level1 {
@@ -67,14 +100,14 @@
 }
 
 .prose li::marker {
-  color: var(--blog-link);
+  color: var(--blog-marker);
   font-weight: 700;
 }
 
 .prose blockquote {
   padding: 4px 0 4px 20px;
-  border-left: 3px solid var(--blog-accent);
-  color: var(--blog-ink);
+  border-left: 3px solid var(--blog-h2-rule);
+  color: var(--blog-heading);
   font-size: 19px;
   font-weight: 500;
 }

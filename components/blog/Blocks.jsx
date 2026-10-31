@@ -83,7 +83,7 @@ const RENDERERS = {
 
   text({ props }, ctx) {
     if (!hasText(props.doc)) return ctx.editing ? <p className={styles.emptyText}>Metin yazmak için tıklayın…</p> : null;
-    return <div style={{ textAlign: props.align }}><PostContent doc={props.doc} /></div>;
+    return <div style={{ textAlign: props.align }}><PostContent doc={props.doc} citations={ctx.citations} /></div>;
   },
 
   image({ props }, ctx) {
@@ -177,7 +177,7 @@ const RENDERERS = {
         </div>
         <div className={styles.imageTextBody}>
           {props.title ? <h3 className={styles.sectionTitle}>{props.title}</h3> : null}
-          {hasText(props.body) ? <PostContent doc={props.body} /> : null}
+          {hasText(props.body) ? <PostContent doc={props.body} citations={ctx.citations} /> : null}
         </div>
       </section>
     );
@@ -195,7 +195,7 @@ const RENDERERS = {
           <div key={column.id} className={styles.column}>
             {column.image ? <Picture image={column.image} sizes="(max-width: 800px) 100vw, 380px" className={styles.columnImage} /> : null}
             {column.title ? <h3 className={styles.columnTitle}>{column.title}</h3> : null}
-            {hasText(column.body) ? <PostContent doc={column.body} /> : ctx.editing && !column.title && !column.image ? <p className={styles.emptyText}>Boş sütun</p> : null}
+            {hasText(column.body) ? <PostContent doc={column.body} citations={ctx.citations} /> : ctx.editing && !column.title && !column.image ? <p className={styles.emptyText}>Boş sütun</p> : null}
           </div>
         ))}
       </section>
@@ -257,16 +257,27 @@ const RENDERERS = {
   faq({ props }, ctx) {
     const items = props.items.filter((item) => item.question.trim() || ctx.editing);
     if (items.length === 0) return ctx.editing ? <Placeholder Icon={Info} label="Soru eklemek için ayarlar panelini kullanın" /> : null;
+    // Geniş alanda iki sütun (solda başlık, sağda numaralı sorular), dar alanda dikey.
     return (
       <section className={styles.faq}>
-        {props.title ? <h2 className={styles.sectionTitle}>{props.title}</h2> : null}
-        {items.map((item) => (
-          // Yerel <details>: klavyeyle açılır, JavaScript gerektirmez.
-          <details key={item.id} className={styles.faqItem} open={ctx.editing || undefined}>
-            <summary>{item.question || "Soru"}</summary>
-            <p className={styles.preLine}>{item.answer}</p>
-          </details>
-        ))}
+        <div className={styles.faqHead}>
+          <p className={styles.faqEyebrow}>SSS</p>
+          {props.title ? <h2 className={styles.faqTitle}>{props.title}</h2> : null}
+          <p className={styles.faqCount}>{items.length} soru</p>
+        </div>
+        <div className={styles.faqList}>
+          {items.map((item, index) => (
+            // Yerel <details>: klavyeyle açılır, JavaScript gerektirmez.
+            <details key={item.id} className={styles.faqItem} open={ctx.editing || undefined}>
+              <summary>
+                <span className={styles.faqNumber} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                <span className={styles.faqQuestion}>{item.question || "Soru"}</span>
+                <span className={styles.faqIcon} aria-hidden="true" />
+              </summary>
+              <p className={styles.preLine}>{item.answer}</p>
+            </details>
+          ))}
+        </div>
       </section>
     );
   },
@@ -365,9 +376,9 @@ export function Block({ block, ctx = {} }) {
   return render(block, { ...ctx, blockId: block.id });
 }
 
-export default function Blocks({ blocks, headings = [] }) {
+export default function Blocks({ blocks, headings = [], citations = 0 }) {
   const headingIds = new Map(headings.filter((item) => item.blockId).map((item) => [item.blockId, item.id]));
-  const ctx = { headingIds, headings, editing: false };
+  const ctx = { headingIds, headings, editing: false, citations };
   return (
     <div className={styles.blocks}>
       {blocks.map((block) => (

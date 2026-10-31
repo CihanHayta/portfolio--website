@@ -1,0 +1,61 @@
+/* Slogan slaytı: tüm metinler aynı hücrede (yükseklik sabit), geçiş 380 ms. */
+.rotator {
+  position: relative;
+  display: block;
+}
+
+.stack {
+  display: grid;
+}
+
+.item {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+}
+
+.item[data-state="in"],
+.item[data-state="out"] {
+  transition:
+    opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.item[data-state="in"] {
+  opacity: 1;
+  transform: none;
+}
+
+.item[data-state="out"] {
+  opacity: 0;
+  transform: translate3d(0, -8px, 0);
+}
+
+/* Klavye: odakta görünen küçük durdur/oynat düğmesi (fareyle üzerine gelmek de durdurur). */
+.toggle {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #141414;
+  color: #f5f0e6;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.toggle:focus-visible {
+  opacity: 1;
+  outline: 2px solid #c9a24b;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item[data-state="in"],
+  .item[data-state="out"] {
+    transition: none;
+  }
+}

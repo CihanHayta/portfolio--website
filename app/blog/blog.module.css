@@ -60,7 +60,16 @@
   line-height: 1.4;
 }
 
+/* Kahverengi hero paneli (slogan kartı) her iki temada da aynı görünür:
+   koyu liste görünümünde de kendi açık token'larını kullanır. */
 .heroMedia {
+  --blog-accent-soft: #f1e9da;
+  --blog-accent: #141414;
+  --blog-bg: #fffdf9;
+  --blog-ink: #141414;
+  --blog-ink-soft: #6b6259;
+  --blog-shadow-pop: 0 12px 32px rgba(20, 20, 20, 0.14);
+  color: #141414;
   position: relative;
   aspect-ratio: 325 / 312;
   border-radius: var(--blog-radius-card);
@@ -406,7 +415,7 @@
 
 .skeleton {
   border-radius: var(--blog-radius-card);
-  background: linear-gradient(90deg, var(--blog-bg-muted) 25%, #ebe3d6 50%, var(--blog-bg-muted) 75%);
+  background: linear-gradient(90deg, var(--blog-bg-muted) 25%, var(--blog-line) 50%, var(--blog-bg-muted) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
 }

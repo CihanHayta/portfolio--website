@@ -1,0 +1,163 @@
+/* İçindekiler: sade kart, 01/02 numaralı H2 satırları, girintili H3/H4, turuncu aktif işaret. */
+
+.desktop {
+  position: sticky;
+  top: calc(var(--site-header-h, 68px) + 3px + 20px);
+  align-self: start;
+  max-height: calc(100dvh - var(--site-header-h, 68px) - 48px);
+  padding: 18px 14px 14px;
+  border: 1px solid var(--blog-line);
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-bg);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0 6px;
+  color: var(--blog-heading);
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item a {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.1em minmax(0, 1fr);
+  align-items: baseline;
+  gap: 4px;
+  padding: 7px 8px 7px 10px;
+  border-radius: 6px;
+  color: var(--blog-ink-soft);
+  font-size: 13.5px;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+/* Uzun başlık alt satıra geçer; numara ve başlık başlangıcı kaymaz. */
+.label {
+  overflow-wrap: anywhere;
+}
+
+.number {
+  color: var(--blog-ink-soft); /* ≥4.5:1 her iki temada (ink-faint açık temada 3.1:1 kalıyordu) */
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.item[data-sub] a {
+  padding-left: 22px;
+  font-size: 13px;
+}
+
+.item a:hover {
+  background: var(--blog-accent-soft);
+  color: var(--blog-heading);
+}
+
+.item[data-active] a {
+  color: var(--blog-accent-text);
+  font-weight: 700;
+}
+
+.item[data-active] .number {
+  color: var(--blog-accent-text);
+}
+
+.item[data-active] a::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--blog-orange);
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  margin-top: 6px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: var(--blog-accent-text);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.more svg[data-open] {
+  transform: rotate(180deg);
+}
+
+/* --- Telefon: kapalı başlayan katlanır kart ------------------------------------ */
+
+.mobile {
+  margin-bottom: 28px;
+  border: 1px solid var(--blog-line);
+  border-radius: var(--blog-radius-card);
+  background: var(--blog-bg);
+}
+
+.mobile summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 16px;
+  color: var(--blog-heading);
+  font-size: 14px;
+  font-weight: 800;
+  list-style: none;
+  cursor: pointer;
+}
+
+.mobile summary::-webkit-details-marker {
+  display: none;
+}
+
+.count {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--blog-bg-muted);
+  color: var(--blog-ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chevron {
+  margin-left: auto;
+  transition: transform 0.2s var(--ease);
+}
+
+.mobile[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.mobile .list {
+  padding: 0 8px 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

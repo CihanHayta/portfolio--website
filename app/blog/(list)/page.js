@@ -29,6 +29,8 @@ import {
 import BlogContactCard from "@/components/blog/BlogContactCard";
 import BlogSearch from "@/components/blog/BlogSearch";
 import PostCard from "@/components/blog/PostCard";
+import ListReveal from "@/components/blog/ListReveal";
+import SloganRotator from "@/components/blog/SloganRotator";
 import styles from "../blog.module.css";
 
 const CATEGORY_ICONS = {
@@ -106,7 +108,8 @@ export default async function BlogPage({ searchParams }) {
   // Başlık ve arama alanı veri beklemeden hemen çizilir (sayfanın en büyük
   // öğesi bu başlıktır); yazılar ve kenar çubuğu veritabanından akarak gelir.
   return (
-    <main className={`container ${styles.page}`}>
+    // data-blog-list: liste sayfası ziyaretçinin cihaz temasını (açık/koyu) izler.
+    <main className={`container ${styles.page}`} data-blog-list="">
       <section className={styles.hero} aria-labelledby="blog-baslik">
           <div className={styles.heroText}>
             <p className={styles.eyebrow}>Blog</p>
@@ -133,7 +136,9 @@ export default async function BlogPage({ searchParams }) {
               <span className={styles.quoteIcon} aria-hidden="true">
                 <Send size={16} />
               </span>
-              <blockquote>{blog.quote}</blockquote>
+              <blockquote>
+                <SloganRotator quotes={blog.quotes?.length ? blog.quotes : [blog.quote]} />
+              </blockquote>
               <figcaption>— {profile.fullName}</figcaption>
             </figure>
           </div>
@@ -225,8 +230,9 @@ async function BlogResults({ q, kategori, page }) {
 
           {posts.length > 0 ? (
             <div className={styles.grid}>
+              <ListReveal />
               {posts.map((post, index) => (
-                <PostCard key={post.id} post={post} priority={index < 3} />
+                <PostCard key={post.id} post={post} priority={index < 3} reveal />
               ))}
             </div>
           ) : (

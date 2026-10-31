@@ -58,6 +58,7 @@
 
 .title {
   margin-top: 16px;
+  color: var(--blog-heading);
   font-size: clamp(30px, 4.4vw, 46px);
   font-weight: 800;
   letter-spacing: -0.035em;
@@ -115,92 +116,13 @@
   justify-content: space-between;
 }
 
+/* İçindekiler kartının konumu (görünümü ArticleToc.module.css'te). */
 .toc {
-  position: sticky;
-  top: 96px;
-  align-self: start;
-  max-height: calc(100dvh - 128px);
-  padding: 18px;
-  border: 1px solid var(--blog-line);
-  border-radius: var(--blog-radius-card);
-  overflow-y: auto;
-}
-
-.tocTitle {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.tocList {
-  list-style: none;
-  display: grid;
-  gap: 2px;
-  margin-top: 10px;
-}
-
-.tocList a {
-  display: block;
-  padding: 6px 8px;
-  border-radius: 6px;
-  color: var(--blog-ink-soft);
-  font-size: 13.5px;
-  line-height: 1.4;
-}
-
-.tocList a:hover {
-  background: var(--blog-accent-soft);
-  color: var(--blog-ink);
-}
-
-.tocList [data-level="2"] a {
-  padding-left: 20px;
-}
-
-.tocList [data-level="3"] a {
-  padding-left: 32px;
+  align-self: stretch;
 }
 
 .tocMobile {
   display: none;
-  margin-bottom: 28px;
-  border: 1px solid var(--blog-line);
-  border-radius: var(--blog-radius-card);
-}
-
-.tocMobile summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.tocMobile .tocList {
-  margin: 0;
-  padding: 0 8px 12px;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 40px;
-  padding-top: 24px;
-  border-top: 1px solid var(--blog-line);
-}
-
-.tags li {
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  background: var(--blog-bg-muted);
-  color: var(--blog-ink-soft);
-  font-size: 13px;
-  font-weight: 600;
 }
 
 @media (max-width: 1020px) {

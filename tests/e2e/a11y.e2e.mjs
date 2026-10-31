@@ -36,6 +36,28 @@ await service.from("blog_admins").insert({ user_id: userId, display_name: "E2E E
 
 const sitemap = await (await targetFetch(base, "/sitemap.xml")).text();
 const postPath = `/blog/${(sitemap.match(/<loc>[^<]*\/blog\/([^<?]+)<\/loc>/) ?? [])[1] ?? ""}`;
+// Koyu temalı, kaynakçalı, SSS'li geçici yazı (makale sonu bölümleri de taransın).
+const darkSlug = `${RUN}-koyu`;
+await service.from("blog_posts").insert({
+  title: `E2E erişilebilirlik koyu ${RUN}`,
+  slug: darkSlug,
+  excerpt: "Koyu tema erişilebilirlik taraması",
+  content: {
+    type: "blocks",
+    version: 1,
+    blocks: [
+      { id: "a11yh0001", type: "heading", props: { text: "Birinci bölüm", level: "2", href: "", align: "left" } },
+      { id: "a11yt0001", type: "text", props: { doc: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Gövde metni [1] ve " }, { type: "text", text: "vurgu", marks: [{ type: "accent" }] }] }] } } },
+      { id: "a11yh0002", type: "heading", props: { text: "İkinci bölüm", level: "2", href: "", align: "left" } },
+      { id: "a11yf0001", type: "faq", props: { title: "Sık sorulan sorular", schema: false, items: [{ id: "a11yq0001", question: "Soru bir mi?", answer: "Cevap bir." }] } },
+    ],
+    meta: { theme: "dark", sources: [{ id: "k1", url: "https://kaynak.example.com/a", title: "Kaynak A", siteName: "Kaynak", kind: "user" }] },
+  },
+  content_text: "Gövde metni",
+  reading_minutes: 1,
+  status: "published",
+  published_at: new Date(Date.now() - 60_000).toISOString(),
+}).throwOnError();
 
 async function scan(page, label) {
   // Giriş animasyonları (ör. başlığın saydamlıktan gelişi) bitmeden renk ölçülmez.
@@ -82,7 +104,7 @@ try {
     const context = await prepareContext(await browser.newContext({ viewport: { width, height }, isMobile: width < 1024, hasTouch: width < 1024 }), base);
     const page = await context.newPage();
 
-    for (const [path, label] of [["/", "Ana sayfa"], ["/blog", "Blog listesi"], [postPath, "Blog yazısı"], ["/admin/login", "Yönetici girişi"]]) {
+    for (const [path, label] of [["/", "Ana sayfa"], ["/blog", "Blog listesi"], [postPath, "Blog yazısı"], [`/blog/${darkSlug}`, "Blog yazısı (koyu tema)"], ["/admin/login", "Yönetici girişi"]]) {
       await page.goto(base + path, { waitUntil: "networkidle" });
       await scan(page, `${width} ${label}`);
     }
@@ -109,25 +131,39 @@ try {
     await page.keyboard.press("Escape");
     await studio.waitFor({ state: "hidden", timeout: 10_000 }).catch(() => {});
 
-    if (width < 1024) {
-      // Telefonda tek görsel girişi: "Görseller"; bölüm planı oradan açılır.
-      await page.locator("[class*=mobileBar]").getByRole("button", { name: "Görseller" }).click();
-      const images = page.getByRole("dialog", { name: "Görseller" });
-      await images.waitFor({ timeout: 15_000 });
-      await scan(page, `${width} Görseller`);
-      await images.getByRole("tab", { name: "Yeni üret" }).click();
-      await images.getByRole("button", { name: /AI Görselleri/ }).click();
-    } else {
-      await page.getByRole("button", { name: "AI Görselleri" }).first().click();
-    }
-    await page.getByRole("dialog", { name: "AI Görselleri" }).waitFor({ timeout: 15_000 });
-    await scan(page, `${width} Görsel stüdyosu`);
-    await page.getByRole("button", { name: "Görsel stüdyosunu kapat" }).click();
+    // Görseller (bölüm sırası) + ChatGPT ile elle üretim paneli
+    if (width < 1024) await page.locator("[class*=mobileBar]").getByRole("button", { name: "Görseller" }).click();
+    else await page.getByRole("button", { name: "Görseller", exact: true }).click();
+    const images = page.getByRole("dialog", { name: "Görseller" });
+    await images.locator("[data-section=cover]").waitFor({ timeout: 20_000 });
+    await scan(page, `${width} Görseller`);
+    await images.locator("[data-section=cover]").getByRole("button", { name: /Kapak oluştur \(ChatGPT\)/ }).click();
+    await images.getByTestId("handoff-panel").waitFor();
+    await scan(page, `${width} ChatGPT ile elle üretim paneli`);
+    await images.getByRole("button", { name: "Bitti" }).click();
+
+    // Kapak alanında "Yapay zekâyla oluştur" penceresi
+    if (width < 1024) await page.locator("[class*=mobileBar]").getByRole("button", { name: "Ayarlar" }).click();
+    await page.getByRole("tab", { name: "Sayfa Ayarları" }).click();
+    await scan(page, `${width} Sayfa ayarları (tema, kaynakça)`);
+    await page.locator("section[aria-labelledby=set-cover]").getByRole("button", { name: "Yapay zekâyla oluştur" }).click();
+    const aiDialog = page.getByRole("dialog", { name: "Kapak görselini yapay zekâyla oluştur" });
+    await aiDialog.waitFor();
+    await scan(page, `${width} Yapay zekâyla oluştur penceresi`);
+    await aiDialog.getByRole("button", { name: "Kapat" }).click();
+    if (width < 1024) await page.getByRole("button", { name: "Ayarları kapat" }).click();
 
     await page.goto(`${base}/admin/blog/ai-servisleri`, { waitUntil: "networkidle" });
     await scan(page, `${width} AI Servisleri`);
     await page.getByRole("button", { name: "Çıkış yap" }).click().catch(() => {});
     await context.close();
+
+    // Ziyaretçinin cihazı koyu modda: blog listesi koyu tema
+    const darkContext = await prepareContext(await browser.newContext({ viewport: { width, height }, colorScheme: "dark", isMobile: width < 1024, hasTouch: width < 1024 }), base);
+    const darkPage = await darkContext.newPage();
+    await darkPage.goto(`${base}/blog`, { waitUntil: "networkidle" });
+    await scan(darkPage, `${width} Blog listesi (koyu mod)`);
+    await darkContext.close();
   }
 } catch (error) {
   failures++;

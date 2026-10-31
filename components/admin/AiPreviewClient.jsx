@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ArticleCta from "@/components/blog/ArticleCta";
+import ArticleClosing from "@/components/blog/ArticleClosing";
 import ArticleView from "@/components/blog/ArticleView";
 import styles from "./AiPreviewClient.module.css";
 
@@ -43,7 +43,7 @@ export default function AiPreviewClient({ authorName }) {
       }}
     >
       <ArticleView post={{ ...post, author_name: post.author_name || authorName }}>
-        <ArticleCta />
+        <ArticleClosing />
       </ArticleView>
     </main>
   );
