@@ -85,9 +85,13 @@ try {
     check((await page.getByRole("article", { name: "Yazı tuvali" }).getAttribute("data-tone")) === "dark", "tuval koyu tonda");
     check((await section.getByText("Yeni koyu temayı denemek ister misin?").count()) === 0, "öneri kabul edilince kapandı");
     if (mobile) await page.getByRole("button", { name: "Ayarları kapat" }).click();
-    await page.waitForTimeout(3500);
-    const saved = (await service.from("blog_posts").select("content").eq("id", post.id).single()).data;
-    check(saved.content.meta?.theme === "dark", "tema Supabase'de (content.meta.theme = dark)");
+    // Otomatik kayıt 2,5 sn gecikmeli; ağ gecikmesi için veritabanı 15 sn'ye kadar yoklanır.
+    let savedTheme = null;
+    for (let waited = 0; waited < 15_000 && savedTheme !== "dark"; waited += 1_000) {
+      await page.waitForTimeout(1_000);
+      savedTheme = (await service.from("blog_posts").select("content").eq("id", post.id).single()).data.content.meta?.theme ?? null;
+    }
+    check(savedTheme === "dark", "tema Supabase'de (content.meta.theme = dark)");
     await page.reload({ waitUntil: "networkidle" });
     await page.getByRole("textbox", { name: "Yazı başlığı" }).waitFor();
     section = await openPage();

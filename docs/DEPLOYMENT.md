@@ -1,6 +1,6 @@
 # Dağıtım (Vercel)
 
-Durum tarihi: **2026-10-31**.
+Durum tarihi: **2026-11-01**.
 
 ## Özet
 
@@ -24,6 +24,15 @@ Durum tarihi: **2026-10-31**.
 | `8da1c51` | `dpl_GyzSMAVwkNaYK4Hmh8dMfPrh6sE1` | Görsel planında yedek servise süre ayrılır |
 | `18bbab7` | `dpl_56NFmG1Afsoye79g8PM9AoJ63wQg` | Erişilebilirlik düzeltmesi ve axe testi |
 | `31a1dc6` | `dpl_38XKSBdiotWabMpHmfUiJsvAi2AJ` | Stüdyo: genişletme hatasında taslak korunur; yedek betikleri; belgeler |
+
+### Canlıya alma (2026-11-01)
+
+| Adım | Sonuç |
+|---|---|
+| Migration `20261027000000_studio_drafts` | **Canlıya uygulandı** (önce `--dry-run --only` başarılı). Sonrası: 7 yazı / 24 medya / 26 etiket / 24 dosya değişmedi; 5 yeni sütun boş; `blog_studio_sessions` RLS açık; `studio-sources` özel; yazı↔medya ikinci yabancı anahtar yok. |
+| Kod | `git push origin d9c496b:main` (ileri sarma) → `dpl_6YhrrDiZZPGs9JSxu2tQNYzYzV2v` READY. Canlı alan adında yeni sürüm işaretleri doğrulandı. |
+| Canlı testler | `live-smoke` (geçici yönetici, CANLI-SMOKE-TEST-2026 taslağı, yayımlanmadı, temizlendi): 47 PASS / 1 FAIL (telefon ayarlar çekmecesi, bekleme olmadan ölçüldü; ikinci tur otomatik izin denetimince durduruldu, aynı commit Preview'da doğrulandı). `live-public` 196/196, `live-security` 22/22, `live-a11y-perf` 18/18, `public-seo` 38/38, `footer` 150/150, `admin-login` 175/175. Günlükler: 5xx yok, gizli kalıp yok. |
+| `20261026000000_backup_reader_role` | **Uygulanmadı** (site sahibinin ayrı onayı gerekir). Günlük yedek iş akışı kapalı, gizli değişken yok, rol yok. |
 
 ### Blog sistemi kapsamlı turu (2026-10-30/31) — durum
 
