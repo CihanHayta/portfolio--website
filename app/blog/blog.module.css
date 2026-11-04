@@ -349,11 +349,27 @@
   font-size: 12px;
 }
 
+/* Yazar kutusu: video sahnesi kartın üst kenarına yaslanır (yazı kartı kapağı gibi),
+   yazar bilgileri altta, ince bir çizgiyle ayrılır. */
 .author {
+  padding: 0;
+  overflow: hidden;
+}
+
+.authorBody {
   display: grid;
   grid-template-columns: 60px minmax(0, 1fr);
   gap: 6px 16px;
   align-items: center;
+  margin-top: 10px;
+  padding: 16px 18px 20px;
+  border-top: 1px solid var(--blog-line);
+}
+
+.author > .authorBody:first-child {
+  margin-top: 0;
+  padding-top: 20px;
+  border-top: 0;
 }
 
 .avatar {

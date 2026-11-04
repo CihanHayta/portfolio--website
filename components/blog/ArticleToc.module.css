@@ -2,7 +2,7 @@
 
 .desktop {
   position: sticky;
-  top: calc(var(--site-header-h, 68px) + 3px + 20px);
+  top: calc(var(--site-header-h, 68px) + var(--reading-progress-h, 4px) + 20px);
   align-self: start;
   max-height: calc(100dvh - var(--site-header-h, 68px) - 48px);
   padding: 18px 14px 14px;

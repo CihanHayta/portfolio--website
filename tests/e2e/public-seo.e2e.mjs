@@ -5,7 +5,7 @@
 // güvenlik başlıkları, JS/ağ hataları ve 390/1440 genişlikte yatay taşma.
 
 import { chromium } from "playwright-core";
-import { prepareContext, targetFetch } from "./_target.mjs";
+import { gotoSettled, prepareContext, targetFetch } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3000";
 const expectHeaders = process.env.EXPECT_SECURITY_HEADERS !== "0";
@@ -45,10 +45,11 @@ for (const [w, h] of [[390, 844], [1440, 900]]) {
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
     // Next'in bağlantı ön yüklemelerini (_rsc) tarayıcı kendisi iptal edebilir (ERR_ABORTED): hata değildir.
-    const abortedPrefetch = (request) => request.failure()?.errorText === "net::ERR_ABORTED" && /[?&]_rsc=/.test(request.url());
+    // Video ön yüklemesi (preload="metadata") üst veriyi okuyunca tarayıcı isteği kendisi keser: hata değildir.
+    const abortedPrefetch = (request) => request.failure()?.errorText === "net::ERR_ABORTED" && (/[?&]_rsc=/.test(request.url()) || request.resourceType() === "media");
     page.on("requestfailed", (request) => !/_next\/webpack-hmr|__nextjs/.test(request.url()) && !abortedPrefetch(request) && errors.push(`ağ: ${request.url()} ${request.failure()?.errorText ?? ""}`));
     page.on("response", (response) => response.status() >= 500 && errors.push(`${response.status()} ${response.url()}`));
-    const response = await page.goto(base + path, { waitUntil: "networkidle" });
+    const response = await gotoSettled(page, base + path);
     const info = await page.evaluate(() => ({
       canonical: document.querySelector('link[rel="canonical"]')?.href ?? null,
       ogUrl: document.querySelector('meta[property="og:url"]')?.content ?? null,

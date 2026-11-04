@@ -15,7 +15,7 @@ import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
 import { projectKeys } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
-import { prepareContext } from "./_target.mjs";
+import { gotoSettled, prepareContext } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3100";
 const out = process.env.QA_OUT ?? mkdtempSync(join(tmpdir(), "persona-list-"));
@@ -58,7 +58,7 @@ try {
         for (const entry of list.getEntries()) if (!entry.hadRecentInput) window.__cls += entry.value;
       }).observe({ type: "layout-shift", buffered: true });
     });
-    await page.goto(`${base}/blog`, { waitUntil: "networkidle" });
+    await gotoSettled(page, `${base}/blog`);
     const cards = page.locator("[data-list-reveal]");
     const total = await cards.count();
     check(total >= 9, `liste kartları (${total})`);
@@ -131,7 +131,7 @@ try {
   // Ziyaretçinin cihazı koyu modda: liste koyu, hero paneli aynı
   const dark = await prepareContext(await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: "dark" }), base);
   const dp = await dark.newPage();
-  await dp.goto(`${base}/blog`, { waitUntil: "networkidle" });
+  await gotoSettled(dp, `${base}/blog`);
   const colors = await dp.evaluate(() => ({
     page: getComputedStyle(document.querySelector("[data-theme=blog]")).backgroundColor,
     card: getComputedStyle(document.querySelector("[data-list-reveal]")).backgroundColor,
@@ -146,14 +146,14 @@ try {
   await dark.close();
   const light = await prepareContext(await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: "light" }), base);
   const lp = await light.newPage();
-  await lp.goto(`${base}/blog`, { waitUntil: "networkidle" });
+  await gotoSettled(lp, `${base}/blog`);
   check((await lp.evaluate(() => getComputedStyle(document.querySelector("[data-theme=blog]")).backgroundColor)) === "rgb(245, 240, 230)", "cihaz açık modda liste krem (mevcut tasarım)");
   await light.close();
 
   // Hareket azaltma: kart gizlenmez, slogan sabit
   const reduced = await prepareContext(await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" }), base);
   const rp = await reduced.newPage();
-  await rp.goto(`${base}/blog`, { waitUntil: "networkidle" });
+  await gotoSettled(rp, `${base}/blog`);
   check(await rp.evaluate(() => [...document.querySelectorAll("[data-list-reveal]")].every((el) => getComputedStyle(el).opacity === "1")), "hareket azaltmada hiçbir kart gizli değil");
   const firstText = await rp.locator("[data-slogan-rotator] [data-state=in]").innerText();
   await rp.waitForTimeout(3600);

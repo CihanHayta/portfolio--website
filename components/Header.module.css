@@ -50,6 +50,21 @@
   border-radius: 8px;
 }
 
+/* Blog sayfalarında tilki işareti ayrı bir bağlantıdır. Görsel 30px kalır; dolgu ve
+   eşit negatif kenar boşluğu tıklama alanını 44px'e çıkarır, yerleşim değişmez. */
+.logoMarkLink {
+  display: inline-flex;
+  flex-shrink: 0; /* dar ekranda işaret ezilmez; tek bağlantılı logodaki gibi 30px kalır */
+  padding: 7px;
+  margin: -7px;
+  border-radius: 12px;
+}
+
+.logoText {
+  display: inline-flex;
+  align-items: center;
+}
+
 .logoName {
   color: var(--p-gold);
 }

@@ -1,0 +1,266 @@
+/* Yazar kutusundaki dikey video slaytı. Sahne videoların gerçek oranında (9:16);
+   görüntü "contain" ile tam gösterilir. Çok geniş tek sütunda yükseklik sınırlanır,
+   kalan yan boşluk koyu sahne zeminiyle dolar (kırpma ve esneme yok). */
+.carousel {
+  display: grid;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: min(600px, 74svh);
+  overflow: hidden;
+  isolation: isolate;
+  background: #0d0d0d;
+}
+
+.stage[data-dir="next"] {
+  --enter: 6%;
+  --leave: -6%;
+}
+
+.stage[data-dir="prev"] {
+  --enter: -6%;
+  --leave: 6%;
+}
+
+/* Önce eski video çıkar (220 ms), sonra yenisi girer (320 ms); ikisi üst üste binmez. */
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(var(--enter, 6%));
+}
+
+.slide[data-state="active"] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 320ms var(--ease) 220ms,
+    transform 320ms var(--ease) 220ms,
+    visibility 0s linear 220ms;
+}
+
+.slide[data-state="leaving"] {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(var(--leave, -6%));
+  transition:
+    opacity 220ms cubic-bezier(0.4, 0, 1, 1),
+    transform 220ms cubic-bezier(0.4, 0, 1, 1),
+    visibility 0s linear 220ms;
+}
+
+.poster,
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Video ilk karesi gelene kadar poster görünür; siyah kare yanıp sönmez. */
+.video {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.video[data-ready] {
+  opacity: 1;
+}
+
+.bigPlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(13, 13, 13, 0.62);
+  color: #fff;
+  cursor: pointer;
+}
+
+.bigPlay svg {
+  margin-left: 3px; /* oynat üçgeninin görsel merkezi */
+}
+
+.bigPlay:hover {
+  background: rgba(13, 13, 13, 0.8);
+}
+
+/* --- Kontroller (videonun dışında; içeriği kapatmaz) -------------------- */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px 2px;
+}
+
+.transport {
+  display: flex;
+  gap: 4px;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--blog-line-strong);
+  border-radius: 50%;
+  background: var(--blog-bg);
+  color: var(--blog-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+
+.iconButton:hover {
+  border-color: var(--blog-ink-faint);
+  background: var(--blog-bg-muted);
+}
+
+.sound {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--blog-accent);
+  border-radius: var(--radius-pill);
+  background: var(--blog-accent);
+  color: var(--blog-on-accent);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+
+.sound:hover {
+  border-color: var(--blog-accent-hover);
+  background: var(--blog-accent-hover);
+}
+
+/* Ses açıkken düğme ikincil görünür: birincil eylem tekrar "Sesi aç" olduğunda vurgulanır. */
+.sound[data-on="true"] {
+  border-color: var(--blog-line-strong);
+  background: var(--blog-bg);
+  color: var(--blog-ink);
+}
+
+.sound[data-on="true"]:hover {
+  background: var(--blog-bg-muted);
+}
+
+/* --- Noktalar: etkin nokta otomatik geçiş süresini gösterir --------------- */
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px 12px 0;
+}
+
+.dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.dot[aria-current="true"] {
+  width: 36px;
+}
+
+.dotMark {
+  position: relative;
+  display: block;
+  width: 8px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--blog-ink-faint);
+  transition:
+    width 0.25s var(--ease),
+    background 0.25s var(--ease);
+}
+
+.dot:hover .dotMark {
+  background: var(--blog-ink-soft);
+}
+
+.dot[aria-current="true"] .dotMark {
+  width: 26px;
+  background: color-mix(in srgb, var(--blog-ink-faint) 45%, transparent);
+}
+
+.dotFill {
+  position: absolute;
+  inset: 0;
+  background: var(--blog-orange);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation-name: dwell;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+/* Ses açıkken otomatik geçiş yok: etkin nokta dolu kalır. */
+.dotFill[data-sound="true"] {
+  transform: none;
+  animation: none;
+}
+
+@keyframes dwell {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide,
+  .slide[data-state="active"],
+  .slide[data-state="leaving"] {
+    transform: none;
+    transition: none;
+  }
+
+  .video,
+  .dotMark {
+    transition: none;
+  }
+}

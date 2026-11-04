@@ -105,14 +105,14 @@ try {
       const style = getComputedStyle(el);
       return { position: style.position, height: el.getBoundingClientRect().height, top: el.getBoundingClientRect().top, header: document.querySelector("header").getBoundingClientRect().bottom };
     });
-    check(bar.position === "fixed" && Math.round(bar.height) === 3 && Math.abs(bar.top - bar.header) <= 1, `çubuk header'ın hemen altında, sabit, 3 px (üst ${Math.round(bar.top)} / header ${Math.round(bar.header)})`);
+    check(bar.position === "fixed" && Math.round(bar.height) === 4 && Math.abs(bar.top - bar.header) <= 1, `çubuk header'ın hemen altında, sabit, 4 px (üst ${Math.round(bar.top)} / header ${Math.round(bar.header)})`);
     check((await progress()) <= 0.02, `başta ≈0 (${await progress()})`);
     const body = await page.evaluate(() => {
       const el = document.querySelector("[data-article-body]");
       const rect = el.getBoundingClientRect();
       return { top: rect.top + scrollY, height: rect.height };
     });
-    const offset = bar.header + 3;
+    const offset = bar.header + bar.height;
     const total = body.height - (h - offset);
     await scrollTo(body.top - offset + total / 2);
     const mid = await progress();

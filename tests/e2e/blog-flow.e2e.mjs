@@ -15,7 +15,7 @@ import { chromium } from "playwright-core";
 import sharp from "sharp";
 import { projectKeys, sql } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
-import { prepareContext, targetFetch } from "./_target.mjs";
+import { gotoSettled, prepareContext, targetFetch } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3100";
 // Görsel planını üretmesi beklenen metin servisi. Preview'da Gemini anahtarı yoktur:
@@ -97,7 +97,7 @@ try {
   const logo = () => page.getByRole("link", { name: /yönetim girişi$/ }).first();
 
   step("Mobil logo → yönetici girişi (tek dokunuş)");
-  await page.goto(`${base}/blog`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${base}/blog`);
   check((await logo().getAttribute("href")) === "/admin", "telefonda logo gerçek bir bağlantı: /admin");
   await page.getByRole("button", { name: "Menüyü aç" }).tap();
   check(await page.getByRole("link", { name: "Ana sayfa", exact: true }).isVisible(), "ziyaretçi için mobil menüde 'Ana sayfa' bağlantısı var");
@@ -116,7 +116,7 @@ try {
   await page.getByRole("button", { name: "Giriş Yap" }).click();
   await page.waitForURL(/\/admin\/blog$/, { timeout: 30_000 });
   check(true, "doğru şifreyle yönetim paneli açıldı");
-  await page.goto(`${base}/`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${base}/`);
   await logo().tap();
   await page.waitForURL(/\/admin\/blog/, { timeout: 20_000 });
   check(true, "giriş yapılmışken logoya dokunmak yönetim panelini açar");
@@ -161,7 +161,7 @@ try {
   const postId = new URL(page.url()).searchParams.get("kaydedildi");
   check(await toast(page, "Taslak kaydedildi."), "taslak kaydedildi bildirimi (listede)");
   check((await page.locator("[data-saved]").first().innerText()).includes(`E2E Reklam Bütçesi ${RUN}`), "kaydedilen taslak listede işaretli");
-  await page.goto(`${base}/admin/blog/${postId}`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${base}/admin/blog/${postId}`);
   await page.getByRole("textbox", { name: "Yazı başlığı" }).waitFor();
   check((await page.getByRole("textbox", { name: "Yazı başlığı" }).inputValue()) === `E2E Reklam Bütçesi ${RUN}`, "yenilemeden sonra başlık veritabanından geldi");
   const canvasText = await page.getByRole("article", { name: "Yazı tuvali" }).innerText();
@@ -207,7 +207,7 @@ try {
   await page.getByRole("button", { name: "Taslak Kaydet" }).click();
   await page.waitForURL(/\/admin\/blog\?kaydedildi=/, { timeout: 20_000 });
   check(await toast(page, "Taslak kaydedildi."), "kapaklı taslak kaydedildi");
-  await page.goto(`${base}/admin/blog/${postId}`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${base}/admin/blog/${postId}`);
   await page.getByRole("textbox", { name: "Yazı başlığı" }).waitFor();
   const [saved] = await sql(ref, `select cover_media_id from public.blog_posts where id = '${postId}'`);
   check(Boolean(saved?.cover_media_id), "yenilemeden sonra kapak veritabanında korunuyor");
@@ -234,7 +234,7 @@ try {
   check(await toast(page, "Yazı yayında."), "yazı yayınlandı");
   check(!(await page.getByText(/başka bir sekmede|beklenmeyen/).first().isVisible().catch(() => false)), "onaya çift dokunma hata ya da çift yayın üretmedi");
   const publicPage = await mobile.newPage();
-  const response = await publicPage.goto(`${base}/blog/${RUN}-butce`, { waitUntil: "networkidle" });
+  const response = await gotoSettled(publicPage, `${base}/blog/${RUN}-butce`);
   check(response.status() === 200 && (await publicPage.locator("h1").innerText()).includes("E2E Reklam Bütçesi"), "yayındaki yazı herkese açık sayfada görünüyor");
   const [published] = await sql(ref, `select content->'meta'->>'sourcesWaived' as waived from public.blog_posts where id = '${postId}'`);
   check(published?.waived === "true", "beyan (kendi deneyimim) yazıyla birlikte kaydedildi");
@@ -242,7 +242,7 @@ try {
   await publicPage.close();
 
   step("İkinci yazı ve slug çakışması");
-  await page.goto(`${base}/admin/blog/new`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${base}/admin/blog/new`);
   await page.getByRole("textbox", { name: "Yazı başlığı" }).fill(`E2E ikinci yazı ${RUN}`);
   await bar.getByRole("button", { name: "Ayarlar" }).click();
   await page.getByRole("tab", { name: "Sayfa Ayarları" }).click();
@@ -257,12 +257,12 @@ try {
   await page.getByRole("button", { name: "Ayarları kapat" }).click();
   await page.getByRole("button", { name: /Yeniden dene|Taslak Kaydet/ }).first().click();
   check(await toast(page, /Taslak kaydedildi\.|Değişiklikler kaydedildi\./), "slug düzeltilince ikinci yazı kaydedildi");
-  await page.goto(`${base}/admin/blog`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${base}/admin/blog`);
   const list = await page.locator("main").innerText();
   check(list.includes(`E2E Reklam Bütçesi ${RUN}`) && list.includes(`E2E ikinci yazı ${RUN}`), "yazı listesinde iki yazı da var");
 
   step("AI Servisleri: kalıcı sayaçlar ve limit düzenleme");
-  await page.goto(`${base}/admin/blog/ai-servisleri`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${base}/admin/blog/ai-servisleri`);
   const panel = await page.locator("main").innerText();
   check(/Depo: supabase/.test(panel), "kalıcı depo: supabase (test projesi)");
   const gemini = page.locator("li").filter({ has: page.getByRole("heading", { name: TEXT_LABEL, exact: true }) });
@@ -277,7 +277,7 @@ try {
   check(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth) <= 0, "AI Servisleri ekranında taşma yok");
 
   step("Çıkış");
-  await page.goto(`${base}/admin/blog`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${base}/admin/blog`);
   await page.getByRole("button", { name: "Çıkış yap" }).click();
   await page.waitForURL(/\/admin\/login/, { timeout: 20_000 });
   await page.goto(`${base}/admin/blog/new`);
@@ -289,7 +289,7 @@ try {
   const desktop = await prepareContext(await browser.newContext({ viewport: { width: 1440, height: 900 } }), base);
   const dpage = await desktop.newPage();
   watch(dpage);
-  await dpage.goto(`${base}/blog`, { waitUntil: "networkidle" });
+  await gotoSettled(dpage, `${base}/blog`);
   check((await dpage.getByRole("link", { name: /ana sayfa$/ }).first().getAttribute("href")) === "/", "masaüstünde logo ana sayfa bağlantısı");
   await dpage.getByRole("link", { name: /ana sayfa$/ }).first().click();
   await dpage.waitForURL((url) => url.pathname === "/", { timeout: 15_000 });

@@ -12,7 +12,7 @@ import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
 import { projectKeys } from "../../scripts/supabase/_api.mjs";
 import { resolveRef } from "../../scripts/supabase/project.mjs";
-import { prepareContext, targetFetch } from "./_target.mjs";
+import { gotoSettled, prepareContext, targetFetch } from "./_target.mjs";
 
 const base = process.env.BASE_URL ?? "http://localhost:3100";
 const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js");
@@ -105,10 +105,10 @@ try {
     const page = await context.newPage();
 
     for (const [path, label] of [["/", "Ana sayfa"], ["/blog", "Blog listesi"], [postPath, "Blog yazısı"], [`/blog/${darkSlug}`, "Blog yazısı (koyu tema)"], ["/admin/login", "Yönetici girişi"]]) {
-      await page.goto(base + path, { waitUntil: "networkidle" });
+      await gotoSettled(page, base + path);
       await scan(page, `${width} ${label}`);
     }
-    await page.goto(`${base}/admin/login`, { waitUntil: "networkidle" });
+    await gotoSettled(page, `${base}/admin/login`);
     await focusVisible(page, `${width} Yönetici girişi`, 4);
 
     await page.getByLabel("E-posta").fill(email);
@@ -118,7 +118,7 @@ try {
     await page.waitForLoadState("networkidle");
     await scan(page, `${width} Yönetim paneli`);
 
-    await page.goto(`${base}/admin/blog/new`, { waitUntil: "networkidle" });
+    await gotoSettled(page, `${base}/admin/blog/new`);
     await page.getByRole("textbox", { name: "Yazı başlığı" }).fill(`E2E erişilebilirlik ${RUN}`);
     await scan(page, `${width} Blog editörü`);
     await focusVisible(page, `${width} Blog editörü`);
@@ -153,7 +153,7 @@ try {
     await aiDialog.getByRole("button", { name: "Kapat" }).click();
     if (width < 1024) await page.getByRole("button", { name: "Ayarları kapat" }).click();
 
-    await page.goto(`${base}/admin/blog/ai-servisleri`, { waitUntil: "networkidle" });
+    await gotoSettled(page, `${base}/admin/blog/ai-servisleri`);
     await scan(page, `${width} AI Servisleri`);
     await page.getByRole("button", { name: "Çıkış yap" }).click().catch(() => {});
     await context.close();
@@ -161,7 +161,7 @@ try {
     // Ziyaretçinin cihazı koyu modda: blog listesi koyu tema
     const darkContext = await prepareContext(await browser.newContext({ viewport: { width, height }, colorScheme: "dark", isMobile: width < 1024, hasTouch: width < 1024 }), base);
     const darkPage = await darkContext.newPage();
-    await darkPage.goto(`${base}/blog`, { waitUntil: "networkidle" });
+    await gotoSettled(darkPage, `${base}/blog`);
     await scan(darkPage, `${width} Blog listesi (koyu mod)`);
     await darkContext.close();
   }

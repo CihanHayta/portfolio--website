@@ -18,6 +18,19 @@ export default function Header() {
   const menuButton = useRef(null);
   // Telefonda logo yönetime gider (tek dokunuş); masaüstünde ana sayfadır.
   const mobileLayout = useMobileLayout();
+  const blogSection = pathname === "/blog" || pathname.startsWith("/blog/");
+  const brandLink = {
+    href: mobileLayout ? "/admin" : "/",
+    prefetch: mobileLayout ? false : undefined,
+    "aria-label": mobileLayout ? `${brand.legalName} yönetim girişi` : `${brand.legalName} ana sayfa`,
+  };
+  const logoMark = <Image src="/brand/persona-mark.png" alt="" width={30} height={30} className={styles.logoMark} priority />;
+  const brandText = (
+    <span>
+      <span className={styles.logoName}>{brand.name}</span>
+      <span className={styles.logoSuffix}> {brand.suffix}</span>
+    </span>
+  );
   // Blog yönetimi de "Blog" bağlantısının altında sayılır.
   const isActive = (href) =>
     !href.includes("#") && (pathname.startsWith(href) || pathname.startsWith(`/admin${href}`));
@@ -51,18 +64,23 @@ export default function Header() {
     <>
       <header className={`${styles.header} onDark`} data-scrolled={scrolled}>
         <div className={styles.inner}>
-          <Link
-            href={mobileLayout ? "/admin" : "/"}
-            prefetch={mobileLayout ? false : undefined}
-            className={styles.logo}
-            aria-label={mobileLayout ? `${brand.legalName} yönetim girişi` : `${brand.legalName} ana sayfa`}
-          >
-            <Image src="/brand/persona-mark.png" alt="" width={30} height={30} className={styles.logoMark} priority />
-            <span>
-              <span className={styles.logoName}>{brand.name}</span>
-              <span className={styles.logoSuffix}> {brand.suffix}</span>
-            </span>
-          </Link>
+          {blogSection ? (
+            // Blog sayfalarında tilki işareti blog ana sayfasına, marka yazısı her
+            // zamanki yerine (masaüstünde ana sayfa, telefonda yönetim) gider.
+            <div className={styles.logo}>
+              <Link href="/blog" className={styles.logoMarkLink} aria-label="Blog ana sayfası">
+                {logoMark}
+              </Link>
+              <Link {...brandLink} className={styles.logoText}>
+                {brandText}
+              </Link>
+            </div>
+          ) : (
+            <Link {...brandLink} className={styles.logo}>
+              {logoMark}
+              {brandText}
+            </Link>
+          )}
 
           <nav className={styles.nav} aria-label="Ana menü">
             {navLinks.map((link) => (

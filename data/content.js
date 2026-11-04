@@ -332,6 +332,41 @@ export const blog = {
   authorTagline: "Kurucu · Persona Dijital Pazarlama",
   authorBio:
     "Markaların ürünlerini doğru kitleye anlatmalarına yardımcı oluyor; reklam, içerik ve görsel üretimi üzerine yazıyorum.",
+  // Yazar kutusundaki video slaytı (sırayla, sessiz başlar). Dosyalar
+  // video/benim-videom/ klasöründeki orijinallerin birebir kopyasıdır.
+  // Dördü de 720×1280 (9:16) dikey; içerik (altyazı, başlık, kenardaki kartlar
+  // ve yazılar) dört kenara kadar uzandığı için hiçbiri kırpılmaz: kutu 9:16,
+  // görüntü "contain" ile tam gösterilir. Posterler videonun temsilî bir karesidir.
+  authorVideos: [
+    {
+      src: "/videos/blog/mobilya-e-ticaret-4-hata.mp4",
+      poster: "/videos/blog/mobilya-e-ticaret-4-hata-poster.jpg",
+      title: "Mobilya e-ticaretinde 4 hata",
+      fit: "contain",
+      position: "50% 50%",
+    },
+    {
+      src: "/videos/blog/mobilya-satmanin-3-kurali.mp4",
+      poster: "/videos/blog/mobilya-satmanin-3-kurali-poster.jpg",
+      title: "Mobilya satmanın 3 kuralı",
+      fit: "contain",
+      position: "50% 50%",
+    },
+    {
+      src: "/videos/blog/markani-buyutme-zamani.mp4",
+      poster: "/videos/blog/markani-buyutme-zamani-poster.jpg",
+      title: "Markanı büyütme zamanı",
+      fit: "contain",
+      position: "50% 50%",
+    },
+    {
+      src: "/videos/blog/markani-bizim-kadar-umursamaz.mp4",
+      poster: "/videos/blog/markani-bizim-kadar-umursamaz-poster.jpg",
+      title: "Hiç kimse markanı bizim kadar umursamaz",
+      fit: "contain",
+      position: "50% 50%",
+    },
+  ],
 };
 
 // Projeler bölümü şu an ana sayfada gösterilmiyor; veriler ve bileşen

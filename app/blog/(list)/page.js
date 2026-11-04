@@ -26,6 +26,7 @@ import {
   listFeaturedPosts,
   listPosts,
 } from "@/lib/blog/queries";
+import AuthorVideos from "@/components/blog/AuthorVideos";
 import BlogContactCard from "@/components/blog/BlogContactCard";
 import BlogSearch from "@/components/blog/BlogSearch";
 import PostCard from "@/components/blog/PostCard";
@@ -164,7 +165,8 @@ function BlogResultsSkeleton() {
       </div>
       <aside className={styles.sidebar}>
         <div className={styles.skeleton} style={{ height: 250 }} />
-        <div className={styles.skeleton} style={{ height: 180 }} />
+        {/* Yazar kutusu: 9:16 video sahnesi + kontroller + yazar bilgileri. */}
+        <div className={styles.skeleton} style={{ height: 860 }} />
       </aside>
     </>
   );
@@ -345,23 +347,29 @@ async function BlogResults({ q, kategori, page }) {
           </section>
         ) : null}
 
+        {/* Yazar kutusu: üstte video slaytı, altında mevcut yazar bilgileri. */}
         <section className={`${styles.panel} ${styles.author}`} aria-label="Yazar">
-          <span className={styles.avatar}>
-            {blog.avatar ? (
-              <Image src={blog.avatar} alt="" fill sizes="60px" />
-            ) : (
-              <span aria-hidden="true">{profile.firstName[0]}</span>
-            )}
-          </span>
-          <div>
-            <h2 className={styles.authorName}>{profile.fullName}</h2>
-            <p className={styles.authorTagline}>{blog.authorTagline}</p>
+          {blog.authorVideos?.length ? (
+            <AuthorVideos videos={blog.authorVideos} label={`${profile.fullName} videoları`} />
+          ) : null}
+          <div className={styles.authorBody}>
+            <span className={styles.avatar}>
+              {blog.avatar ? (
+                <Image src={blog.avatar} alt="" fill sizes="60px" />
+              ) : (
+                <span aria-hidden="true">{profile.firstName[0]}</span>
+              )}
+            </span>
+            <div>
+              <h2 className={styles.authorName}>{profile.fullName}</h2>
+              <p className={styles.authorTagline}>{blog.authorTagline}</p>
+            </div>
+            <p className={styles.authorBio}>{blog.authorBio}</p>
+            <Link href="/" className={styles.authorLink}>
+              Hakkımda daha fazla
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
           </div>
-          <p className={styles.authorBio}>{blog.authorBio}</p>
-          <Link href="/" className={styles.authorLink}>
-            Hakkımda daha fazla
-            <ArrowRight size={14} aria-hidden="true" />
-          </Link>
         </section>
       </aside>
     </>

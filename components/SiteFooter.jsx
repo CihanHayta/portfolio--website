@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Phone } from "lucide-react";
 import { brand, brandSummary, navLinks, profile, socials } from "@/data/content";
+import FooterLogo from "./FooterLogo";
 import styles from "./SiteFooter.module.css";
 
 export default function SiteFooter() {
@@ -8,12 +10,12 @@ export default function SiteFooter() {
     <footer className={`${styles.footer} onDark`}>
       <div className={styles.inner}>
         <div className={styles.brand}>
-          <Link href="/" className={styles.logo}>
+          <FooterLogo className={styles.logo}>
             <Image src="/brand/persona-mark.png" alt="" width={26} height={26} className={styles.mark} />
             <span>
               <span className={styles.name}>{brand.name}</span> {brand.suffix}
             </span>
-          </Link>
+          </FooterLogo>
           <p className={styles.summary}>{brandSummary}</p>
         </div>
 
@@ -27,7 +29,16 @@ export default function SiteFooter() {
 
 
         <div className={styles.contact}>
-          <a href={`tel:${profile.phone.replace(/[^+\d]/g, "")}`}>{profile.phone}</a>
+          <a
+            href={`tel:${profile.phone.replace(/[^+\d]/g, "")}`}
+            className={styles.phone}
+            aria-label={`Telefonla ara: ${profile.phone}`}
+          >
+            <span className={styles.phoneIcon} aria-hidden="true">
+              <Phone size={14} strokeWidth={2} />
+            </span>
+            {profile.phone}
+          </a>
           <a href={`mailto:${profile.email}`}>{profile.email}</a>
         </div>
 

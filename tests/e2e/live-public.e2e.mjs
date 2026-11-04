@@ -7,6 +7,7 @@
 // salt okunur karşılaştırılır.
 
 import { chromium } from "playwright-core";
+import { gotoSettled } from "./_target.mjs";
 import { linkedProject, sql } from "../../scripts/supabase/_api.mjs";
 
 const base = process.env.BASE_URL ?? "https://personadijitalpazarlama.com";
@@ -23,7 +24,8 @@ const published = await sql(ref, "select slug, title, (select name from public.b
 const post = published[0];
 console.log(`Canlı veritabanı: ${published.length} yayımlanmış yazı (${published.map((row) => row.slug).join(", ")})`);
 
-const browser = await chromium.launch();
+// Yazar videolarının sesi hoparlöre verilmez (--mute-audio); video öğesinin durumu ölçülür.
+const browser = await chromium.launch({ args: ["--mute-audio"] });
 const statusOf = async (url) => {
   try {
     const response = await fetch(url, { redirect: "follow" });
@@ -55,7 +57,7 @@ try {
     const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 
     // A. Ana sayfa
-    const home = await page.goto(`${base}/`, { waitUntil: "networkidle" });
+    const home = await gotoSettled(page, `${base}/`);
     check(home.status() === 200, "A ana sayfa açılıyor");
     check((await overflow()) <= 0, "A ana sayfada yatay taşma yok");
     const homeBroken = await brokenImages(page);
@@ -85,7 +87,7 @@ try {
     errors.length = 0;
 
     // B. Blog listesi
-    const list = await page.goto(`${base}/blog`, { waitUntil: "networkidle" });
+    const list = await gotoSettled(page, `${base}/blog`);
     check(list.status() === 200, "B blog listesi açılıyor");
     const cards = page.locator("[data-list-reveal]");
     const titles = await cards.locator("h2").allInnerTexts();
@@ -142,11 +144,64 @@ try {
       const hidden = await page.evaluate(() => getComputedStyle(document.querySelector("[class*=heroMedia]")).display === "none");
       check(hidden, "A dar ekranda kahverengi panel önceki tasarımdaki gibi gizli (≤860 px)");
     }
+    // V. Yazar kutusundaki video slaytı (salt okunur: yalnızca oynatma ve kontroller)
+    await page.goto(`${base}/blog`, { waitUntil: "load" });
+    const stage = page.locator("[data-author-videos] [data-dir]");
+    await stage.scrollIntoViewIfNeeded();
+    await page.mouse.move(1, 1).catch(() => {});
+    const slider = () => page.evaluate(() => {
+      const root = document.querySelector("[data-author-videos]");
+      const i = Number(root.dataset.index);
+      const videos = [...root.querySelectorAll("video")];
+      const v = videos[i];
+      const box = v.getBoundingClientRect();
+      const scale = Math.min(box.width / (v.videoWidth || 1), box.height / (v.videoHeight || 1));
+      return { i, mode: root.dataset.mode, count: videos.length, playing: videos.filter((x) => !x.paused).length, paused: v.paused, muted: v.muted, t: v.currentTime, fit: getComputedStyle(v).objectFit, natural: `${v.videoWidth}x${v.videoHeight}`, cw: v.videoWidth * scale, ch: v.videoHeight * scale, bw: box.width, bh: box.height };
+    });
+    let sv = null;
+    for (let waited = 0; waited < 15_000; waited += 300) {
+      sv = await slider();
+      if (!sv.paused && sv.t > 0.3) break;
+      await page.waitForTimeout(300);
+    }
+    check(sv.count === 4 && !sv.paused && sv.muted && sv.playing === 1, "V yazar videosu sessiz otomatik oynuyor (4 slayt, tek video)", JSON.stringify({ i: sv.i, t: Number(sv.t.toFixed(1)), natural: sv.natural }));
+    check(sv.fit === "contain" && sv.cw <= sv.bw + 0.5 && sv.ch <= sv.bh + 0.5 && Math.abs(sv.cw / sv.ch - 9 / 16) < 0.01, "V video kırpılmadan/esnemeden sığıyor (9:16, contain)", `${sv.cw.toFixed(0)}×${sv.ch.toFixed(0)} / ${sv.bw.toFixed(0)}×${sv.bh.toFixed(0)}`);
+    if (w === 1440) {
+      const startIndex = sv.i;
+      let advanced = null;
+      for (let waited = 0; waited < 9000; waited += 250) {
+        await page.waitForTimeout(250);
+        const now = await slider();
+        if (now.i !== startIndex) { advanced = waited; break; }
+      }
+      check(advanced !== null, "V ~5,5 sn sonra sıradaki videoya geçti", `${advanced} ms`);
+      await page.getByRole("button", { name: "Sesi aç" }).click();
+      await page.mouse.move(1, 1);
+      const soundOn = await slider();
+      await page.waitForTimeout(8000);
+      const held = await slider();
+      check(soundOn.mode === "sound" && !soundOn.muted && held.i === soundOn.i && !held.paused, "V ses açılınca video sabit kaldı ve sesli sürdü (8 sn)");
+      await page.getByRole("button", { name: "Sesi kapat" }).click();
+      check((await slider()).muted, "V ses kapatıldı");
+    }
     check(errors.length === 0, "B blog listesinde JavaScript hatası yok", errors.join(" | ").slice(0, 160));
     errors.length = 0;
 
+    // H. Tilki bağlantısı, telefon ikonu ve footer kısayolu (yalnızca giriş ekranını açar)
+    const fox = page.locator("header").getByRole("link", { name: "Blog ana sayfası" });
+    check((await fox.count()) === 1 && (await fox.getAttribute("href")) === "/blog", "H blog sayfasında tilki /blog bağlantısı");
+    const phone = await page.locator('footer a[href^="tel:"]').evaluate((a) => ({ href: a.getAttribute("href"), label: a.getAttribute("aria-label"), icon: Boolean(a.querySelector("svg")) }));
+    check(phone.href === "tel:+905399417105" && phone.icon && phone.label === "Telefonla ara: +90 539 941 71 05", "H footer telefonunda ahize ikonu ve doğru tel: bağlantısı");
+    if (w === 1440) {
+      await page.locator("footer [data-footer-logo]").scrollIntoViewIfNeeded();
+      await page.locator("footer [data-footer-logo]").dblclick();
+      await page.waitForURL((url) => url.pathname.startsWith("/admin/login"), { timeout: 15_000 }).catch(() => {});
+      check(new URL(page.url()).pathname.startsWith("/admin/login") && (await page.getByLabel("E-posta").count()) === 1, "H footer logosuna çift tıklama giriş ekranını açtı (giriş yapılmadı)");
+    }
+    errors.length = 0;
+
     // C. Gerçek yazı detayı
-    const detail = await page.goto(`${base}/blog/${post.slug}`, { waitUntil: "networkidle" });
+    const detail = await gotoSettled(page, `${base}/blog/${post.slug}`);
     check(detail.status() === 200, `C yazı açılıyor (${post.slug})`);
     const info = await page.evaluate(() => {
       const body = document.querySelector("[data-article-body]");
@@ -206,7 +261,7 @@ try {
       const bar = document.querySelector("[data-reading-progress]");
       return { top: body.top + scrollY, height: body.height, bar: bar.getBoundingClientRect().top, header: document.querySelector("header").getBoundingClientRect().bottom, barHeight: bar.getBoundingClientRect().height };
     });
-    const offset = geometry.header + 3;
+    const offset = geometry.header + geometry.barHeight;
     const total = geometry.height - (h - offset);
     const go = async (y) => {
       await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), y);
@@ -222,7 +277,7 @@ try {
     const pFooter = await progress();
     await go(geometry.top - offset + total / 4);
     const pBack = await progress();
-    check(Math.abs(geometry.bar - geometry.header) <= 1 && Math.round(geometry.barHeight) === 3, "C okuma çubuğu header'ın hemen altında, 3 px");
+    check(Math.abs(geometry.bar - geometry.header) <= 1 && Math.round(geometry.barHeight) === 4, "C okuma çubuğu header'ın hemen altında, 4 px");
     check(p0 <= 0.02 && Math.abs(p50 - 0.5) <= 0.06 && p100 >= 0.99, `C okuma çubuğu makaleye göre ilerliyor (başta ${p0}, ortada ${p50}, sonda ${p100})`);
     check(pFooter === 1 && pBack < p50, `C footer'da %100'de kalıyor, yukarıda azalıyor (${pFooter} / ${pBack})`);
     // Makale sonu
@@ -247,7 +302,7 @@ try {
   for (const scheme of ["dark", "light"]) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: scheme });
     const page = await context.newPage();
-    await page.goto(`${base}/blog`, { waitUntil: "networkidle" });
+    await gotoSettled(page, `${base}/blog`);
     const colors = await page.evaluate(() => ({ page: getComputedStyle(document.querySelector("[data-theme=blog]")).backgroundColor, title: getComputedStyle(document.querySelector("[data-list-reveal] h2")).color, panel: getComputedStyle(document.querySelector("[class*=heroMedia]")).backgroundColor }));
     if (scheme === "dark") check(colors.page === "rgb(15, 15, 16)" && colors.title === "rgb(255, 255, 255)" && colors.panel === "rgb(241, 233, 218)", "B cihaz koyu modda liste koyu, kart başlığı beyaz, panel aynı", JSON.stringify(colors));
     else check(colors.page === "rgb(245, 240, 230)" && colors.panel === "rgb(241, 233, 218)", "B cihaz açık modda liste krem (mevcut tasarım)", JSON.stringify(colors));

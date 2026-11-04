@@ -3,6 +3,7 @@
 // Kritik/ciddi axe bulgusu FAIL'dir. Performans: TTFB, LCP, CLS, görsel biçimleri (bilgi + eşik).
 import { createRequire } from "node:module";
 import { chromium } from "playwright-core";
+import { gotoSettled } from "./_target.mjs";
 import { linkedProject, sql } from "../../scripts/supabase/_api.mjs";
 
 const base = process.env.BASE_URL ?? "https://personadijitalpazarlama.com";
@@ -30,7 +31,7 @@ try {
           for (const entry of list.getEntries()) if (!entry.hadRecentInput) window.__perf.cls += entry.value;
         }).observe({ type: "layout-shift", buffered: true });
       });
-      await page.goto(base + path, { waitUntil: "networkidle" });
+      await gotoSettled(page, base + path);
       await page.waitForTimeout(800);
       await page.addScriptTag({ path: axePath });
       const axe = await page.evaluate(async () => {
