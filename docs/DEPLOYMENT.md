@@ -1,6 +1,6 @@
 # Dağıtım (Vercel)
 
-Durum tarihi: **2026-11-01**.
+Durum tarihi: **2026-11-04**.
 
 ## Özet
 
@@ -33,6 +33,16 @@ Durum tarihi: **2026-11-01**.
 | Kod | `git push origin d9c496b:main` (ileri sarma) → `dpl_6YhrrDiZZPGs9JSxu2tQNYzYzV2v` READY. Canlı alan adında yeni sürüm işaretleri doğrulandı. |
 | Canlı testler | `live-smoke` (geçici yönetici, CANLI-SMOKE-TEST-2026 taslağı, yayımlanmadı, temizlendi): 47 PASS / 1 FAIL (telefon ayarlar çekmecesi, bekleme olmadan ölçüldü; ikinci tur otomatik izin denetimince durduruldu, aynı commit Preview'da doğrulandı). `live-public` 196/196, `live-security` 22/22, `live-a11y-perf` 18/18, `public-seo` 38/38, `footer` 150/150, `admin-login` 175/175. Günlükler: 5xx yok, gizli kalıp yok. |
 | `20261026000000_backup_reader_role` | **Uygulanmadı** (site sahibinin ayrı onayı gerekir). Günlük yedek iş akışı kapalı, gizli değişken yok, rol yok. |
+
+### Blog videoları ve kısayollar (2026-11-04)
+
+| Adım | Sonuç |
+|---|---|
+| İçerik | Yazar kutusunda 4 dikey videolu slayt (`public/videos/blog/`, orijinallerin SHA-256 ile doğrulanmış birebir kopyası; orijinaller `video/benim-videom/` içinde, repoda değil). Okuma çubuğu 4 px. Blog sayfalarında tilki → `/blog`. Footer logosu: masaüstünde çift/üçlü tıklama `/admin/login` (yalnızca giriş ekranı). Footer telefonunda ahize ikonu. |
+| Preview | `71870b3` → `dpl_DJ8dUvAYgKzqrPwica4haBT3431N`: `author-videos` 110/110 (gerçek Chrome; 99 sn'lik video baştan sona sesli), `site-shortcuts` 28/28, `public-article`, `blog-list`, `footer`, `public-seo`, `a11y` tümü geçti. |
+| Kod | `git push origin 71870b3:main` (ileri sarma, `d9c496b..71870b3`) → `dpl_64ZEuBYuzJxKeo8SRRtMH2S33k5v` READY. Canlı alan adında yeni işaretler ve 4 video dosyası (206 `video/mp4`) doğrulandı. Geri alma hedefi: `dpl_6YhrrDiZZPGs9JSxu2tQNYzYzV2v` (`d9c496b`). |
+| Canlı testler | Salt okunur: `live-public` 220/220 (5 genişlikte video, tilki, telefon, 4 px çubuk; masaüstünde ses aç/kapat ve footer çift tıklama → giriş ekranı), `live-a11y-perf` 18/18 (`/blog` LCP 1,2–1,5 sn, CLS 0), `live-security` 22/22, `site-shortcuts` 28/28, `author-videos` 106/106 (99 sn'lik tam oynatma canlıda atlandı; Preview'da geçti). Günlükler: 50 kayıt, hepsi info/200, gizli kalıp yok. |
+| Test notu | `/blog` artık akış hâlinde video indirdiği için Playwright'ın `networkidle` durumu oluşmayabilir; testler `tests/e2e/_target.mjs` içindeki `gotoSettled` ile (medya hariç ağ sessizliği) bekler. |
 
 ### Blog sistemi kapsamlı turu (2026-10-30/31) — durum
 
