@@ -1,6 +1,6 @@
 # Dağıtım (Vercel)
 
-Durum tarihi: **2026-11-04**.
+Durum tarihi: **2026-11-05**.
 
 ## Özet
 
@@ -33,6 +33,14 @@ Durum tarihi: **2026-11-04**.
 | Kod | `git push origin d9c496b:main` (ileri sarma) → `dpl_6YhrrDiZZPGs9JSxu2tQNYzYzV2v` READY. Canlı alan adında yeni sürüm işaretleri doğrulandı. |
 | Canlı testler | `live-smoke` (geçici yönetici, CANLI-SMOKE-TEST-2026 taslağı, yayımlanmadı, temizlendi): 47 PASS / 1 FAIL (telefon ayarlar çekmecesi, bekleme olmadan ölçüldü; ikinci tur otomatik izin denetimince durduruldu, aynı commit Preview'da doğrulandı). `live-public` 196/196, `live-security` 22/22, `live-a11y-perf` 18/18, `public-seo` 38/38, `footer` 150/150, `admin-login` 175/175. Günlükler: 5xx yok, gizli kalıp yok. |
 | `20261026000000_backup_reader_role` | **Uygulanmadı** (site sahibinin ayrı onayı gerekir). Günlük yedek iş akışı kapalı, gizli değişken yok, rol yok. |
+
+### İletişim kartı düzeltmesi ve header markası (2026-11-05)
+
+| Adım | Sonuç |
+|---|---|
+| İletişim kartı (`0f87c00`) | Yüzen iletişim kartı yazar videosu kutusuna bindiğinde ve yazı sonundaki CTA görünürken geri çekilir (önceki giriş animasyonu "both" dolgusu yüzünden hiç gizlenmiyordu). Preview `dpl_5e3MvvLLqGFNWvNEhCSgNoXZ4Pb2`: `author-videos` 118/118, `public-article`, `blog-list`, `public-seo`, `footer` geçti. Canlı `dpl_6URGwHkYjhhZ1SnvUmGNVZnVYdnX`: 390 ve 1440 px'te kart video kontrollerini örtmüyor. |
+| Header markası (`d2316b1`) | "CİHAN \| DİJİTAL PAZARLAMA"; menüde ve ana sayfa bölümünde "Neden Ben?". Preview: `header-brand` 618/618, `site-shortcuts` 28/28, `a11y`, `footer` geçti. `git push origin d2316b1:main` → canlı; `header-brand` 618/618, `live-public` 220/220, `live-a11y-perf` 18/18. Footer, SEO başlıkları ve yönetici giriş ekranında eski ad bilerek bırakıldı (kapsam dışı). |
+| Vercel notu | 2026-11-05'te Vercel kısmen arızalıyken GitHub push bildirimi iki kez işlenmedi (dalda ve `main`'de). Aynı commit, Vercel API ile Git kaynağından başlatıldı: `POST /v13/deployments` gövdesi `{"name":"portfolio-website","project":"portfolio-website","gitSource":{"type":"github","repoId":1320163732,"ref":"<dal>","sha":"<sha>"}}` (canlı için ayrıca `"target":"production"`). |
 
 ### Blog videoları ve kısayollar (2026-11-04)
 
