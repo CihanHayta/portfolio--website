@@ -22,13 +22,16 @@ export default function Header() {
   const brandLink = {
     href: mobileLayout ? "/admin" : "/",
     prefetch: mobileLayout ? false : undefined,
-    "aria-label": mobileLayout ? `${brand.legalName} yönetim girişi` : `${brand.legalName} ana sayfa`,
+    "aria-label": `${brand.mark.primary} ${brand.mark.secondary} ${mobileLayout ? "yönetim girişi" : "ana sayfa"}`,
   };
   const logoMark = <Image src="/brand/persona-mark.png" alt="" width={30} height={30} className={styles.logoMark} priority />;
+  // Marka: "CİHAN" (ana ad) | "DİJİTAL PAZARLAMA" (ikincil ifade). Ayraç dekoratiftir;
+  // dar telefonda yalnızca ana ad görünür. Bağlantının adı aria-label'dan gelir.
   const brandText = (
-    <span>
-      <span className={styles.logoName}>{brand.name}</span>
-      <span className={styles.logoSuffix}> {brand.suffix}</span>
+    <span className={styles.brandLockup}>
+      <span className={styles.logoName}>{brand.mark.primary}</span>{" "}
+      <span className={styles.logoDivider} aria-hidden="true" />{" "}
+      <span className={styles.logoSuffix}>{brand.mark.secondary}</span>
     </span>
   );
   // Blog yönetimi de "Blog" bağlantısının altında sayılır.

@@ -17,6 +17,12 @@ export const brand = {
   suffix: "Dijital",
   legalName: "Persona Dijital Pazarlama",
   tagline: "Dijital Pazarlama Ajansı",
+  // Kişisel marka (header): "CİHAN | DİJİTAL PAZARLAMA". Büyük harfler Türkçe yazılır
+  // (İ), CSS dönüşümüne bırakılmaz. Bağlantı adı görünen metinle başlar (WCAG 2.5.3).
+  mark: {
+    primary: "CİHAN",
+    secondary: "DİJİTAL PAZARLAMA",
+  },
 };
 
 export const profile = {
@@ -38,7 +44,7 @@ export const socials = [
 export const navLinks = [
   { label: "Hizmetler", href: "/#hizmetler" },
   { label: "Nasıl Çalışıyoruz?", href: "/#calisma-yontemimiz" },
-  { label: "Neden Persona?", href: "/#neden" },
+  { label: "Neden Ben?", href: "/#neden" },
   { label: "SSS", href: "/#sss" },
   { label: "Blog", href: "/blog" },
   { label: "İletişim", href: "/#iletisim" },
@@ -203,7 +209,7 @@ export const home = {
 
   difference: {
     id: "neden",
-    eyebrow: "Neden Persona?",
+    eyebrow: "Neden Ben?",
     title: "Reklam yönetiminde farkı yaratan şey, yaklaşımdır.",
     commonTitle: "Sık karşılaşılan sorunlar",
     oursTitle: "Persona yaklaşımı",

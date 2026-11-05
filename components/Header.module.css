@@ -65,8 +65,32 @@
   align-items: center;
 }
 
+/* Marka: CİHAN | DİJİTAL PAZARLAMA. Ana ad güçlü ve altın; ikincil ifade küçük,
+   geniş aralıklı ve krem; aralarında ince bir ayraç. */
+.brandLockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .logoName {
   color: var(--p-gold);
+  letter-spacing: 0.08em;
+}
+
+.logoDivider {
+  display: block;
+  flex-shrink: 0;
+  width: 1px;
+  height: 16px;
+  background: rgba(245, 240, 230, 0.32);
+}
+
+.logoSuffix {
+  color: rgba(245, 240, 230, 0.86);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
 }
 
 .nav {
@@ -235,9 +259,19 @@
   }
 }
 
-@media (max-width: 480px) {
-  .logoSuffix {
+/* İkincil ifade yalnızca yeterli yer varken görünür (ölçülerek belirlendi): telefonda
+   (≤560px) ve masaüstü menüsünün yeni açıldığı dar masaüstünde (1121–1239px) marka
+   yalnızca "CİHAN" olur; böylece düğme ve menüyle hiçbir genişlikte çakışmaz. */
+@media (max-width: 560px), (min-width: 1121px) and (max-width: 1239px) {
+  .logoSuffix,
+  .logoDivider {
     display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .logoName {
+    font-size: 16px;
   }
 }
 
