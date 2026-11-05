@@ -32,10 +32,11 @@ function saveSession(session) {
 // görüşme formunu (ContactModal) açar; gönderim WhatsApp/e-posta üzerinden olur.
 export default function BlogContactCard({ mode = "article" }) {
   const [phase, setPhase] = useState("hidden"); // hidden | visible | leaving
-  const [inlineCtaVisible, setInlineCtaVisible] = useState(false);
+  const [tucked, setTucked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const shownRef = useRef(false);
   const leaveTimer = useRef(null);
+  const cardRef = useRef(null);
 
   // Tetikleme: kaydırma dinleyicisi (pasif, kare başına en fazla bir ölçüm).
   useEffect(() => {
@@ -74,14 +75,56 @@ export default function BlogContactCard({ mode = "article" }) {
     };
   }, [mode]);
 
-  // Yazının sonundaki satır içi CTA görünürken kart geri çekilir (aynı mesaj iki kez görünmez).
+  // Kart geri çekilir (görünmez, tıklanmaz, klavyeyle odaklanmaz):
+  // - yazının sonundaki satır içi CTA ekrandayken (aynı mesaj iki kez görünmez);
+  // - liste sayfasındaki yazar videosu kutusunun üstüne bindiğinde (video kontrolleri ve
+  //   noktalar örtülmez). Kart videodan uzaktayken her zamanki gibi görünür.
+  // Ölçüm kart görününce kurulur: liste sayfasında yazar kutusu akışla sonradan gelir.
+  const shown = phase !== "hidden";
   useEffect(() => {
+    if (!shown) return undefined;
     const inline = document.querySelector("[data-inline-cta]");
-    if (!inline || typeof IntersectionObserver === "undefined") return;
-    const observer = new IntersectionObserver(([entry]) => setInlineCtaVisible(entry.isIntersecting), { threshold: 0.2 });
-    observer.observe(inline);
-    return () => observer.disconnect();
-  }, []);
+    const videos = document.querySelector("[data-author-videos]");
+    let inlineVisible = false;
+    let frame = 0;
+    const overlapsVideos = () => {
+      const card = cardRef.current;
+      if (!videos || !card) return false;
+      const a = card.getBoundingClientRect();
+      const b = videos.getBoundingClientRect();
+      const gap = 8;
+      return a.left < b.right + gap && b.left < a.right + gap && a.top < b.bottom + gap && b.top < a.bottom + gap;
+    };
+    const update = () => {
+      frame = 0;
+      setTucked(inlineVisible || overlapsVideos());
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    let observer = null;
+    if (inline && typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          inlineVisible = entry.isIntersecting && entry.intersectionRatio >= 0.1;
+          schedule();
+        },
+        { threshold: [0, 0.1, 0.2] }
+      );
+      observer.observe(inline);
+    }
+    if (videos) {
+      window.addEventListener("scroll", schedule, { passive: true });
+      window.addEventListener("resize", schedule, { passive: true });
+    }
+    schedule();
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [shown]);
 
   const dismiss = () => {
     saveSession({ ...loadSession(), dismissed: true });
@@ -110,9 +153,11 @@ export default function BlogContactCard({ mode = "article" }) {
     <>
       {phase !== "hidden" ? (
         <aside
+          ref={cardRef}
           className={`${styles.card} onDark`}
           data-phase={phase}
-          data-tucked={inlineCtaVisible || undefined}
+          data-tucked={tucked || undefined}
+          inert={tucked || undefined}
           aria-labelledby="blog-cta-card-title"
           aria-live="polite"
         >

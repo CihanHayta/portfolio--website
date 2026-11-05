@@ -79,6 +79,52 @@ const geometry = (page) =>
   });
 
 const mouseAway = (page) => page.mouse.move(2, 2);
+
+// Sayfanın sonuna inip (iletişim kartı tetiklenir) video kontrollerine dönülür; her
+// kontrolün ortasına gerçekten tıklanabiliyor mu (üstünde başka öğe yok mu) ölçülür.
+async function coverCheck(page, label) {
+  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }));
+  await page.waitForTimeout(700);
+  // Etkin nokta, kartın (varsa) tam ortasına gelecek şekilde kaydırılır: en kötü durum.
+  await page.evaluate(() => {
+    const dot = document.querySelector("[data-author-videos] [aria-current=true]").getBoundingClientRect();
+    const card = document.querySelector('[aria-labelledby="blog-cta-card-title"]')?.getBoundingClientRect();
+    const targetY = card ? card.top + card.height / 2 : innerHeight - 160;
+    window.scrollBy({ top: dot.top + dot.height / 2 - targetY, behavior: "instant" });
+  });
+  await page.waitForTimeout(700);
+  const cover = await page.evaluate(() => {
+    const card = document.querySelector('[aria-labelledby="blog-cta-card-title"]');
+    const buttons = [...document.querySelectorAll("[data-author-videos] button")].filter((b) => b.getAttribute("aria-hidden") !== "true");
+    const blocked = buttons
+      .filter((b) => {
+        const r = b.getBoundingClientRect();
+        if (r.top < 0 || r.bottom > innerHeight) return false;
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return !hit || !b.contains(hit);
+      })
+      .map((b) => b.getAttribute("aria-label") ?? b.textContent.trim());
+    return { card: Boolean(card), tucked: card ? card.hasAttribute("data-tucked") : null, inert: card ? card.inert : null, opacity: card ? getComputedStyle(card).opacity : null, blocked };
+  });
+  check(cover.blocked.length === 0 && (!cover.card || (cover.tucked && cover.inert && cover.opacity === "0")), `${label}: iletişim kartı video kontrollerini örtmüyor (kart açıksa geri çekiliyor)`, JSON.stringify(cover));
+  // Kart yalnızca video kutusuyla çakışırken gizlenir; çakışmadığı konumlarda görünür kalır.
+  if (cover.card) {
+    const samples = [];
+    for (const position of ["top", "bottom"]) {
+      await page.evaluate((where) => window.scrollTo({ top: where === "top" ? 0 : document.documentElement.scrollHeight, behavior: "instant" }), position);
+      await page.waitForTimeout(500);
+      samples.push(await page.evaluate(() => {
+        const card = document.querySelector('[aria-labelledby="blog-cta-card-title"]');
+        const a = card.getBoundingClientRect();
+        const b = document.querySelector("[data-author-videos]").getBoundingClientRect();
+        const overlap = a.left < b.right + 8 && b.left < a.right + 8 && a.top < b.bottom + 8 && b.top < a.bottom + 8;
+        return { overlap, opacity: getComputedStyle(card).opacity };
+      }));
+    }
+    check(samples.every((x) => (x.overlap ? x.opacity === "0" : x.opacity === "1")), `${label}: kart videoyla çakışmadığında görünür, çakışınca gizli`, JSON.stringify(samples));
+  }
+  return cover;
+}
 const scrollToStage = (page) =>
   page.evaluate(() => document.querySelector("[data-author-videos] [data-dir]").scrollIntoView({ block: "center", behavior: "instant" }));
 
@@ -303,6 +349,8 @@ async function desktopSuite(browser) {
   await page.keyboard.press("Enter");
   await page.locator("body").focus().catch(() => {});
 
+  await coverCheck(page, "1440");
+
   // Sayfadan ayrılınca hiçbir video çalmaz (istemci tarafı gezinme).
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await page.locator("header nav").getByRole("link", { name: "Hizmetler" }).click();
@@ -387,6 +435,9 @@ async function responsiveSuite(browserType, name, widths) {
       const back = await waitFor(page, (x) => !x.videos[x.index].paused, 5000);
       check(back.ok, "sahneye dönünce oynatma sürdü");
     }
+    await coverCheck(page, `${w}`);
+    await scrollToStage(page);
+    await waitFor(page, (x) => !x.videos[x.index].paused, 6000);
     // Dokunmatik: sonraki ve ses düğmeleri
     const before = (await snapshot(page)).index;
     await page.getByRole("button", { name: "Sonraki video" }).tap();

@@ -189,6 +189,17 @@ try {
     check((await closing.count()) === 1, "kapanış: 'Dijital Pazarlama İçin Ücretsiz Ön Görüşme'");
     const serviceLinks = await closing.locator("ul a").evaluateAll((links) => links.map((a) => a.getAttribute("href")));
     check(serviceLinks.length >= 1 && serviceLinks.length <= 2 && serviceLinks.every((href) => href === "/#hizmetler"), `ilgili hizmetler (en fazla 2) gerçek hizmetler bölümüne bağlı (${serviceLinks.length})`);
+    // Yüzen iletişim kartı açıksa, satır içi kapanış CTA'sı görünürken geri çekilir (görünmez, tıklanmaz).
+    await closing.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    const floating = await page.evaluate(() => {
+      const card = document.querySelector('[aria-labelledby="blog-cta-card-title"]');
+      if (!card) return null;
+      const style = getComputedStyle(card);
+      return { tucked: card.hasAttribute("data-tucked"), opacity: style.opacity, pointer: style.pointerEvents };
+    });
+    if (floating) check(floating.tucked && floating.opacity === "0" && floating.pointer === "none", "kapanış CTA'sı görünürken yüzen iletişim kartı geri çekiliyor", JSON.stringify(floating));
+    else console.log("  bilgi yüzen iletişim kartı bu noktada açılmamış (geri çekilme ölçülmedi)");
     await closing.getByRole("button", { name: "Benimle iletişime geç" }).click();
     check(await page.getByRole("dialog").filter({ hasText: /Görüşme/ }).first().isVisible(), "'Benimle iletişime geç' sitenin iletişim penceresini açıyor");
     await page.keyboard.press("Escape");
